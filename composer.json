@@ -1,5 +1,5 @@
 {
-    "name": "byjg/serialize",
+    "name": "byjg/serializer",
     "description": "Serialize any object into array and format it JSON or XML",
     "authors": [
         {
