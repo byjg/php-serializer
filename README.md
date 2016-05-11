@@ -16,6 +16,16 @@ $result = $object->build();
 
 `$result` is an array. You can use a Formatter to transform it in JSON or XML.
 
+## Formatting the Output with a formatter
+
+```php
+$serializer = new \ByJG\Serialize\SerializerObject($data);
+$result = $object->build();
+
+echo (new JsonFormatter())->process($result);
+echo (new XmlFormatter())->process($result);
+```
+
 ## Create a *bindable* object
 
 ```php

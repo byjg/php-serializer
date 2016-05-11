@@ -2,6 +2,8 @@
 
 namespace ByJG\Serialize;
 
+use ByJG\Serialize\Formatter\JsonFormatter;
+use ByJG\Serialize\Formatter\XmlFormatter;
 use stdClass;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\ModelList;
@@ -47,6 +49,17 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
             ['Id' => 10, 'Name' => 'Joao'],
             $result
         );
+
+        $this->assertEquals(
+            '{"Id":10,"Name":"Joao"}',
+            (new JsonFormatter())->process($result)
+        );
+
+        $this->assertEquals(
+            "<?xml version=\"1.0\"?>\n<root><Id>10</Id><Name>Joao</Name></root>\n",
+            (new XmlFormatter())->process($result)
+        );
+
     }
 
     /**
@@ -69,6 +82,17 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
             ]
             , $result
         );
+
+        $this->assertEquals(
+            '[{"Id":10,"Name":"Joao"},{"Id":20,"Name":"JG"}]',
+            (new JsonFormatter())->process($result)
+        );
+
+        $this->assertEquals(
+            "<?xml version=\"1.0\"?>\n<root><item0><Id>10</Id><Name>Joao</Name></item0><item1><Id>20</Id><Name>JG</Name></item1></root>\n",
+            (new XmlFormatter())->process($result)
+        );
+
     }
 
     /**
