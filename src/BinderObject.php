@@ -2,7 +2,6 @@
 
 namespace ByJG\Serialize;
 
-use ByJG\AnyDataset\Repository\SingleRow;
 use stdClass;
 
 class BinderObject implements DumpToArrayInterface
@@ -78,9 +77,7 @@ class BinderObject implements DumpToArrayInterface
      */
     protected static function setPropValue($obj, $propName, $value)
     {
-        if ($obj instanceof SingleRow) {
-            $obj->setField($propName, $value);
-        } else if (method_exists($obj, 'set' . $propName)) {
+        if (method_exists($obj, 'set' . $propName)) {
             $obj->{'set' . $propName}($value);
         } elseif (isset($obj->{$propName}) || $obj instanceof stdClass) {
             $obj->{$propName} = $value;

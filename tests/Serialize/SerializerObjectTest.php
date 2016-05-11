@@ -2,7 +2,6 @@
 
 namespace ByJG\Serialize;
 
-use ByJG\AnyDataset\Repository\AnyDataset;
 use stdClass;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\ModelList;
