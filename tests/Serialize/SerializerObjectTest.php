@@ -552,6 +552,22 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
             ],
             $result
         );
+
+        $object->setOnlyString(true);
+        $result = $object->build();
+
+        $this->assertEquals(
+            [
+                'varFalse' => '',
+                'varTrue' => '1',
+                'varZero' => '0',
+                'varZeroStr' => '0',
+                'varNull' => '',
+                'varEmptyString' => ''
+            ],
+            $result
+        );
+
     }
 
     public function testEmptyValues_2()

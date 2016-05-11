@@ -10,6 +10,7 @@ class SerializerObject
     protected $_methodPattern = ['/([^A-Za-z0-9])/', ''];
     protected $_methodGetPrefix = 'get';
     protected $_stopFirstLevel = false;
+    protected $_onlyString = false;
     protected $_currentLevel = 0;
 
     public function __construct($model)
@@ -68,6 +69,23 @@ class SerializerObject
         $this->_stopFirstLevel = $stopAtFirstLevel;
     }
 
+    /**
+     * @return boolean
+     */
+    public function isOnlyString()
+    {
+        return $this->_onlyString;
+    }
+
+    /**
+     * @param boolean $onlyString
+     */
+    public function setOnlyString($onlyString)
+    {
+        $this->_onlyString = $onlyString;
+    }
+
+
     public function build()
     {
         $this->_currentLevel = 1;
@@ -76,6 +94,8 @@ class SerializerObject
 
     public function buildProperty($property)
     {
+        // If Stop at First Level is active and the current level is greater than 1 return the
+        // original object instead convert it to array;
         if ($this->getStopFirstLevel() && $this->_currentLevel > 1) {
             return $property;
         }
@@ -92,6 +112,9 @@ class SerializerObject
             return $this->buildObject($property);
         }
 
+        if ($this->isOnlyString()) {
+            $property = "$property";
+        }
         return $property;
     }
 
