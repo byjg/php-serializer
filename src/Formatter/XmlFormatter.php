@@ -6,7 +6,7 @@
  * Time: 01:42
  */
 
-namespace ByJG\Serialize\Formatter;
+namespace ByJG\Serializer\Formatter;
 
 
 class XmlFormatter implements FormatterInterface

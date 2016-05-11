@@ -2,7 +2,7 @@
 
 namespace Tests\Sample;
 
-use ByJG\Serialize\BaseModel;
+use ByJG\Serializer\BaseModel;
 
 /**
  * @Xmlnuke:NodeName ModelPropertyPattern

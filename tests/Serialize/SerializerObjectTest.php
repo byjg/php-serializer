@@ -1,9 +1,9 @@
 <?php
 
-namespace ByJG\Serialize;
+namespace ByJG\Serializer;
 
-use ByJG\Serialize\Formatter\JsonFormatter;
-use ByJG\Serialize\Formatter\XmlFormatter;
+use ByJG\Serializer\Formatter\JsonFormatter;
+use ByJG\Serializer\Formatter\XmlFormatter;
 use stdClass;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\ModelList;
@@ -36,7 +36,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_ObjectGetter_1elem()
     {
@@ -63,7 +63,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_ObjectGetter_2elem()
     {
@@ -96,7 +96,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_ObjectPublic_1elem()
     {
@@ -112,7 +112,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_ObjectPublic_2elem()
     {
@@ -134,7 +134,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_StdClass_1()
     {
@@ -152,7 +152,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_StdClass_Model()
     {
@@ -171,7 +171,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_Array_1()
     {
@@ -190,7 +190,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_Array_2()
     {
@@ -222,7 +222,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_StdClass_Array()
     {
@@ -244,7 +244,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_Array_Scalar()
     {
@@ -264,7 +264,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_Array_Mixed()
     {
@@ -285,7 +285,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_Array_Array()
     {
@@ -326,7 +326,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_Array_Array_2()
     {
@@ -354,7 +354,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_Array_Array_3()
     {
@@ -389,7 +389,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_Array_Array_5()
     {
@@ -432,7 +432,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      * @todo: Interpret Annotations
      */
     public function testCreateObjectFromModel_Collection_DontCreateNode()
@@ -457,7 +457,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      * @todo: Interpret Annotations
      */
     public function testCreateObjectFromModel_Collection_CreateNode()
@@ -482,7 +482,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      * @todo: Interpret Annotations
      */
     public function testCreateObjectFromModel_Collection_SkipParentAndRenameChild()
@@ -507,7 +507,7 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\SerializerObject::CreateObjectFromModel
+     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      */
     public function testCreateObjectFromModel_OnlyScalarAtFirstLevel()
     {

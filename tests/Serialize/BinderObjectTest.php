@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\Serialize;
+namespace ByJG\Serializer;
 use Tests\Sample\ModelPublic;
 use Tests\Sample\SampleModel;
 
@@ -29,7 +29,7 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\BinderObject::bind
+     * @covers ByJG\Serializer\BinderObject::bind
      */
     public function testBind_Constructor()
     {
@@ -39,7 +39,7 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\BinderObject::bind
+     * @covers ByJG\Serializer\BinderObject::bind
      */
     public function testBind_Array()
     {
@@ -50,7 +50,7 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\BinderObject::bind
+     * @covers ByJG\Serializer\BinderObject::bind
      */
     public function testBind_StdClass()
     {
@@ -65,7 +65,7 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\BinderObject::bindTo
+     * @covers ByJG\Serializer\BinderObject::bindTo
      */
     public function testBindTo_Object()
     {
@@ -81,7 +81,7 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\BinderObject::bindTo
+     * @covers ByJG\Serializer\BinderObject::bindTo
      * @todo   Implement testBindTo().
      */
     public function testBindTo_stdClass()
@@ -98,7 +98,7 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\BinderObject::toArray
+     * @covers ByJG\Serializer\BinderObject::toArray
      */
     public function testToArray()
     {

@@ -6,7 +6,7 @@
  * Time: 01:40
  */
 
-namespace ByJG\Serialize\Formatter;
+namespace ByJG\Serializer\Formatter;
 
 
 interface FormatterInterface

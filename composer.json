@@ -9,7 +9,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "ByJG\\Serialize\\": "src/",
+            "ByJG\\Serializer\\": "src/",
             "Tests\\": "tests"
         }
     },

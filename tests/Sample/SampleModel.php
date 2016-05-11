@@ -2,7 +2,7 @@
 
 namespace Tests\Sample;
 
-use ByJG\Serialize\BaseModel;
+use ByJG\Serializer\BaseModel;
 
 class SampleModel extends BaseModel
 {

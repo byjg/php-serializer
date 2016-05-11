@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\Serialize;
+namespace ByJG\Serializer;
 
 /**
  * Description of DumpToArrayInterface

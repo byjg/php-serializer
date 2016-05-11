@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\Serialize;
+namespace ByJG\Serializer;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\SampleModel;
 
@@ -30,7 +30,7 @@ class BaseModelTest extends \PHPUnit_Framework_TestCase
 
 
     /**
-     * @covers ByJG\Serialize\BaseModel::bindGeneralObject
+     * @covers ByJG\Serializer\BaseModel::bindGeneralObject
      */
     public function testBindFromObject()
     {
@@ -43,7 +43,7 @@ class BaseModelTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\BaseModel::bindStdClass
+     * @covers ByJG\Serializer\BaseModel::bindStdClass
      */
     public function testBindFromStdClass()
     {
@@ -69,7 +69,7 @@ class BaseModelTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serialize\BaseModel::bindArray
+     * @covers ByJG\Serializer\BaseModel::bindArray
      */
     public function testBindFromArray()
     {

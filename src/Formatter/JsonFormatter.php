@@ -6,7 +6,7 @@
  * Time: 01:41
  */
 
-namespace ByJG\Serialize\Formatter;
+namespace ByJG\Serializer\Formatter;
 
 
 class JsonFormatter implements FormatterInterface
