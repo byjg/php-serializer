@@ -14,7 +14,6 @@ class ModelPropertyPatternConstruct extends BaseModel
 
     function __construct($object = null)
     {
-        $this->setPropertyPattern(null, null);
         parent::__construct($object);
     }
 
