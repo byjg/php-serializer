@@ -45,7 +45,7 @@ class BinderObject implements DumpToArrayInterface
      */
     protected function bindObjectInternal($source, $target)
     {
-        $sourceArray = self::toArrayFrom($source);
+        $sourceArray = self::toArrayFrom($source, true);
 
         foreach ($sourceArray as $propName => $value) {
             $this->setPropValue($target, $propName, $value);
@@ -103,13 +103,14 @@ class BinderObject implements DumpToArrayInterface
      * Get all properties from a source object as an associative array
      *
      * @param mixed $source
+     * @param bool $firstLevel
      * @return array
      */
-    public static function toArrayFrom($source)
+    public static function toArrayFrom($source, $firstLevel = false)
     {
         // Prepare the source object type
         $object = new SerializerObject($source);
-        $object->setStopFirstLevel(true);
+        $object->setStopFirstLevel($firstLevel);
         return $object->build();
     }
 
