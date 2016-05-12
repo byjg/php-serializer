@@ -16,8 +16,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": ">=5.4.0",
-        "ext-json": "*",
-        "byjg/singleton-pattern": "1.0.*"
+        "ext-json": "*"
     },
     "suggest": {
         "ext-curl": "*"
