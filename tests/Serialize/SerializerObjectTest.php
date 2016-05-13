@@ -35,9 +35,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_ObjectGetter_1elem()
     {
         $model = new ModelGetter(10, 'Joao');
@@ -62,9 +59,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_ObjectGetter_2elem()
     {
         $model = array(
@@ -95,9 +89,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_ObjectPublic_1elem()
     {
         $model = new ModelPublic(10, 'Joao');
@@ -111,9 +102,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_ObjectPublic_2elem()
     {
         $model = array(
@@ -133,9 +121,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_StdClass_1()
     {
         $model = new stdClass();
@@ -151,9 +136,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_StdClass_Model()
     {
         $model = new stdClass();
@@ -170,9 +152,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_Array_1()
     {
         $model = [
@@ -189,9 +168,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_Array_2()
     {
         $model = [
@@ -221,9 +197,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_StdClass_Array()
     {
         $model = new stdClass();
@@ -243,9 +216,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_Array_Scalar()
     {
         $model = new stdClass();
@@ -263,9 +233,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_Array_Mixed()
     {
         $model = new stdClass();
@@ -284,9 +251,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_Array_Array()
     {
         $model = new stdClass();
@@ -325,9 +289,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_Array_Array_2()
     {
         $model = new stdClass();
@@ -353,9 +314,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_Array_Array_3()
     {
         $model = [
@@ -388,9 +346,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_Array_Array_5()
     {
         $model = new stdClass;
@@ -432,7 +387,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      * @todo: Interpret Annotations
      */
     public function testCreateObjectFromModel_Collection_DontCreateNode()
@@ -457,7 +411,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      * @todo: Interpret Annotations
      */
     public function testCreateObjectFromModel_Collection_CreateNode()
@@ -482,7 +435,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
      * @todo: Interpret Annotations
      */
     public function testCreateObjectFromModel_Collection_SkipParentAndRenameChild()
@@ -506,9 +458,6 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers ByJG\Serializer\SerializerObject::CreateObjectFromModel
-     */
     public function testCreateObjectFromModel_OnlyScalarAtFirstLevel()
     {
         $model = [

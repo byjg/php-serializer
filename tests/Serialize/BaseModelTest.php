@@ -29,9 +29,6 @@ class BaseModelTest extends \PHPUnit_Framework_TestCase
     }
 
 
-    /**
-     * @covers ByJG\Serializer\BaseModel::bindGeneralObject
-     */
     public function testBindFromObject()
     {
         $model = new ModelGetter(10, 'Testing');
@@ -42,9 +39,6 @@ class BaseModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Testing", $object->getName());
     }
 
-    /**
-     * @covers ByJG\Serializer\BaseModel::bindStdClass
-     */
     public function testBindFromStdClass()
     {
         // Matching exact property names
@@ -68,9 +62,6 @@ class BaseModelTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Testing", $object->getName());
     }
 
-    /**
-     * @covers ByJG\Serializer\BaseModel::bindArray
-     */
     public function testBindFromArray()
     {
         $array = array(

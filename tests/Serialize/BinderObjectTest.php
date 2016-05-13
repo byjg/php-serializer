@@ -28,9 +28,6 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    /**
-     * @covers ByJG\Serializer\BinderObject::bind
-     */
     public function testBind_Constructor()
     {
         $object1 = new SampleModel( ['Id' => 10, 'Name' => 'Joao']);
@@ -38,9 +35,6 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Joao', $object1->getName());
     }
 
-    /**
-     * @covers ByJG\Serializer\BinderObject::bind
-     */
     public function testBind_Array()
     {
         $object1 = new SampleModel();
@@ -49,9 +43,6 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Joao', $object1->getName());
     }
 
-    /**
-     * @covers ByJG\Serializer\BinderObject::bind
-     */
     public function testBind_StdClass()
     {
         $stdClass = new \stdClass();
@@ -64,9 +55,6 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Joao', $object1->getName());
     }
 
-    /**
-     * @covers ByJG\Serializer\BinderObject::bindTo
-     */
     public function testBindTo_Object()
     {
         $object1 = new SampleModel();
@@ -80,10 +68,6 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Joao', $object2->getName());
     }
 
-    /**
-     * @covers ByJG\Serializer\BinderObject::bindTo
-     * @todo   Implement testBindTo().
-     */
     public function testBindTo_stdClass()
     {
         $object1 = new SampleModel();
@@ -97,9 +81,6 @@ class BinderObjectTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Joao', $object2->Name);
     }
 
-    /**
-     * @covers ByJG\Serializer\BinderObject::toArray
-     */
     public function testToArray()
     {
         $object1 = new SampleModel();
