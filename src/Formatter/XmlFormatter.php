@@ -12,6 +12,10 @@ namespace ByJG\Serializer\Formatter;
 class XmlFormatter implements FormatterInterface
 {
 
+    /**
+     * @param array $serializable
+     * @return mixed
+     */
     public function process($serializable)
     {
         $xml = new \SimpleXMLElement("<?xml version=\"1.0\"?><root></root>");
@@ -20,7 +24,11 @@ class XmlFormatter implements FormatterInterface
         return $xml->asXML();
     }
 
-    protected function arrayToXml($array, &$xml)
+    /**
+     * @param array $array
+     * @param \SimpleXMLElement $xml
+     */
+    protected function arrayToXml($array, \SimpleXMLElement &$xml)
     {
         foreach ($array as $key => $value) {
             if (is_array($value)) {

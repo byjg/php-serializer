@@ -19,73 +19,10 @@ class SerializerObject
     }
 
     /**
-     * @param $key
+     * Build the array based on the object properties
+     *
      * @return array
      */
-    public function getMethodPattern($key)
-    {
-        return $this->_methodPattern[$key];
-    }
-
-    /**
-     * @param $search
-     * @param $replace
-     * @internal param array $methodPattern
-     */
-    public function setMethodPattern($search, $replace)
-    {
-        $this->_methodPattern = [$search, $replace];
-    }
-
-    /**
-     * @return string
-     */
-    public function getMethodGetPrefix()
-    {
-        return $this->_methodGetPrefix;
-    }
-
-    /**
-     * @param string $methodGetPrefix
-     */
-    public function setMethodGetPrefix($methodGetPrefix)
-    {
-        $this->_methodGetPrefix = $methodGetPrefix;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getStopFirstLevel()
-    {
-        return $this->_stopFirstLevel;
-    }
-
-    /**
-     * @param bool $stopAtFirstLevel
-     */
-    public function setStopFirstLevel($stopAtFirstLevel)
-    {
-        $this->_stopFirstLevel = $stopAtFirstLevel;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function isOnlyString()
-    {
-        return $this->_onlyString;
-    }
-
-    /**
-     * @param boolean $onlyString
-     */
-    public function setOnlyString($onlyString)
-    {
-        $this->_onlyString = $onlyString;
-    }
-
-
     public function build()
     {
         $this->_currentLevel = 1;
@@ -116,6 +53,22 @@ class SerializerObject
             $property = "$property";
         }
         return $property;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getStopFirstLevel()
+    {
+        return $this->_stopFirstLevel;
+    }
+
+    /**
+     * @param bool $stopAtFirstLevel
+     */
+    public function setStopFirstLevel($stopAtFirstLevel)
+    {
+        $this->_stopFirstLevel = $stopAtFirstLevel;
     }
 
     /**
@@ -165,5 +118,55 @@ class SerializerObject
 
         return $result;
     }
-    
+
+    /**
+     * @param $key
+     * @return array
+     */
+    public function getMethodPattern($key)
+    {
+        return $this->_methodPattern[$key];
+    }
+
+    /**
+     * @param $search
+     * @param $replace
+     */
+    public function setMethodPattern($search, $replace)
+    {
+        $this->_methodPattern = [$search, $replace];
+    }
+
+    /**
+     * @return string
+     */
+    public function getMethodGetPrefix()
+    {
+        return $this->_methodGetPrefix;
+    }
+
+    /**
+     * @param string $methodGetPrefix
+     */
+    public function setMethodGetPrefix($methodGetPrefix)
+    {
+        $this->_methodGetPrefix = $methodGetPrefix;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isOnlyString()
+    {
+        return $this->_onlyString;
+    }
+
+    /**
+     * @param boolean $onlyString
+     */
+    public function setOnlyString($onlyString)
+    {
+        $this->_onlyString = $onlyString;
+    }
+
 }
