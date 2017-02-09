@@ -3,6 +3,7 @@
 namespace ByJG\Serializer;
 
 use ByJG\Serializer\Formatter\JsonFormatter;
+use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
 use stdClass;
 use Tests\Sample\ModelGetter;
@@ -53,6 +54,16 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
 
         $this->assertEquals(
+            "10\nJoao\n",
+            (new PlainTextFormatter())->process($result)
+        );
+
+        $this->assertEquals(
+            "<div>10</div><div>Joao</div>",
+            (new PlainTextFormatter("</div>", "<div>"))->process($result)
+        );
+
+        $this->assertEquals(
             "<?xml version=\"1.0\"?>\n<root><Id>10</Id><Name>Joao</Name></root>\n",
             (new XmlFormatter())->process($result)
         );
@@ -80,6 +91,16 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             '[{"Id":10,"Name":"Joao"},{"Id":20,"Name":"JG"}]',
             (new JsonFormatter())->process($result)
+        );
+
+        $this->assertEquals(
+            "10\nJoao\n\n20\nJG\n\n",
+            (new PlainTextFormatter())->process($result)
+        );
+
+        $this->assertEquals(
+            "<div><div>10</div><div>Joao</div></div><div><div>20</div><div>JG</div></div>",
+            (new PlainTextFormatter("</div>", "<div>"))->process($result)
         );
 
         $this->assertEquals(
