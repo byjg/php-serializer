@@ -12,6 +12,7 @@ class SerializerObject
     protected $_stopFirstLevel = false;
     protected $_onlyString = false;
     protected $_currentLevel = 0;
+    protected $_doNotParse = [];
 
     public function __construct($model)
     {
@@ -98,6 +99,14 @@ class SerializerObject
 
     public function buildObject($object)
     {
+        // Check if this object can serialized
+        foreach ((array)$this->_doNotParse as $class) {
+            if (is_a($object, $class)) {
+                return $object;
+            }
+        }
+        
+        // Start Serialize object
         $result = [];
         $this->_currentLevel++;
 
@@ -167,6 +176,22 @@ class SerializerObject
     public function setOnlyString($onlyString)
     {
         $this->_onlyString = $onlyString;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDoNotParse()
+    {
+        return $this->_doNotParse;
+    }
+
+    /**
+     * @param array $doNotParse
+     */
+    public function setDoNotParse(array $doNotParse)
+    {
+        $this->_doNotParse = $doNotParse;
     }
 
 }

@@ -618,4 +618,82 @@ class SerializerObjectTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testDoNotParseClass()
+    {
+        $model = new stdClass();
+        $model->Id = 10;
+        $model->Name = 'Joao';
+        $model->Object1 = new ModelGetter(20, 'JG');
+        $model->Object2 = new ModelPublic(10, 'JG2');
+
+        $object = new SerializerObject($model);
+        $object->setDoNotParse([
+            ModelPublic::class
+        ]);
+        $result = $object->build();
+
+        $this->assertEquals(
+            [
+                "Id" => 10,
+                "Name" => 'Joao',
+                'Object1' => ['Id' => 20, 'Name' => 'JG'],
+                'Object2' => new ModelPublic(10, 'JG2')
+            ],
+            $result
+        );
+
+        $object2 = new SerializerObject($model);
+        $object2->setDoNotParse([
+            ModelPublic::class,
+            ModelGetter::class
+        ]);
+        $result = $object2->build();
+
+        $this->assertEquals(
+            [
+                "Id" => 10,
+                "Name" => 'Joao',
+                'Object1' => new ModelGetter(20, 'JG'),
+                'Object2' => new ModelPublic(10, 'JG2')
+            ],
+            $result
+        );
+    }
+
+    public function testDoNotParseClass_2()
+    {
+        $model = new stdClass();
+        $model->Obj = [
+            10,
+            'Joao',
+            ["Other" => new ModelGetter(20, 'JG')]
+        ];
+        $model->Obj2 = [
+            20,
+            'Gilberto',
+            new ModelPublic(10, 'JG2')
+        ];
+
+        $object = new SerializerObject($model);
+        $object->setDoNotParse([
+            ModelGetter::class
+        ]);
+        $result = $object->build();
+
+        $this->assertEquals(
+            [
+                "Obj" => [
+                    10,
+                    'Joao',
+                    ["Other" => new ModelGetter(20, 'JG')]
+                ],
+                "Obj2" => [
+                    20,
+                    'Gilberto',
+                    ['Id' => '10', 'Name' => 'JG2']
+                ]
+            ],
+            $result
+        );
+    }
 }

@@ -53,11 +53,12 @@ class BinderObject implements DumpToArrayInterface
      * @param bool $firstLevel
      * @return array
      */
-    public static function toArrayFrom($source, $firstLevel = false)
+    public static function toArrayFrom($source, $firstLevel = false, $excludeClasses = [])
     {
         // Prepare the source object type
         $object = new SerializerObject($source);
         $object->setStopFirstLevel($firstLevel);
+        $object->setDoNotParse($excludeClasses);
         return $object->build();
     }
 
