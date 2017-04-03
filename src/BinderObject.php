@@ -39,6 +39,10 @@ class BinderObject implements DumpToArrayInterface
      */
     protected function bindObjectInternal($source, $target)
     {
+        if (is_array($target) || !is_object($target)) {
+            throw new \InvalidArgumentException('Target object must have to be an object instance');
+        }
+
         $sourceArray = self::toArrayFrom($source, true);
 
         foreach ($sourceArray as $propName => $value) {
