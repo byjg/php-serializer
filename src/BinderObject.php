@@ -14,21 +14,23 @@ class BinderObject implements DumpToArrayInterface
      *
      * @param mixed $source
      * @param mixed $target
+     * @param string $propertyPattern Regular Expression -> /searchPattern/replace/
      */
-    public static function bindObject($source, $target)
+    public static function bindObject($source, $target, $propertyPattern = null)
     {
         $binderObject = new BinderObject();
-        $binderObject->bindObjectInternal($source, $target);
+        $binderObject->bindObjectInternal($source, $target, $propertyPattern);
     }
 
     /**
      * Bind the properties from an object to the properties matching to the current instance
      *
      * @param mixed $source
+     * @param null|string $propertyPattern Regular Expression -> /searchPattern/replace/
      */
-    public function bind($source)
+    public function bind($source, $propertyPattern = null)
     {
-        $this->bindObjectInternal($source, $this);
+        $this->bindObjectInternal($source, $this, $propertyPattern);
     }
 
     /**
@@ -36,8 +38,9 @@ class BinderObject implements DumpToArrayInterface
      *
      * @param mixed $source
      * @param mixed $target
+     * @param string $propertyPattern Regular Expression -> /searchPattern/replace/
      */
-    protected function bindObjectInternal($source, $target)
+    protected function bindObjectInternal($source, $target, $propertyPattern = null)
     {
         if (is_array($target) || !is_object($target)) {
             throw new \InvalidArgumentException('Target object must have to be an object instance');
@@ -46,6 +49,14 @@ class BinderObject implements DumpToArrayInterface
         $sourceArray = self::toArrayFrom($source, true);
 
         foreach ($sourceArray as $propName => $value) {
+            if (!is_null($propertyPattern)) {
+                $propAr = explode($propertyPattern[0], $propertyPattern);
+                $propName = preg_replace(
+                    $propertyPattern[0] . $propAr[1] . $propertyPattern[0],
+                    $propAr[2],
+                    $propName
+                );
+            }
             $this->setPropValue($target, $propName, $value);
         }
     }
@@ -102,10 +113,11 @@ class BinderObject implements DumpToArrayInterface
      * Bind the properties from the current instance to the properties matching to an object
      *
      * @param mixed $target
+     * @param null|string $propertyPattern Regular Expression -> /searchPattern/replace/
      */
-    public function bindTo($target)
+    public function bindTo($target, $propertyPattern = null)
     {
-        $this->bindObjectInternal($this, $target);
+        $this->bindObjectInternal($this, $target, $propertyPattern);
     }
 
     /**
@@ -117,6 +129,4 @@ class BinderObject implements DumpToArrayInterface
     {
         return self::toArrayFrom($this);
     }
-
-
 }

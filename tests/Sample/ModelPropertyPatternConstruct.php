@@ -4,9 +4,6 @@ namespace Tests\Sample;
 
 use ByJG\Serializer\BaseModel;
 
-/**
- * @Xmlnuke:NodeName ModelPropertyPatternConstruct
- */
 class ModelPropertyPatternConstruct extends BaseModel
 {
 

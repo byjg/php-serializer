@@ -4,9 +4,6 @@ namespace Tests\Sample;
 
 use Exception;
 
-/**
- * @Xmlnuke:NodeName ModelList
- */
 class ModelList2
 {
 

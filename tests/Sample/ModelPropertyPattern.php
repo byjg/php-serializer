@@ -4,9 +4,6 @@ namespace Tests\Sample;
 
 use ByJG\Serializer\BaseModel;
 
-/**
- * @Xmlnuke:NodeName ModelPropertyPattern
- */
 class ModelPropertyPattern extends BaseModel
 {
 
@@ -14,9 +11,9 @@ class ModelPropertyPattern extends BaseModel
     protected $_Client_Name = "";
     protected $_birth_date = "";
 
-    function __construct($object = null)
+    function __construct($object = null, $propertyPattern = null)
     {
-        parent::__construct($object);
+        parent::__construct($object, $propertyPattern);
     }
 
     public function getIdModel()
@@ -48,6 +45,4 @@ class ModelPropertyPattern extends BaseModel
     {
         $this->_birth_date = $birth_date;
     }
-
-
 }
