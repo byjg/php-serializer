@@ -6,6 +6,7 @@ use ByJG\Serializer\Formatter\JsonFormatter;
 use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
 use stdClass;
+use Tests\Sample\ModelForceProperty;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\ModelList;
 use Tests\Sample\ModelList2;
@@ -577,7 +578,7 @@ class SerializerObjectTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(
             [
-                'collection' => []
+                'collection' => null
             ],
             $result
         );
@@ -694,6 +695,21 @@ class SerializerObjectTest extends \PHPUnit\Framework\TestCase
                     'Gilberto',
                     ['Id' => '10', 'Name' => 'JG2']
                 ]
+            ],
+            $result
+        );
+    }
+
+    public function testModelWithFakeProperty()
+    {
+        $model = new ModelForceProperty();
+
+        $object = new SerializerObject($model);
+        $result = $object->build();
+
+        $this->assertEquals(
+            [
+                "fakeProp" => 20
             ],
             $result
         );

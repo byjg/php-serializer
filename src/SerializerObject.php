@@ -118,6 +118,7 @@ class SerializerObject
                 $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
 
                 if (method_exists($object, $this->getMethodGetPrefix() . $propertyName)) {
+                    $value = $object->{$this->getMethodGetPrefix() . $propertyName}();
                     $result[$propertyName] = $this->buildProperty($value);
                 }
             } else {

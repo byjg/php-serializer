@@ -7,7 +7,7 @@ use Exception;
 class ModelList
 {
 
-    protected $_collection = array();
+    protected $_collection = [];
 
     /**
      * Add VistoriaAuditor to a List
