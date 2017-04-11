@@ -124,5 +124,40 @@ class BinderObjectTest extends \PHPUnit\Framework\TestCase
         BinderObject::bindObject($object1, $array);
     }
 
+    public function testToArrayFrom()
+    {
+        $object1 = new SampleModel();
+        $object1->Id = 10;
+        $object1->setName('Joao');
+
+        $result = BinderObject::toArrayFrom($object1);
+
+        $this->assertEquals(
+            [
+                'Id' => 10,
+                'Name' => 'Joao'
+            ],
+            $result
+        );
+    }
+
+    // public function testToArrayFrom2()
+    // {
+    //     $object1 = new ModelPropertyPattern();
+    //     $object1->setBirth_date('1974-01-26');
+    //     $object1->setClientName('Joao');
+    //     $object1->setIdModel(1);
+    //
+    //     $result = BinderObject::toArrayFrom($object1);
+    //
+    //     $this->assertEquals(
+    //         [
+    //             'Id_Model' => 1,
+    //             'Client_Name' => "Joao",
+    //             'birth_date' => "1974-01-26"
+    //         ],
+    //         $result
+    //     );
+    // }
 
 }

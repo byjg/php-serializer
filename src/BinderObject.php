@@ -66,14 +66,20 @@ class BinderObject implements DumpToArrayInterface
      *
      * @param mixed $source
      * @param bool $firstLevel
+     * @param array $excludeClasses
+     * @param mixed|null $propertyPattern
      * @return array
      */
-    public static function toArrayFrom($source, $firstLevel = false, $excludeClasses = [])
+    public static function toArrayFrom($source, $firstLevel = false, $excludeClasses = [], $propertyPattern = null)
     {
         // Prepare the source object type
         $object = new SerializerObject($source);
         $object->setStopFirstLevel($firstLevel);
         $object->setDoNotParse($excludeClasses);
+        if (!is_null($propertyPattern)) {
+            $parts = explode($propertyPattern[0], $propertyPattern);
+            $object->setMethodPattern($parts[1], $parts[2]);
+        }
         return $object->build();
     }
 
