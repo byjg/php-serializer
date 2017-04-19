@@ -4,13 +4,10 @@ namespace Tests\Sample;
 
 use Exception;
 
-/**
- * @Xmlnuke:NodeName ModelList
- */
 class ModelList
 {
 
-    protected $_collection = array();
+    protected $_collection = [];
 
     /**
      * Add VistoriaAuditor to a List

@@ -4,9 +4,6 @@ namespace Tests\Sample;
 
 use ByJG\Serializer\BaseModel;
 
-/**
- * @Xmlnuke:NodeName ModelGetter
- */
 class ModelGetter extends BaseModel
 {
 
