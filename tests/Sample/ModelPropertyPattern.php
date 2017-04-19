@@ -9,7 +9,7 @@ class ModelPropertyPattern extends BaseModel
 
     protected $_Id_Model = "";
     protected $_Client_Name = "";
-    protected $_birth_date = "";
+    protected $birthdate = "";
 
     function __construct($object = null, $propertyPattern = null)
     {
@@ -36,13 +36,13 @@ class ModelPropertyPattern extends BaseModel
         $this->_Client_Name = $Name;
     }
 
-    public function getBirth_date()
+    public function getBirthdate()
     {
-        return $this->_birth_date;
+        return $this->birthdate;
     }
 
-    public function setBirth_date($birth_date)
+    public function setBirthdate($birth_date)
     {
-        $this->_birth_date = $birth_date;
+        $this->birthdate = $birth_date;
     }
 }

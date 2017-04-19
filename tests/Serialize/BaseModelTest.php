@@ -125,13 +125,15 @@ class BaseModelTest extends \PHPUnit\Framework\TestCase
    {
        // Other Testing
        $obj = [
-           "birth_date" => "1974-01-26"
+           "clientname" => "Joao",
+           "birthdate" => "1974-01-26"
        ];
 
        $object = new \Tests\Sample\ModelPropertyPattern();
        $object->bind($obj);
 
-       $this->assertEquals("1974-01-26", $object->getBirth_date());
+       $this->assertEquals("1974-01-26", $object->getBirthdate());
+       $this->assertEquals("Joao", $object->getClientName());
    }
 
    /**

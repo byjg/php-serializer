@@ -67,8 +67,9 @@ class BinderObject implements DumpToArrayInterface
      * @param mixed $source
      * @param bool $firstLevel
      * @param array $excludeClasses
-     * @param mixed|null $propertyPattern
+     * @param array|null $propertyPattern
      * @return array
+     * @throws \Exception
      */
     public static function toArrayFrom($source, $firstLevel = false, $excludeClasses = [], $propertyPattern = null)
     {
@@ -77,8 +78,10 @@ class BinderObject implements DumpToArrayInterface
         $object->setStopFirstLevel($firstLevel);
         $object->setDoNotParse($excludeClasses);
         if (!is_null($propertyPattern)) {
-            $parts = explode($propertyPattern[0], $propertyPattern);
-            $object->setMethodPattern($parts[1], $parts[2]);
+            if (!is_array($propertyPattern)) {
+                throw new \Exception('Property pattern must be an array with 2 regex elements (Search and Replace)');
+            }
+            $object->setMethodPattern($propertyPattern[0], $propertyPattern[1]);
         }
         return $object->build();
     }

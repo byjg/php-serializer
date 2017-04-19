@@ -2,6 +2,7 @@
 
 namespace ByJG\Serializer;
 
+use Tests\Sample\ModelPropertyPattern;
 use Tests\Sample\ModelPublic;
 use Tests\Sample\SampleModel;
 
@@ -141,23 +142,22 @@ class BinderObjectTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    // public function testToArrayFrom2()
-    // {
-    //     $object1 = new ModelPropertyPattern();
-    //     $object1->setBirth_date('1974-01-26');
-    //     $object1->setClientName('Joao');
-    //     $object1->setIdModel(1);
-    //
-    //     $result = BinderObject::toArrayFrom($object1);
-    //
-    //     $this->assertEquals(
-    //         [
-    //             'Id_Model' => 1,
-    //             'Client_Name' => "Joao",
-    //             'birth_date' => "1974-01-26"
-    //         ],
-    //         $result
-    //     );
-    // }
+    public function testToArrayFrom2()
+    {
+        $object1 = new ModelPropertyPattern();
+        $object1->setBirthdate('1974-01-26');
+        $object1->setClientName('Joao');
+        $object1->setIdModel(1);
 
+        $result = BinderObject::toArrayFrom($object1);
+
+        $this->assertEquals(
+            [
+                'IdModel' => 1,
+                'ClientName' => "Joao",
+                'birthdate' => "1974-01-26"
+            ],
+            $result
+        );
+    }
 }
