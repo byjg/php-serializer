@@ -526,8 +526,7 @@ class SerializerObjectTest extends \PHPUnit\Framework\TestCase
             $result
         );
 
-        $object->setOnlyString(true);
-        $result = $object->build();
+        $object->setOnlyString(true)->build();
 
         $this->assertEquals(
             [
@@ -541,30 +540,67 @@ class SerializerObjectTest extends \PHPUnit\Framework\TestCase
             $result
         );
 
+        $result = $object->setOnlyString(false)->setBuildNull(false)->build();
+
+        $this->assertEquals(
+            [
+                'varFalse' => false,
+                'varTrue' => true,
+                'varZero' => 0,
+                'varZeroStr' => '0',
+                'varEmptyString' => ''
+            ],
+            $result
+        );
+
     }
 
     public function testEmptyValues_2()
     {
-        $model = new ModelPublic(null, null);
+        $model = new ModelPublic(null, 'Joao');
 
         $object = new SerializerObject($model);
         $result = $object->build();
 
         $this->assertEquals(
-            ['Id'=>null, 'Name'=>null],
+            ['Id'=>null, 'Name'=>'Joao'],
+            $result
+        );
+
+        $result = $object->setBuildNull(false)->build();
+
+        $this->assertEquals(
+            ['Name'=>'Joao'],
+            $result
+        );
+
+        $model = new ModelPublic(null, null);
+        $object = new SerializerObject($model);
+
+        $result = $object->setBuildNull(false)->build();
+
+        $this->assertEquals(
+            [],
             $result
         );
     }
 
     public function testEmptyValues_3()
     {
-        $model = new ModelGetter(null, null);
+        $model = new ModelGetter(null, 'Joao');
 
         $object = new SerializerObject($model);
         $result = $object->build();
 
         $this->assertEquals(
-            ['Id'=>null, 'Name'=>null],
+            ['Id'=>null, 'Name'=>'Joao'],
+            $result
+        );
+
+        $result = $object->setBuildNull(false)->build();
+
+        $this->assertEquals(
+            ['Name'=>'Joao'],
             $result
         );
     }
@@ -582,8 +618,56 @@ class SerializerObjectTest extends \PHPUnit\Framework\TestCase
             ],
             $result
         );
+
+        $result = $object->setBuildNull(false)->build();
+
+        $this->assertEquals(
+            [],
+            $result
+        );
     }
-    
+
+    public function testEmptyValues_5()
+    {
+        $model = new ModelList();
+        $model->addItem(new ModelGetter(null, 'Joao'));
+        $model->addItem(new ModelGetter(null, null));
+
+        $object = new SerializerObject($model);
+        $result = $object->build();
+
+        $this->assertEquals(
+            [
+                'collection' => [
+                    [
+                        'Id' => null,
+                        'Name' => 'Joao'
+                    ],
+                    [
+                        'Id' => null,
+                        'Name' => null
+                    ]
+                ]
+            ],
+            $result
+        );
+
+        $result = $object->setBuildNull(false)->build();
+
+        $this->assertEquals(
+            [
+                'collection' => [
+                    [
+                        'Name' => 'Joao'
+                    ],
+                    [
+                    ]
+                ]
+            ],
+            $result
+        );
+    }
+
     public function testFirstLevel()
     {
         $model = new stdClass();
