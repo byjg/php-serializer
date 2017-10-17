@@ -102,6 +102,10 @@ class SerializerObject
         return $this->buildArray((array)$stdClass);
     }
 
+    /**
+     * @param stdClass|object $object
+     * @return array|object
+     */
     public function buildObject($object)
     {
         // Check if this object can serialized
