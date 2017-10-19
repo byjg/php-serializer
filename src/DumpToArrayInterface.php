@@ -9,5 +9,5 @@ namespace ByJG\Serializer;
  */
 interface DumpToArrayInterface
 {
-    function toArray();
+    public function toArray();
 }

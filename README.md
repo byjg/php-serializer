@@ -11,6 +11,7 @@ Serialize any object into array and format it JSON or XML
 Just use the Serializer class with any kind of object, stdClass or array;
 
 ```php
+<?php
 $serializer = new \ByJG\Serializer\SerializerObject($data);
 $result = $object->build();
 ```
@@ -20,16 +21,73 @@ $result = $object->build();
 ## Formatting the Output with a formatter
 
 ```php
+<?php
 $serializer = new \ByJG\Serializer\SerializerObject($data);
-$result = $object->build();
+$result = $serializer->build();
 
 echo (new JsonFormatter())->process($result);
 echo (new XmlFormatter())->process($result);
 ```
 
+## Customizing the Serialization
+
+### Ignore null elements: `setBuildNull(false)`
+
+The SerializerObject brings all properties by default. For example:
+
+```php
+<?php
+$myclass->setName('Joao');
+$myclass->setAge(null);
+
+$serializer = new \ByJG\Serializer\SerializerObject($myclass);
+$result = $serializer->build();
+print_r($result);
+
+// Will return:
+// Array
+// (
+//     [name] => Joao
+//     [age] => 
+// )
+```
+
+But you can setup for ignore the null elements:
+
+```php
+<?php
+$serializer = new \ByJG\Serializer\SerializerObject($myclass);
+$result = $serializer->setBuildNull(false)->build();
+print_r($result);
+
+// And the result will be:
+// Array
+// (
+//     [name] => Joao
+// )
+
+```
+
+### Do not parse some classes: `setDoNotParse([object])`
+
+Sometimes we want to serialize the object but ignore some class types.
+
+Setting this option below the whole classes defined in the setDoNotParse will be ignored and not parsed:
+
+```php
+<?php
+$serializer = new \ByJG\Serializer\SerializerObject($myclass);
+$result = $serializer->setDoNotParse([
+    MyClass::class
+]);
+```
+
+
+
 ## Create a *bindable* object
 
 ```php
+<?php
 // Create the class
 class MyClass extends BinderObject
 {}

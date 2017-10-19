@@ -13,6 +13,7 @@ class SerializerObject
     protected $_onlyString = false;
     protected $_currentLevel = 0;
     protected $_doNotParse = [];
+    protected $_buildNull = true;
 
     public function __construct($model)
     {
@@ -83,6 +84,10 @@ class SerializerObject
 
         foreach ($array as $key => $value) {
             $result[$key] = $this->buildProperty($value);
+
+            if ($result[$key] === null && !$this->isBuildNull()) {
+                unset($result[$key]);
+            }
         }
 
         return $result;
@@ -97,6 +102,10 @@ class SerializerObject
         return $this->buildArray((array)$stdClass);
     }
 
+    /**
+     * @param stdClass|object $object
+     * @return array|object
+     */
     public function buildObject($object)
     {
         // Check if this object can serialized
@@ -105,24 +114,28 @@ class SerializerObject
                 return $object;
             }
         }
-        
+
         // Start Serialize object
         $result = [];
         $this->_currentLevel++;
 
         foreach ((array)$object as $key => $value) {
-
+            $propertyName = $key;
             if ($key[0] == "\0") {
                 // validate protected;
                 $keyName = substr($key, strrpos($key, "\0"));
                 $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
 
-                if (method_exists($object, $this->getMethodGetPrefix() . $propertyName)) {
-                    $value = $object->{$this->getMethodGetPrefix() . $propertyName}();
-                    $result[$propertyName] = $this->buildProperty($value);
+                if (!method_exists($object, $this->getMethodGetPrefix() . $propertyName)) {
+                    continue;
                 }
-            } else {
-                $result[$key] = $this->buildProperty($value);
+                $value = $object->{$this->getMethodGetPrefix() . $propertyName}();
+            }
+
+            $result[$propertyName] = $this->buildProperty($value);
+
+            if ($result[$propertyName] === null && !$this->isBuildNull()) {
+                unset($result[$propertyName]);
             }
         }
 
@@ -173,10 +186,12 @@ class SerializerObject
 
     /**
      * @param boolean $onlyString
+     * @return $this
      */
     public function setOnlyString($onlyString)
     {
         $this->_onlyString = $onlyString;
+        return $this;
     }
 
     /**
@@ -189,10 +204,30 @@ class SerializerObject
 
     /**
      * @param array $doNotParse
+     * @return $this
      */
     public function setDoNotParse(array $doNotParse)
     {
         $this->_doNotParse = $doNotParse;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBuildNull()
+    {
+        return $this->_buildNull;
+    }
+
+    /**
+     * @param bool $buildNull
+     * @return $this
+     */
+    public function setBuildNull($buildNull)
+    {
+        $this->_buildNull = $buildNull;
+        return $this;
     }
 
 }
