@@ -2,16 +2,12 @@
 
 namespace ByJG\Serializer;
 
+use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelPropertyPattern;
 use Tests\Sample\ModelPublic;
 use Tests\Sample\SampleModel;
 
-// backward compatibility
-if (!class_exists('\PHPUnit\Framework\TestCase')) {
-    class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
-}
-
-class BinderObjectTest extends \PHPUnit\Framework\TestCase
+class BinderObjectTest extends TestCase
 {
 
     /**

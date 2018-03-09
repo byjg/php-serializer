@@ -15,6 +15,7 @@ class BinderObject implements DumpToArrayInterface
      * @param mixed $source
      * @param mixed $target
      * @param string $propertyPattern Regular Expression -> /searchPattern/replace/
+     * @throws \Exception
      */
     public static function bindObject($source, $target, $propertyPattern = null)
     {
@@ -27,6 +28,7 @@ class BinderObject implements DumpToArrayInterface
      *
      * @param mixed $source
      * @param null|string $propertyPattern Regular Expression -> /searchPattern/replace/
+     * @throws \Exception
      */
     public function bind($source, $propertyPattern = null)
     {
@@ -39,6 +41,7 @@ class BinderObject implements DumpToArrayInterface
      * @param mixed $source
      * @param mixed $target
      * @param string $propertyPattern Regular Expression -> /searchPattern/replace/
+     * @throws \Exception
      */
     protected function bindObjectInternal($source, $target, $propertyPattern = null)
     {
@@ -123,6 +126,7 @@ class BinderObject implements DumpToArrayInterface
      *
      * @param mixed $target
      * @param null|string $propertyPattern Regular Expression -> /searchPattern/replace/
+     * @throws \Exception
      */
     public function bindTo($target, $propertyPattern = null)
     {
@@ -133,6 +137,7 @@ class BinderObject implements DumpToArrayInterface
      * Get all properties from the current instance as an associative array
      *
      * @return array The object properties as array
+     * @throws \Exception
      */
     public function toArray()
     {

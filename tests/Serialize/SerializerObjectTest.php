@@ -5,6 +5,7 @@ namespace ByJG\Serializer;
 use ByJG\Serializer\Formatter\JsonFormatter;
 use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
+use PHPUnit\Framework\TestCase;
 use stdClass;
 use Tests\Sample\ModelForceProperty;
 use Tests\Sample\ModelGetter;
@@ -13,12 +14,7 @@ use Tests\Sample\ModelList2;
 use Tests\Sample\ModelList3;
 use Tests\Sample\ModelPublic;
 
-// backward compatibility
-if (!class_exists('\PHPUnit\Framework\TestCase')) {
-    class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
-}
-
-class SerializerObjectTest extends \PHPUnit\Framework\TestCase
+class SerializerObjectTest extends TestCase
 {
 
     /**

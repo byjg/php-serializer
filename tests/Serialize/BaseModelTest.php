@@ -2,15 +2,11 @@
 
 namespace ByJG\Serializer;
 
+use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\SampleModel;
 
-// backward compatibility
-if (!class_exists('\PHPUnit\Framework\TestCase')) {
-    class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
-}
-
-class BaseModelTest extends \PHPUnit\Framework\TestCase
+class BaseModelTest extends TestCase
 {
 
     /**
