@@ -82,7 +82,9 @@ class BinderObject implements DumpToArrayInterface
         $object->setDoNotParse($excludeClasses);
         if (!is_null($propertyPattern)) {
             if (!is_array($propertyPattern)) {
-                throw new \Exception('Property pattern must be an array with 2 regex elements (Search and Replace)');
+                throw new \InvalidArgumentException(
+                    'Property pattern must be an array with 2 regex elements (Search and Replace)'
+                );
             }
             $object->setMethodPattern($propertyPattern[0], $propertyPattern[1]);
         }
