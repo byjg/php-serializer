@@ -108,7 +108,7 @@ class BinderObjectTest extends TestCase
     }
 
     /**
-     * @expectedException \InvalidArgumentException
+     * @expectedException \ByJG\Serializer\Exception\InvalidArgumentException
      */
     public function testBindToArray()
     {

@@ -2,6 +2,7 @@
 
 namespace ByJG\Serializer;
 
+use ByJG\Serializer\Exception\InvalidArgumentException;
 use stdClass;
 
 class BinderObject implements DumpToArrayInterface
@@ -15,7 +16,7 @@ class BinderObject implements DumpToArrayInterface
      * @param mixed $source
      * @param mixed $target
      * @param string $propertyPattern Regular Expression -> /searchPattern/replace/
-     * @throws \Exception
+     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
      */
     public static function bindObject($source, $target, $propertyPattern = null)
     {
@@ -28,7 +29,7 @@ class BinderObject implements DumpToArrayInterface
      *
      * @param mixed $source
      * @param null|string $propertyPattern Regular Expression -> /searchPattern/replace/
-     * @throws \Exception
+     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
      */
     public function bind($source, $propertyPattern = null)
     {
@@ -41,12 +42,12 @@ class BinderObject implements DumpToArrayInterface
      * @param mixed $source
      * @param mixed $target
      * @param string $propertyPattern Regular Expression -> /searchPattern/replace/
-     * @throws \Exception
+     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
      */
     protected function bindObjectInternal($source, $target, $propertyPattern = null)
     {
         if (is_array($target) || !is_object($target)) {
-            throw new \InvalidArgumentException('Target object must have to be an object instance');
+            throw new InvalidArgumentException('Target object must have to be an object instance');
         }
 
         $sourceArray = self::toArrayFrom($source, true);
@@ -72,7 +73,7 @@ class BinderObject implements DumpToArrayInterface
      * @param array $excludeClasses
      * @param array|null $propertyPattern
      * @return array
-     * @throws \Exception
+     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
      */
     public static function toArrayFrom($source, $firstLevel = false, $excludeClasses = [], $propertyPattern = null)
     {
@@ -82,7 +83,7 @@ class BinderObject implements DumpToArrayInterface
         $object->setDoNotParse($excludeClasses);
         if (!is_null($propertyPattern)) {
             if (!is_array($propertyPattern)) {
-                throw new \InvalidArgumentException(
+                throw new InvalidArgumentException(
                     'Property pattern must be an array with 2 regex elements (Search and Replace)'
                 );
             }
@@ -128,7 +129,7 @@ class BinderObject implements DumpToArrayInterface
      *
      * @param mixed $target
      * @param null|string $propertyPattern Regular Expression -> /searchPattern/replace/
-     * @throws \Exception
+     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
      */
     public function bindTo($target, $propertyPattern = null)
     {
@@ -139,7 +140,7 @@ class BinderObject implements DumpToArrayInterface
      * Get all properties from the current instance as an associative array
      *
      * @return array The object properties as array
-     * @throws \Exception
+     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
      */
     public function toArray()
     {

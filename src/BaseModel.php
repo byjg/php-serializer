@@ -11,7 +11,7 @@ abstract class BaseModel extends BinderObject
      *
      * @param Object $object
      * @param null $propertyPattern
-     * @throws \Exception
+     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
      */
     public function __construct($object = null, $propertyPattern = null)
     {
