@@ -9,7 +9,11 @@
     ],
     "autoload": {
         "psr-4": {
-            "ByJG\\Serializer\\": "src/",
+            "ByJG\\Serializer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "Tests\\": "tests"
         }
     },
@@ -20,7 +24,7 @@
         "ext-json": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": ">5.7"
+        "phpunit/phpunit": "5.7.*|7.4.*"
     },
     "suggest": {
         "ext-curl": "*"
