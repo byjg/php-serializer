@@ -11,4 +11,3 @@ install:
 
 script: 
   - vendor/bin/phpunit
-
