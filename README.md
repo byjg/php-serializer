@@ -6,7 +6,7 @@
 
 Serialize any object into array and format it JSON or XML
 
-# Basic Usage
+## Basic Usage
 
 Just use the Serializer class with any kind of object, stdClass or array;
 
@@ -18,7 +18,7 @@ $result = $object->build();
 
 `$result` is an array. You can use a Formatter to transform it in JSON or XML.
 
-# Formatting the Output with a formatter
+## Formatting the Output with a formatter
 
 ```php
 <?php
@@ -29,9 +29,9 @@ echo (new JsonFormatter())->process($result);
 echo (new XmlFormatter())->process($result);
 ```
 
-# Customizing the Serialization
+## Customizing the Serialization
 
-## Ignore null elements: `setBuildNull(false)`
+### Ignore null elements: `setBuildNull(false)`
 
 The SerializerObject brings all properties by default. For example:
 
@@ -68,7 +68,7 @@ print_r($result);
 
 ```
 
-## Do not parse some classes: `setDoNotParse([object])`
+### Do not parse some classes: `setDoNotParse([object])`
 
 Sometimes we want to serialize the object but ignore some class types.
 
@@ -84,7 +84,9 @@ $result = $serializer->setDoNotParse([
 
 
 
-# Create a *bindable* object
+## Create a *bindable* object
+
+Add to the object the method `bind` that allows set contents from another object
 
 ```php
 <?php
@@ -99,7 +101,7 @@ $myclass->bind($data);
 $myclass->toArray();
 ```
 
-or
+## Copy contents from any object to another
 
 ```php
 // Set all properties from $source that matches with the property in $target
@@ -109,13 +111,13 @@ BinderObject::bindObject($source, $target);
 BinderObject::toArrayFrom($source);
 ```
 
-# Install
+## Install
 
 ```
 composer require "byjg/serialize=1.0.*"
 ```
 
-# Test
+## Test
 
 ```
 phpunit
