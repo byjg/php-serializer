@@ -1,8 +1,8 @@
 # Serializer
+[![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/byjg/serializer/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/byjg/serializer/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/byjg/serializer/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/byjg/serializer/?branch=master)
-[![SensioLabsInsight](https://insight.sensiolabs.com/projects/6375df04-b1f8-4f5f-94f8-a375f630250a/mini.png)](https://insight.sensiolabs.com/projects/6375df04-b1f8-4f5f-94f8-a375f630250a)
-[![Build Status](https://travis-ci.org/byjg/serializer.svg?branch=master)](https://travis-ci.org/byjg/serializer)
+[![Build Status](https://github.com/byjg/serializer/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/serializer/actions/workflows/phpunit.yml)
 
 Serialize any object into array and format it JSON or XML
 
@@ -121,3 +121,5 @@ composer require "byjg/serialize=1.0.*"
 phpunit
 ```
 
+----
+[Open source ByJG](http://opensource.byjg.com)

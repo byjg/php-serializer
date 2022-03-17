@@ -2,6 +2,7 @@
 
 namespace ByJG\Serializer;
 
+use ByJG\Serializer\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelPropertyPattern;
 use Tests\Sample\ModelPublic;
@@ -107,11 +108,9 @@ class BinderObjectTest extends TestCase
         $this->assertEquals($model, $object->getName());
     }
 
-    /**
-     * @expectedException \ByJG\Serializer\Exception\InvalidArgumentException
-     */
     public function testBindToArray()
     {
+        $this->expectException(InvalidArgumentException::class);
         $object1 = new SampleModel();
         $object1->Id = 10;
         $object1->setName('Joao');
