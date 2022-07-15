@@ -232,7 +232,7 @@ class SerializerObject
      * @param bool $buildNull
      * @return $this
      */
-    public function withDontSerializeNull()
+    public function withDoNotSerializeNull()
     {
         $this->_serializeNull = false;
         return $this;

@@ -13,7 +13,7 @@ Just use the Serializer class with any kind of object, stdClass or array;
 ```php
 <?php
 $serializer = new \ByJG\Serializer\SerializerObject($data);
-$result = $object->build();
+$result = $object->serialize();
 ```
 
 `$result` is an array. You can use a Formatter to transform it in JSON or XML.
@@ -23,7 +23,7 @@ $result = $object->build();
 ```php
 <?php
 $serializer = new \ByJG\Serializer\SerializerObject($data);
-$result = $serializer->build();
+$result = $serializer->serialize();
 
 echo (new JsonFormatter())->process($result);
 echo (new XmlFormatter())->process($result);
@@ -56,8 +56,9 @@ But you can setup for ignore the null elements:
 
 ```php
 <?php
-$serializer = new \ByJG\Serializer\SerializerObject($myclass);
-$result = $serializer->setBuildNull(false)->build();
+$result = \ByJG\Serializer\SerializerObject::instance($myclass)
+            ->withDoNotSerializeNull()
+            ->serialize();
 print_r($result);
 
 // And the result will be:
@@ -76,10 +77,11 @@ Setting this option below the whole classes defined in the setDoNotParse will be
 
 ```php
 <?php
-$serializer = new \ByJG\Serializer\SerializerObject($myclass);
-$result = $serializer->setDoNotParse([
-    MyClass::class
-]);
+$result = \ByJG\Serializer\SerializerObject::instance($myclass)
+            ->withDoNotParse([
+                MyClass::class
+            ])
+            ->serialize();
 ```
 
 
@@ -91,30 +93,30 @@ Add to the object the method `bind` that allows set contents from another object
 ```php
 <?php
 // Create the class
-class MyClass extends BinderObject
+class MyClass extends BindableObject
 {}
 
 // Bind any data into the properties of myclass
-$myclass->bind($data);
+$myclass->bindFrom($data);
 
 // You can convert to array all properties
-$myclass->toArray();
+$myclass->bindTo($otherobject);
 ```
 
 ## Copy contents from any object to another
 
 ```php
 // Set all properties from $source that matches with the property in $target
-BinderObject::bindObject($source, $target);
+BinderObject::bind($source, $target);
 
 // Convert all properties of any object into array
-BinderObject::toArrayFrom($source);
+SerializerObject::serialize($source);
 ```
 
 ## Install
 
 ```
-composer require "byjg/serialize=1.0.*"
+composer require "byjg/serialize=2.0.*"
 ```
 
 ## Test

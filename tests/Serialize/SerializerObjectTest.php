@@ -528,7 +528,7 @@ class SerializerObjectTest extends TestCase
             $result
         );
 
-        $result = $object->withOnlyString(false)->withDontSerializeNull()->serialize();
+        $result = $object->withOnlyString(false)->withDoNotSerializeNull()->serialize();
 
         $this->assertEquals(
             [
@@ -555,7 +555,7 @@ class SerializerObjectTest extends TestCase
             $result
         );
 
-        $result = $object->withDontSerializeNull()->serialize();
+        $result = $object->withDoNotSerializeNull()->serialize();
 
         $this->assertEquals(
             ['Name'=>'Joao'],
@@ -565,7 +565,7 @@ class SerializerObjectTest extends TestCase
         $model = new ModelPublic(null, null);
         $object = new SerializerObject($model);
 
-        $result = $object->withDontSerializeNull()->serialize();
+        $result = $object->withDoNotSerializeNull()->serialize();
 
         $this->assertEquals(
             [],
@@ -585,7 +585,7 @@ class SerializerObjectTest extends TestCase
             $result
         );
 
-        $result = $object->withDontSerializeNull()->serialize();
+        $result = $object->withDoNotSerializeNull()->serialize();
 
         $this->assertEquals(
             ['Name'=>'Joao'],
@@ -607,7 +607,7 @@ class SerializerObjectTest extends TestCase
             $result
         );
 
-        $result = $object->withDontSerializeNull()->serialize();
+        $result = $object->withDoNotSerializeNull()->serialize();
 
         $this->assertEquals(
             [],
@@ -640,7 +640,7 @@ class SerializerObjectTest extends TestCase
             $result
         );
 
-        $result = $object->withDontSerializeNull()->serialize();
+        $result = $object->withDoNotSerializeNull()->serialize();
 
         $this->assertEquals(
             [
