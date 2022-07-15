@@ -62,14 +62,14 @@ class BaseModelTest extends TestCase
 
        // Testing Without Property Bind
        $object = new \Tests\Sample\ModelPropertyPattern();
-       $object->bind($obj);
+       $object->bindFrom($obj);
 
        $this->assertEquals('', $object->getIdModel());
        $this->assertEquals('', $object->getClientName());
 
        // Testing with Bind
        $object = new \Tests\Sample\ModelPropertyPattern();
-       $object->bind($obj, '/_//');
+       $object->bindFrom($obj, '/_//');
 
        $this->assertEquals(10, $object->getIdModel());
        $this->assertEquals("Testing", $object->getClientName());
@@ -106,7 +106,7 @@ class BaseModelTest extends TestCase
        ];
 
        $object = new \Tests\Sample\ModelPropertyPattern();
-       $object->bind($obj);
+       $object->bindFrom($obj);
 
        $this->assertEquals("1974-01-26", $object->getBirthdate());
        $this->assertEquals("Joao", $object->getClientName());
@@ -124,7 +124,7 @@ class BaseModelTest extends TestCase
        ];
 
        $object = new \Tests\Sample\ModelPropertyPatternConstruct();
-       $object->bind($obj);
+       $object->bindFrom($obj);
 
        $this->assertEquals("1974-01-26", $object->getBirth_date());
    }

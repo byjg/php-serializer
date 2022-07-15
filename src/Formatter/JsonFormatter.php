@@ -7,17 +7,23 @@
  */
 
 namespace ByJG\Serializer\Formatter;
+use Serializable;
+use ByJG\Serializer\SerializerObject;
 
 
 class JsonFormatter implements FormatterInterface
 {
 
     /**
-     * @param array $serializable
+     * @param array|object $serializable
      * @return string
      */
     public function process($serializable)
     {
-        return json_encode($serializable);
+        if (is_array($serializable)) {
+            return json_encode($serializable);
+        }
+
+        return json_encode(SerializerObject::instance($serializable)->serialize());
     }
 }

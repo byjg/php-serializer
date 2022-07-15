@@ -9,15 +9,20 @@ class SerializerObject
     protected $_model = null;
     protected $_methodPattern = ['/([^A-Za-z0-9])/', ''];
     protected $_methodGetPrefix = 'get';
-    protected $_stopFirstLevel = false;
+    protected $_stopAtFirstLevel = false;
     protected $_onlyString = false;
     protected $_currentLevel = 0;
     protected $_doNotParse = [];
-    protected $_buildNull = true;
+    protected $_serializeNull = true;
 
     public function __construct($model)
     {
         $this->_model = $model;
+    }
+
+    public static function instance($model)
+    {
+        return new SerializerObject($model);
     }
 
     /**
@@ -25,30 +30,30 @@ class SerializerObject
      *
      * @return array
      */
-    public function build()
+    public function serialize()
     {
         $this->_currentLevel = 1;
-        return $this->buildProperty($this->_model);
+        return $this->serializeProperties($this->_model);
     }
 
-    public function buildProperty($property)
+    protected function serializeProperties($property)
     {
         // If Stop at First Level is active and the current level is greater than 1 return the
         // original object instead convert it to array;
-        if ($this->getStopFirstLevel() && $this->_currentLevel > 1) {
+        if ($this->isStoppingAtFirstLevel() && $this->_currentLevel > 1) {
             return $property;
         }
 
         if (is_array($property)) {
-            return $this->buildArray($property);
+            return $this->serializeArray($property);
         }
 
         if ($property instanceof \stdClass) {
-            return $this->buildStdClass($property);
+            return $this->serializeStdClass($property);
         }
 
         if (is_object($property)) {
-            return $this->buildObject($property);
+            return $this->serializeObject($property);
         }
 
         if ($this->isOnlyString()) {
@@ -60,32 +65,33 @@ class SerializerObject
     /**
      * @return bool
      */
-    public function getStopFirstLevel()
+    public function isStoppingAtFirstLevel()
     {
-        return $this->_stopFirstLevel;
+        return $this->_stopAtFirstLevel;
     }
 
     /**
      * @param bool $stopAtFirstLevel
      */
-    public function setStopFirstLevel($stopAtFirstLevel)
+    public function withStopAtFirstLevel()
     {
-        $this->_stopFirstLevel = $stopAtFirstLevel;
+        $this->_stopAtFirstLevel = true;
+        return $this;
     }
 
     /**
      * @param array $array
      * @return array
      */
-    public function buildArray(array $array)
+    protected function serializeArray(array $array)
     {
         $result = [];
         $this->_currentLevel++;
 
         foreach ($array as $key => $value) {
-            $result[$key] = $this->buildProperty($value);
+            $result[$key] = $this->serializeProperties($value);
 
-            if ($result[$key] === null && !$this->isBuildNull()) {
+            if ($result[$key] === null && !$this->isSerializingNull()) {
                 unset($result[$key]);
             }
         }
@@ -97,16 +103,16 @@ class SerializerObject
      * @param stdClass $stdClass
      * @return array
      */
-    public function buildStdClass(\stdClass $stdClass)
+    protected function serializeStdClass(\stdClass $stdClass)
     {
-        return $this->buildArray((array)$stdClass);
+        return $this->serializeArray((array)$stdClass);
     }
 
     /**
      * @param stdClass|object $object
      * @return array|object
      */
-    public function buildObject($object)
+    protected function serializeObject($object)
     {
         // Check if this object can serialized
         foreach ((array)$this->_doNotParse as $class) {
@@ -132,9 +138,9 @@ class SerializerObject
                 $value = $object->{$this->getMethodGetPrefix() . $propertyName}();
             }
 
-            $result[$propertyName] = $this->buildProperty($value);
+            $result[$propertyName] = $this->serializeProperties($value);
 
-            if ($result[$propertyName] === null && !$this->isBuildNull()) {
+            if ($result[$propertyName] === null && !$this->isSerializingNull()) {
                 unset($result[$propertyName]);
             }
         }
@@ -155,9 +161,10 @@ class SerializerObject
      * @param $search
      * @param $replace
      */
-    public function setMethodPattern($search, $replace)
+    public function withMethodPattern($search, $replace)
     {
         $this->_methodPattern = [$search, $replace];
+        return $this;
     }
 
     /**
@@ -171,9 +178,10 @@ class SerializerObject
     /**
      * @param string $methodGetPrefix
      */
-    public function setMethodGetPrefix($methodGetPrefix)
+    public function withMethodGetPrefix($methodGetPrefix)
     {
         $this->_methodGetPrefix = $methodGetPrefix;
+        return $this;
     }
 
     /**
@@ -188,9 +196,9 @@ class SerializerObject
      * @param boolean $onlyString
      * @return $this
      */
-    public function setOnlyString($onlyString)
+    public function withOnlyString($value = true)
     {
-        $this->_onlyString = $onlyString;
+        $this->_onlyString = $value;
         return $this;
     }
 
@@ -206,7 +214,7 @@ class SerializerObject
      * @param array $doNotParse
      * @return $this
      */
-    public function setDoNotParse(array $doNotParse)
+    public function withDoNotParse(array $doNotParse)
     {
         $this->_doNotParse = $doNotParse;
         return $this;
@@ -215,18 +223,18 @@ class SerializerObject
     /**
      * @return bool
      */
-    public function isBuildNull()
+    public function isSerializingNull()
     {
-        return $this->_buildNull;
+        return $this->_serializeNull;
     }
 
     /**
      * @param bool $buildNull
      * @return $this
      */
-    public function setBuildNull($buildNull)
+    public function withDontSerializeNull()
     {
-        $this->_buildNull = $buildNull;
+        $this->_serializeNull = false;
         return $this;
     }
 
