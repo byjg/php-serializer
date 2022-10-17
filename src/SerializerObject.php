@@ -3,6 +3,7 @@
 namespace ByJG\Serializer;
 
 use stdClass;
+use Symfony\Component\Yaml\Yaml;
 
 class SerializerObject
 {
@@ -15,6 +16,8 @@ class SerializerObject
     protected $_doNotParse = [];
     protected $_serializeNull = true;
 
+    protected $_sourceType = "OBJECT";
+
     public function __construct($model)
     {
         $this->_model = $model;
@@ -25,6 +28,18 @@ class SerializerObject
         return new SerializerObject($model);
     }
 
+    public function fromYaml()
+    {
+        $this->_sourceType = "YAML";
+        return $this;
+    }
+
+    public function fromJson()
+    {
+        $this->_sourceType = "JSON";
+        return $this;
+    }
+
     /**
      * Build the array based on the object properties
      *
@@ -32,6 +47,12 @@ class SerializerObject
      */
     public function serialize()
     {
+        if ($this->_sourceType == "YAML") {
+            return Yaml::parse($this->_model);
+        } elseif ($this->_sourceType == "JSON") {
+            return json_decode($this->_model, true);
+        }
+
         $this->_currentLevel = 1;
         return $this->serializeProperties($this->_model);
     }

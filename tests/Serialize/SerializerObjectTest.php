@@ -786,4 +786,31 @@ class SerializerObjectTest extends TestCase
             $result
         );
     }
+
+    public function testSerializeJson()
+    {
+        $this->assertEquals(["a"=>1, "b"=>2], SerializerObject::instance('{"a": 1, "b": 2}')->fromJson()->serialize());
+    }
+
+    public function testSerializeYaml()
+    {
+        $yaml = <<<END
+            name: test
+            values:
+              - a: 1
+                b: 2
+              - c: 3
+                d: 4
+            END;
+
+        $this->assertEquals(
+            [ "name"=> "test",
+                "values" => [
+                    ["a"=>1, "b"=>2],
+                    ["c"=>3, "d"=>4]
+                ]
+            ],
+            SerializerObject::instance($yaml)->fromYaml()->serialize()
+        );
+    }
 }
