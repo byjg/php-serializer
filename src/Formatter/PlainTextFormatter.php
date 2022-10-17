@@ -41,28 +41,33 @@ class PlainTextFormatter implements FormatterInterface
         return $result;
     }
 
-	/**
-	 * @param mixed $breakLine 
-	 * @return PlainTextFormatter
-	 */
-	function withBreakLine($breakLine) {
-		$this->breakLine = $breakLine;
-		return $this;
-	}
-	/**
-	 * @param mixed $startOfLine 
-	 * @return PlainTextFormatter
-	 */
-	function withStartOfLine($startOfLine) {
-		$this->startOfLine = $startOfLine;
-		return $this;
-	}
-	/**
-	 * @param mixed $ignorePropertyName 
-	 * @return PlainTextFormatter
-	 */
-	function withIgnorePropertyName($ignorePropertyName) {
-		$this->ignorePropertyName = $ignorePropertyName;
-		return $this;
-	}
+    /**
+     * @param mixed $breakLine
+     * @return PlainTextFormatter
+     */
+    public function withBreakLine($breakLine)
+    {
+        $this->breakLine = $breakLine;
+        return $this;
+    }
+
+    /**
+     * @param mixed $startOfLine
+     * @return PlainTextFormatter
+     */
+    public function withStartOfLine($startOfLine)
+    {
+        $this->startOfLine = $startOfLine;
+        return $this;
+    }
+
+    /**
+     * @param mixed $ignorePropertyName
+     * @return PlainTextFormatter
+     */
+    public function withIgnorePropertyName($ignorePropertyName)
+    {
+        $this->ignorePropertyName = $ignorePropertyName;
+        return $this;
+    }
 }

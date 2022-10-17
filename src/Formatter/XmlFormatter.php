@@ -51,28 +51,33 @@ class XmlFormatter implements FormatterInterface
             }
         }
     }
-	/**
-	 * @param mixed $rootElement 
-	 * @return XmlFormatter
-	 */
-	function withRootElement($rootElement) {
-		$this->rootElement = $rootElement;
-		return $this;
-	}
-	/**
-	 * @param mixed $listElement 
-	 * @return XmlFormatter
-	 */
-	function withListElement($listElement) {
-		$this->listElement = $listElement;
-		return $this;
-	}
-	/**
-	 * @param mixed $listElementSuffix 
-	 * @return XmlFormatter
-	 */
-	function withListElementSuffix() {
-		$this->listElementSuffix = true;
-		return $this;
-	}
+    /**
+     * @param mixed $rootElement
+     * @return XmlFormatter
+     */
+    public function withRootElement($rootElement)
+    {
+        $this->rootElement = $rootElement;
+        return $this;
+    }
+
+    /**
+     * @param mixed $listElement
+     * @return XmlFormatter
+     */
+    public function withListElement($listElement)
+    {
+        $this->listElement = $listElement;
+        return $this;
+    }
+
+    /**
+     * @param mixed $listElementSuffix
+     * @return XmlFormatter
+     */
+    public function withListElementSuffix()
+    {
+        $this->listElementSuffix = true;
+        return $this;
+    }
 }
