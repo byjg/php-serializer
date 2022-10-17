@@ -794,14 +794,7 @@ class SerializerObjectTest extends TestCase
 
     public function testSerializeYaml()
     {
-        $yaml = <<<END
-            name: test
-            values:
-              - a: 1
-                b: 2
-              - c: 3
-                d: 4
-            END;
+        $yaml = file_get_contents(__DIR__ . "/yamlserialize.yml");
 
         $this->assertEquals(
             [ "name"=> "test",
