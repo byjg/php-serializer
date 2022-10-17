@@ -19,11 +19,8 @@ class YamlFormatterTest extends TestCase
         ];
 
         $formatter = new YamlFormatter();
-        $this->assertEquals(<<<END
-            key1: value
-            key2: value2
-
-            END,
+        $this->assertEquals(
+            file_get_contents(__DIR__ . "/yaml1.yml"),
             $formatter->process($array)
         );
     }
@@ -35,19 +32,13 @@ class YamlFormatterTest extends TestCase
         $object->setName("Joao");
 
         $formatter = new YamlFormatter();
-        $this->assertEquals(<<<END
-            Id: '10'
-            Name: Joao
-
-            END,
+        $this->assertEquals(
+            file_get_contents(__DIR__ . "/yaml2.yml"),
             $formatter->process($object->toArray())
         );
 
-        $this->assertEquals(<<<END
-            Id: '10'
-            Name: Joao
-            
-            END,
+        $this->assertEquals(
+            file_get_contents(__DIR__ . "/yaml2.yml"),
             $formatter->process($object)
         );
     }
@@ -59,25 +50,14 @@ class YamlFormatterTest extends TestCase
         $object->addItem(new ModelGetter(20, "Doe"));
 
         $formatter = new YamlFormatter();
-        $this->assertEquals(<<<END
-            collection:
-              - { Id: 10, Name: John }
-              - { Id: 20, Name: Doe }
-            
-            END,
+        $this->assertEquals(
+            file_get_contents(__DIR__ . "/yaml3.yml"),
             $formatter->process($object)
         );
 
 
-        $this->assertEquals(<<<END
-            -
-              Id: 10
-              Name: John
-            -
-              Id: 20
-              Name: Doe
-            
-            END,
+        $this->assertEquals(
+            file_get_contents(__DIR__ . "/yaml4.yml"),
             $formatter->process(SerializerObject::instance($object->getCollection())->serialize())
         );
     }
