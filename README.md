@@ -88,8 +88,6 @@ $result = \ByJG\Serializer\SerializerObject::instance($myclass)
             ->serialize();
 ```
 
-
-
 ## Create a *bindable* object
 
 Add to the object the method `bind` that allows set contents from another object
@@ -119,14 +117,14 @@ SerializerObject::serialize($source);
 
 ## Install
 
-```
-composer require "byjg/serialize=2.0.*"
+```bash
+composer require "byjg/serialize=5.0.*"
 ```
 
 ## Test
 
-```
-phpunit
+```bash
+vendor/bin/phpunit
 ```
 
 ----
