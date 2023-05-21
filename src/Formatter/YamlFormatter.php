@@ -3,8 +3,9 @@
 namespace ByJG\Serializer\Formatter;
 
 use ByJG\Serializer\SerializerObject;
+use Symfony\Component\Yaml\Yaml;
 
-class JsonFormatter implements FormatterInterface
+class YamlFormatter implements FormatterInterface
 {
 
     /**
@@ -14,9 +15,9 @@ class JsonFormatter implements FormatterInterface
     public function process($serializable)
     {
         if (is_array($serializable)) {
-            return json_encode($serializable);
+            return Yaml::dump($serializable, 2, 2);
         }
 
-        return json_encode(SerializerObject::instance($serializable)->serialize());
+        return Yaml::dump(SerializerObject::instance($serializable)->serialize(), 2, 2);
     }
 }

@@ -1,25 +1,32 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: jg
- * Date: 11/05/16
- * Time: 01:42
- */
 
 namespace ByJG\Serializer\Formatter;
+
+use ByJG\Serializer\SerializerObject;
 
 
 class XmlFormatter implements FormatterInterface
 {
 
+    protected $rootElement = "root";
+
+    protected $listElement = "item";
+
+    protected $listElementSuffix = false;
+
+    
     /**
-     * @param array $serializable
+     * @param array|object $serializable
      * @return mixed
      */
     public function process($serializable)
     {
-        $xml = new \SimpleXMLElement("<?xml version=\"1.0\"?><root></root>");
-        $this->arrayToXml($serializable, $xml);
+        $array = $serializable;
+        if (!is_array($serializable)) {
+            $array = SerializerObject::instance($serializable)->serialize();
+        }
+        $xml = new \SimpleXMLElement("<?xml version=\"1.0\"?><{$this->rootElement}></{$this->rootElement}>");
+        $this->arrayToXml($array, $xml);
 
         return $xml->asXML();
     }
@@ -36,12 +43,41 @@ class XmlFormatter implements FormatterInterface
                     $subnode = $xml->addChild("$key");
                     $this->arrayToXml($value, $subnode);
                 } else {
-                    $subnode = $xml->addChild("item$key");
+                    $subnode = $xml->addChild($this->listElement . ($this->listElementSuffix ? $key : ""));
                     $this->arrayToXml($value, $subnode);
                 }
             } else {
                 $xml->addChild("$key", htmlspecialchars("$value"));
             }
         }
+    }
+    /**
+     * @param mixed $rootElement
+     * @return XmlFormatter
+     */
+    public function withRootElement($rootElement)
+    {
+        $this->rootElement = $rootElement;
+        return $this;
+    }
+
+    /**
+     * @param mixed $listElement
+     * @return XmlFormatter
+     */
+    public function withListElement($listElement)
+    {
+        $this->listElement = $listElement;
+        return $this;
+    }
+
+    /**
+     * @param mixed $listElementSuffix
+     * @return XmlFormatter
+     */
+    public function withListElementSuffix()
+    {
+        $this->listElementSuffix = true;
+        return $this;
     }
 }

@@ -20,7 +20,7 @@ class BinderObjectTest extends TestCase
     public function testBind_Array()
     {
         $object1 = new SampleModel();
-        $object1->bind( ['Id' => 10, 'Name' => 'Joao'] );
+        $object1->bindFrom( ['Id' => 10, 'Name' => 'Joao'] );
         $this->assertEquals(10, $object1->Id);
         $this->assertEquals('Joao', $object1->getName());
     }
@@ -32,7 +32,7 @@ class BinderObjectTest extends TestCase
         $stdClass->Name = 'Joao';
 
         $object1 = new SampleModel();
-        $object1->bind( $stdClass );
+        $object1->bindFrom( $stdClass );
         $this->assertEquals(10, $object1->Id);
         $this->assertEquals('Joao', $object1->getName());
     }
@@ -98,7 +98,7 @@ class BinderObjectTest extends TestCase
 
         $array = [];
 
-        BinderObject::bindObject($object1, $array);
+        BinderObject::bind($object1, $array);
     }
 
     public function testToArrayFrom()
@@ -107,7 +107,7 @@ class BinderObjectTest extends TestCase
         $object1->Id = 10;
         $object1->setName('Joao');
 
-        $result = BinderObject::toArrayFrom($object1);
+        $result = SerializerObject::instance($object1)->serialize();
 
         $this->assertEquals(
             [
@@ -125,7 +125,7 @@ class BinderObjectTest extends TestCase
         $object1->setClientName('Joao');
         $object1->setIdModel(1);
 
-        $result = BinderObject::toArrayFrom($object1);
+        $result = SerializerObject::instance($object1)->serialize();
 
         $this->assertEquals(
             [
