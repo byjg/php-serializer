@@ -3,6 +3,8 @@
 namespace ByJG\Serializer;
 
 use ByJG\Serializer\Exception\InvalidArgumentException;
+use ByJG\Serializer\PropertyPattern\CamelToSnakeCase;
+use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelPropertyPattern;
 use Tests\Sample\ModelPublic;
@@ -135,5 +137,37 @@ class BinderObjectTest extends TestCase
             ],
             $result
         );
+    }
+
+    public function testPropertyPatterSnakeToCamel()
+    {
+        $source = new \stdClass();
+        $source->id_model = 1;
+        $source->client_name = 'Joao';
+        $source->age = 49;
+
+        $target = new \stdClass();
+
+        BinderObject::bind($source, $target, new SnakeToCamelCase());
+
+        $this->assertEquals(1, $target->idModel);
+        $this->assertEquals('Joao', $target->clientName);
+        $this->assertEquals(49, $target->age);
+    }
+
+    public function testPropertyPatterCamelToSnake()
+    {
+        $source = new \stdClass();
+        $source->idModel = 1;
+        $source->clientName = 'Joao';
+        $source->age = 49;
+
+        $target = new \stdClass();
+
+        BinderObject::bind($source, $target, new CamelToSnakeCase());
+
+        $this->assertEquals(1, $target->id_model);
+        $this->assertEquals('Joao', $target->client_name);
+        $this->assertEquals(49, $target->age);
     }
 }

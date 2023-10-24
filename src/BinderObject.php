@@ -3,11 +3,11 @@
 namespace ByJG\Serializer;
 
 use ByJG\Serializer\Exception\InvalidArgumentException;
+use ByJG\Serializer\PropertyPattern\PropertyPatternInterface;
 use stdClass;
 
 class BinderObject
 {
-
     protected $propNameLower = [];
 
     /**
@@ -15,10 +15,10 @@ class BinderObject
      *
      * @param mixed $source
      * @param mixed $target
-     * @param string $propertyPattern Regular Expression -> /searchPattern/replace/
-     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
+     * @param PropertyPatternInterface|null $propertyPattern
+     * @throws InvalidArgumentException
      */
-    public static function bind($source, $target, $propertyPattern = null)
+    public static function bind($source, $target, ?PropertyPatternInterface $propertyPattern = null)
     {
         $binderObject = new BinderObject();
         $binderObject->bindObjectInternal($source, $target, $propertyPattern);
@@ -29,10 +29,10 @@ class BinderObject
      *
      * @param mixed $source
      * @param mixed $target
-     * @param string $propertyPattern Regular Expression -> /searchPattern/replace/
-     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
+     * @param PropertyPatternInterface|null $propertyPattern
+     * @throws InvalidArgumentException
      */
-    protected function bindObjectInternal($source, $target, $propertyPattern = null)
+    protected function bindObjectInternal($source, $target, ?PropertyPatternInterface $propertyPattern = null)
     {
         if (is_array($target) || !is_object($target)) {
             throw new InvalidArgumentException('Target object must have to be an object instance');
@@ -44,12 +44,11 @@ class BinderObject
 
         foreach ($sourceArray as $propName => $value) {
             if (!is_null($propertyPattern)) {
-                $propAr = explode($propertyPattern[0], $propertyPattern);
-                $propName = preg_replace(
-                    $propertyPattern[0] . $propAr[1] . $propertyPattern[0],
-                    $propAr[2],
-                    $propName
-                );
+                if (!is_null($propertyPattern->getCallback())) {
+                    $propName = preg_replace_callback($propertyPattern->getRegEx(), $propertyPattern->getCallback(), $propName);
+                } else {
+                    $propName = preg_replace($propertyPattern->getRegEx(), $propertyPattern->getReplacement(), $propName);
+                }
             }
             $this->setPropValue($target, $propName, $value);
         }
