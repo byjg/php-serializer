@@ -133,8 +133,8 @@ phpunit
 
 ```mermaid
 flowchart TD
-    Serializer --> ext-json
-    Serializer --> symfony/yaml
+    byjg/serializer --> ext-json
+    byjg/serializer --> symfony/yaml
 ```
 
 ----
