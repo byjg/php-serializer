@@ -129,5 +129,13 @@ composer require "byjg/serialize=2.0.*"
 phpunit
 ```
 
+## Dependencies
+
+```mermaid
+flowchart TD
+    Serializer --> ext-json
+    Serializer --> symfony/yaml
+```
+
 ----
 [Open source ByJG](http://opensource.byjg.com)
