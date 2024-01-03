@@ -2,6 +2,7 @@
 
 namespace ByJG\Serializer;
 
+use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\SampleModel;
@@ -69,13 +70,13 @@ class BaseModelTest extends TestCase
 
        // Testing with Bind
        $object = new \Tests\Sample\ModelPropertyPattern();
-       $object->bindFrom($obj, '/_//');
+       $object->bindFrom($obj, new SnakeToCamelCase());
 
        $this->assertEquals(10, $object->getIdModel());
        $this->assertEquals("Testing", $object->getClientName());
 
        // Testing Constructor
-       $object = new \Tests\Sample\ModelPropertyPattern($obj, '/_//');
+       $object = new \Tests\Sample\ModelPropertyPattern($obj, new SnakeToCamelCase());
 
        $this->assertEquals(10, $object->getIdModel());
        $this->assertEquals("Testing", $object->getClientName());

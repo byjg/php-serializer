@@ -1,7 +1,8 @@
 <?php
 
 namespace ByJG\Serializer;
-use phpDocumentor\Reflection\DocBlock\Serializer;
+
+use ByJG\Serializer\PropertyPattern\PropertyPatternInterface;
 
 abstract class BaseModel extends BindableObject
 {
@@ -10,11 +11,10 @@ abstract class BaseModel extends BindableObject
      * Construct a model and optionally can set (bind) your properties base and the attribute matching from SingleRow,
      * IteratorInterface
      *
-     * @param Object $object
-     * @param null $propertyPattern
-     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
+     * @param null $object
+     * @param PropertyPatternInterface|null $propertyPattern
      */
-    public function __construct($object = null, $propertyPattern = null)
+    public function __construct($object = null, ?PropertyPatternInterface $propertyPattern = null)
     {
         if (!is_null($object)) {
             $this->bindFrom($object, $propertyPattern);

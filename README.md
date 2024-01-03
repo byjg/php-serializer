@@ -88,8 +88,6 @@ $result = \ByJG\Serializer\SerializerObject::instance($myclass)
             ->serialize();
 ```
 
-
-
 ## Create a *bindable* object
 
 Add to the object the method `bind` that allows set contents from another object
@@ -120,13 +118,21 @@ SerializerObject::serialize($source);
 ## Install
 
 ```
-composer require "byjg/serialize=2.0.*"
+composer require "byjg/serialize"
 ```
 
 ## Test
 
 ```
-phpunit
+vendor/bin/phpunit
+```
+
+## Dependencies
+
+```mermaid
+flowchart TD
+    byjg/serializer --> ext-json
+    byjg/serializer --> symfony/yaml
 ```
 
 ----
