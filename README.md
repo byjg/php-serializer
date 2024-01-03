@@ -120,13 +120,13 @@ SerializerObject::serialize($source);
 ## Install
 
 ```
-composer require "byjg/serialize=2.0.*"
+composer require "byjg/serialize"
 ```
 
 ## Test
 
 ```
-phpunit
+vendor/bin/phpunit
 ```
 
 ## Dependencies
