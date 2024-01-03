@@ -117,14 +117,22 @@ SerializerObject::serialize($source);
 
 ## Install
 
-```bash
-composer require "byjg/serialize=5.0.*"
+```
+composer require "byjg/serialize"
 ```
 
 ## Test
 
-```bash
+```
 vendor/bin/phpunit
+```
+
+## Dependencies
+
+```mermaid
+flowchart TD
+    byjg/serializer --> ext-json
+    byjg/serializer --> symfony/yaml
 ```
 
 ----
