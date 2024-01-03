@@ -115,6 +115,57 @@ BinderObject::bind($source, $target);
 SerializerObject::serialize($source);
 ```
 
+### Copy contents from an object with CamelCase properties to another with snake_case properties
+
+```php
+class Source
+{
+    public $idModel;
+    public $clientName;
+    public $age;
+}
+
+class Target
+{
+    public $id_model;
+    public $client_name;
+    public $age;
+}
+
+$source = new Source();
+$source->idModel = 1;
+$source->clientName = 'John';
+$source->age = 30;
+
+BinderObject::bind($source, $target, new CamelToSnakeCase());
+```
+
+### Copy contents from an object with snake_case properties to another with CamelCase properties
+
+```php
+class Source
+{
+    public $id_model;
+    public $client_name;
+    public $age;
+}
+
+class Target
+{
+    public $idModel;
+    public $clientName;
+    public $age;
+}
+
+$source = new Source();
+$source->id_model = 1;
+$source->client_name = 'John';
+$source->age = 30;
+
+BinderObject::bind($source, $target, new SnakeToCamelCase());
+```
+
+
 ## Install
 
 ```
