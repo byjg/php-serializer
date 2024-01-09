@@ -289,7 +289,7 @@ class Serialize
     /**
      * @return $this
      */
-    public function withDoNotNullValues(): self
+    public function withDoNotParseNullValues(): self
     {
         $this->_serializeNull = false;
         return $this;

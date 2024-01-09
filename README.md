@@ -48,7 +48,18 @@ echo Serialize::from($data)->toPlainText();
 
 ## Customizing the Serialization
 
-### Ignore null elements: `withDoNotSerializeNull()`
+These are the possible modifier for parse:
+
+| Method                   | Description                                     |
+|--------------------------|-------------------------------------------------|
+| withDoNotParseNullValues | Ignore null elements                            |
+| withDoNotParse           | Ignore some classes and return them as is       |
+| withOnlyString           | Return only string elements                     |
+| withMethodPattern        | use the pattern to convert method into property | 
+
+
+
+### Ignore null elements: `withDoNotParseNullValues()`
 
 The SerializerObject brings all properties by default. For example:
 
@@ -74,7 +85,7 @@ But you can setup for ignore the null elements:
 ```php
 <?php
 $result = \ByJG\Serializer\Serialize::from($myclass)
-            ->withDoNotNullValues()
+            ->withDoNotParseNullValues()
             ->toArray();
 print_r($result);
 
@@ -100,6 +111,45 @@ $result = \ByJG\Serializer\Serialize::from($myclass)
             ])
             ->toArray();
 ```
+
+### Return only string elements: `withOnlyString()`
+
+Sometimes we want to serialize the object and return only the string elements.
+
+```php
+<?php
+$model = new stdClass();
+$model->varFalse = false;
+$model->varTrue = true;
+$model->varZero = 0;
+$model->varZeroStr = '0';
+$model->varNull = null;
+$model->varEmptyString = '';
+
+$result = \ByJG\Serializer\Serialize::from($myclass)
+            ->withOnlyString()
+            ->toArray();
+
+// It will return:
+// Array
+// (
+//     [varFalse] => ''
+//     [varTrue] => '1'
+//     [varZero] => '0'
+//     [varZeroStr] => '0'
+//     [varNull] => ''
+//     [varEmptyString] => ''
+// )
+``` 
+
+### Use the pattern to convert method into property: `withMethodPattern($pattern, $replace)`
+
+In the class we might have the name `property` name different from the getter method. 
+
+The default configuration is to remove everything in the `property` 
+that doesn't match with the `$pattern = '/([^A-Za-z0-9])/'`
+
+If you need something different you can use the `withMethodPattern` to define your own pattern.
 
 ## Create a class can copy from/to any object
 
