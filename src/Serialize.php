@@ -25,7 +25,7 @@ class Serialize
         $this->_model = $model;
     }
 
-    public static function from(mixed $model): self
+    public static function from(object|array $model): self
     {
         return new Serialize($model);
     }
