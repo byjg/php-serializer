@@ -24,7 +24,7 @@ class XmlFormatter implements FormatterInterface
     {
         $array = $serializable;
         if (!is_array($serializable)) {
-            $array = SerializerObject::instance($serializable)->serialize();
+            $array = SerializerObject::instance($serializable)->toArray();
         }
         $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><$this->rootElement></$this->rootElement>");
         $this->arrayToXml($array, $xml);

@@ -17,6 +17,6 @@ class JsonFormatter implements FormatterInterface
             return json_encode($serializable);
         }
 
-        return json_encode(SerializerObject::instance($serializable)->serialize());
+        return json_encode(SerializerObject::instance($serializable)->toArray());
     }
 }

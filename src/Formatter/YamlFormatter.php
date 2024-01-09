@@ -18,6 +18,6 @@ class YamlFormatter implements FormatterInterface
             return Yaml::dump($serializable, 2, 2);
         }
 
-        return Yaml::dump(SerializerObject::instance($serializable)->serialize(), 2, 2);
+        return Yaml::dump(SerializerObject::instance($serializable)->toArray(), 2, 2);
     }
 }

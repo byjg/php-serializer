@@ -112,7 +112,7 @@ class BinderObjectTest extends TestCase
         $object1->Id = 10;
         $object1->setName('Joao');
 
-        $result = SerializerObject::instance($object1)->serialize();
+        $result = SerializerObject::instance($object1)->toArray();
 
         $this->assertEquals(
             [
@@ -130,7 +130,7 @@ class BinderObjectTest extends TestCase
         $object1->setClientName('Joao');
         $object1->setIdModel(1);
 
-        $result = SerializerObject::instance($object1)->serialize();
+        $result = SerializerObject::instance($object1)->toArray();
 
         $this->assertEquals(
             [

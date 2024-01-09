@@ -33,7 +33,7 @@ class BinderObject
     {
         $sourceArray = SerializerObject::instance($source)
                     ->withStopAtFirstLevel()
-                    ->serialize();
+                    ->toArray();
 
         foreach ($sourceArray as $propName => $value) {
             if (!is_null($propertyPattern)) {

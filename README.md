@@ -14,9 +14,9 @@ Just use the Serializer class with any kind of object, stdClass or array;
 
 ```php
 <?php
-$result = \ByJG\Serializer\SerializerObject::instance($data)->serialize();
-$result2 = \ByJG\Serializer\SerializerObject::instance($anyJsonString)->fromJson()->serialize();
-$result3 = \ByJG\Serializer\SerializerObject::instance($anyYamlString)->fromYaml()->serialize();
+$result = \ByJG\Serializer\SerializerObject::instance($data)->toArray();
+$result2 = \ByJG\Serializer\SerializerObject::instance($anyJsonString)->fromJson()->toArray();
+$result3 = \ByJG\Serializer\SerializerObject::instance($anyYamlString)->fromYaml()->toArray();
 ```
 
 In the examples above `$result`, `$result2` and `$result3` will be an associative array.
@@ -45,7 +45,7 @@ $myclass->setName('Joao');
 $myclass->setAge(null);
 
 $serializer = new \ByJG\Serializer\SerializerObject($myclass);
-$result = $serializer->serialize();
+$result = $serializer->toArray();
 print_r($result);
 
 // Will return:
@@ -61,8 +61,8 @@ But you can setup for ignore the null elements:
 ```php
 <?php
 $result = \ByJG\Serializer\SerializerObject::instance($myclass)
-            ->withDoNotSerializeNull()
-            ->serialize();
+            ->withDoNotNullValues()
+            ->toArray();
 print_r($result);
 
 // And the result will be:
@@ -85,7 +85,7 @@ $result = \ByJG\Serializer\SerializerObject::instance($myclass)
             ->withDoNotParse([
                 MyClass::class
             ])
-            ->serialize();
+            ->toArray();
 ```
 
 ## Create a *bindable* object

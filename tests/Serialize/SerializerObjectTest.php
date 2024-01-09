@@ -22,7 +22,7 @@ class SerializerObjectTest extends TestCase
         $model = new ModelGetter(10, 'Joao');
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ['Id' => 10, 'Name' => 'Joao'],
@@ -59,7 +59,7 @@ class SerializerObjectTest extends TestCase
         );
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -96,7 +96,7 @@ class SerializerObjectTest extends TestCase
         $model = new ModelPublic(10, 'Joao');
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ['Id' => 10, 'Name' => 'Joao'],
@@ -112,7 +112,7 @@ class SerializerObjectTest extends TestCase
         );
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -130,7 +130,7 @@ class SerializerObjectTest extends TestCase
         $model->Name = 'Joao';
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ['Id' => 10, 'Name' => 'Joao'],
@@ -146,7 +146,7 @@ class SerializerObjectTest extends TestCase
         $model->Object = new ModelGetter(20, 'JG');
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ['Id' => 10, 'Name' => 'Joao', 'Object' => ['Id' => 20, 'Name'=>'JG']],
@@ -162,7 +162,7 @@ class SerializerObjectTest extends TestCase
         ];
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ['Id' => 10, 'Name' => 'Joao'],
@@ -183,7 +183,7 @@ class SerializerObjectTest extends TestCase
         ];
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -208,7 +208,7 @@ class SerializerObjectTest extends TestCase
         ];
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -227,7 +227,7 @@ class SerializerObjectTest extends TestCase
         ];
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ["Obj" => [10, 'Joao']],
@@ -245,7 +245,7 @@ class SerializerObjectTest extends TestCase
         ];
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ["Obj" => [10, 'Joao', ['Id'=>20, 'Name'=>'JG']]],
@@ -270,7 +270,7 @@ class SerializerObjectTest extends TestCase
         ];
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -302,7 +302,7 @@ class SerializerObjectTest extends TestCase
         ];
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -331,7 +331,7 @@ class SerializerObjectTest extends TestCase
 
         $object = new SerializerObject($model);
 
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -367,7 +367,7 @@ class SerializerObjectTest extends TestCase
 
         $object = new SerializerObject($model);
 
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -398,7 +398,7 @@ class SerializerObjectTest extends TestCase
         $modellist->addItem(new ModelGetter(20, 'JG'));
 
         $object = new SerializerObject($modellist);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -422,7 +422,7 @@ class SerializerObjectTest extends TestCase
         $modellist->addItem(new ModelGetter(20, 'JG'));
 
         $object = new SerializerObject($modellist);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -446,7 +446,7 @@ class SerializerObjectTest extends TestCase
         $modellist->addItem(new ModelGetter(20, 'JG'));
 
         $object = new SerializerObject($modellist);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -460,7 +460,7 @@ class SerializerObjectTest extends TestCase
         );
 
         $object = new SerializerObject($modellist->getCollection());
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -479,7 +479,7 @@ class SerializerObjectTest extends TestCase
         ];
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -501,7 +501,7 @@ class SerializerObjectTest extends TestCase
         $model->varEmptyString = '';
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -515,7 +515,7 @@ class SerializerObjectTest extends TestCase
             $result
         );
 
-        $object->withOnlyString()->serialize();
+        $object->withOnlyString()->toArray();
 
         $this->assertEquals(
             [
@@ -529,7 +529,7 @@ class SerializerObjectTest extends TestCase
             $result
         );
 
-        $result = $object->withOnlyString(false)->withDoNotSerializeNull()->serialize();
+        $result = $object->withOnlyString(false)->withDoNotNullValues()->toArray();
 
         $this->assertEquals(
             [
@@ -549,14 +549,14 @@ class SerializerObjectTest extends TestCase
         $model = new ModelPublic(null, 'Joao');
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ['Id'=>null, 'Name'=>'Joao'],
             $result
         );
 
-        $result = $object->withDoNotSerializeNull()->serialize();
+        $result = $object->withDoNotNullValues()->toArray();
 
         $this->assertEquals(
             ['Name'=>'Joao'],
@@ -566,7 +566,7 @@ class SerializerObjectTest extends TestCase
         $model = new ModelPublic(null, null);
         $object = new SerializerObject($model);
 
-        $result = $object->withDoNotSerializeNull()->serialize();
+        $result = $object->withDoNotNullValues()->toArray();
 
         $this->assertEquals(
             [],
@@ -579,14 +579,14 @@ class SerializerObjectTest extends TestCase
         $model = new ModelGetter(null, 'Joao');
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ['Id'=>null, 'Name'=>'Joao'],
             $result
         );
 
-        $result = $object->withDoNotSerializeNull()->serialize();
+        $result = $object->withDoNotNullValues()->toArray();
 
         $this->assertEquals(
             ['Name'=>'Joao'],
@@ -599,7 +599,7 @@ class SerializerObjectTest extends TestCase
         $model = new ModelList();
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -608,7 +608,7 @@ class SerializerObjectTest extends TestCase
             $result
         );
 
-        $result = $object->withDoNotSerializeNull()->serialize();
+        $result = $object->withDoNotNullValues()->toArray();
 
         $this->assertEquals(
             [],
@@ -623,7 +623,7 @@ class SerializerObjectTest extends TestCase
         $model->addItem(new ModelGetter(null, null));
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -641,7 +641,7 @@ class SerializerObjectTest extends TestCase
             $result
         );
 
-        $result = $object->withDoNotSerializeNull()->serialize();
+        $result = $object->withDoNotNullValues()->toArray();
 
         $this->assertEquals(
             [
@@ -666,7 +666,7 @@ class SerializerObjectTest extends TestCase
 
         $object = new SerializerObject($model);
         $object->withStopAtFirstLevel();
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ["Id" => 10, "Name" => 'Joao', 'Object' => new ModelGetter(20, 'JG')],
@@ -686,7 +686,7 @@ class SerializerObjectTest extends TestCase
 
         $object = new SerializerObject($model);
         $object->withStopAtFirstLevel();
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             ["Obj" => [10, 'Joao', new ModelGetter(20, 'JG')]],
@@ -706,7 +706,7 @@ class SerializerObjectTest extends TestCase
         $object->withDoNotParse([
             ModelPublic::class
         ]);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -723,7 +723,7 @@ class SerializerObjectTest extends TestCase
             ModelPublic::class,
             ModelGetter::class
         ]);
-        $result = $object2->serialize();
+        $result = $object2->toArray();
 
         $this->assertEquals(
             [
@@ -754,7 +754,7 @@ class SerializerObjectTest extends TestCase
         $object->withDoNotParse([
             ModelGetter::class
         ]);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -778,7 +778,7 @@ class SerializerObjectTest extends TestCase
         $model = new ModelForceProperty();
 
         $object = new SerializerObject($model);
-        $result = $object->serialize();
+        $result = $object->toArray();
 
         $this->assertEquals(
             [
@@ -790,7 +790,7 @@ class SerializerObjectTest extends TestCase
 
     public function testSerializeJson()
     {
-        $this->assertEquals(["a"=>1, "b"=>2], SerializerObject::instance('{"a": 1, "b": 2}')->fromJson()->serialize());
+        $this->assertEquals(["a"=>1, "b"=>2], SerializerObject::instance('{"a": 1, "b": 2}')->fromJson()->toArray());
     }
 
     public function testSerializeYaml()
@@ -804,7 +804,7 @@ class SerializerObjectTest extends TestCase
                     ["c"=>3, "d"=>4]
                 ]
             ],
-            SerializerObject::instance($yaml)->fromYaml()->serialize()
+            SerializerObject::instance($yaml)->fromYaml()->toArray()
         );
     }
 }

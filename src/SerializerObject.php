@@ -45,7 +45,7 @@ class SerializerObject
      *
      * @return array
      */
-    public function serialize(): array
+    public function toArray(): array
     {
         if ($this->_sourceType == "YAML") {
             return Yaml::parse($this->_model);
@@ -54,10 +54,10 @@ class SerializerObject
         }
 
         $this->_currentLevel = 1;
-        return $this->serializeProperties($this->_model);
+        return $this->parseProperties($this->_model);
     }
 
-    protected function serializeProperties($property): mixed
+    protected function parseProperties($property): mixed
     {
         // If Stop at First Level is active and the current level is greater than 1 return the
         // original object instead convert it to array;
@@ -66,15 +66,15 @@ class SerializerObject
         }
 
         if (is_array($property)) {
-            return $this->serializeArray($property);
+            return $this->parseArray($property);
         }
 
         if ($property instanceof stdClass) {
-            return $this->serializeStdClass($property);
+            return $this->parseStdClass($property);
         }
 
         if (is_object($property)) {
-            return $this->serializeObject($property);
+            return $this->parseObject($property);
         }
 
         if ($this->isOnlyString()) {
@@ -104,15 +104,15 @@ class SerializerObject
      * @param array $array
      * @return array
      */
-    protected function serializeArray(array $array): array
+    protected function parseArray(array $array): array
     {
         $result = [];
         $this->_currentLevel++;
 
         foreach ($array as $key => $value) {
-            $result[$key] = $this->serializeProperties($value);
+            $result[$key] = $this->parseProperties($value);
 
-            if ($result[$key] === null && !$this->isSerializingNull()) {
+            if ($result[$key] === null && !$this->isCopyingNullValues()) {
                 unset($result[$key]);
             }
         }
@@ -124,16 +124,16 @@ class SerializerObject
      * @param stdClass $stdClass
      * @return array
      */
-    protected function serializeStdClass(stdClass $stdClass): array
+    protected function parseStdClass(stdClass $stdClass): array
     {
-        return $this->serializeArray((array)$stdClass);
+        return $this->parseArray((array)$stdClass);
     }
 
     /**
      * @param object $object
      * @return array|object
      */
-    protected function serializeObject(object $object): array|object
+    protected function parseObject(object $object): array|object
     {
         // Check if this object can serialize
         foreach ($this->_doNotParse as $class) {
@@ -159,9 +159,9 @@ class SerializerObject
                 $value = $object->{$this->getMethodGetPrefix() . $propertyName}();
             }
 
-            $result[$propertyName] = $this->serializeProperties($value);
+            $result[$propertyName] = $this->parseProperties($value);
 
-            if ($result[$propertyName] === null && !$this->isSerializingNull()) {
+            if ($result[$propertyName] === null && !$this->isCopyingNullValues()) {
                 unset($result[$propertyName]);
             }
         }
@@ -246,7 +246,7 @@ class SerializerObject
     /**
      * @return bool
      */
-    public function isSerializingNull(): bool
+    public function isCopyingNullValues(): bool
     {
         return $this->_serializeNull;
     }
@@ -254,7 +254,7 @@ class SerializerObject
     /**
      * @return $this
      */
-    public function withDoNotSerializeNull(): self
+    public function withDoNotNullValues(): self
     {
         $this->_serializeNull = false;
         return $this;

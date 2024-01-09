@@ -23,7 +23,7 @@ abstract class BaseModel extends BindableObject
 
     public function toArray(): array
     {
-        return SerializerObject::instance($this)->serialize();
+        return SerializerObject::instance($this)->toArray();
     }
 
 }

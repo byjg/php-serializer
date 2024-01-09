@@ -59,7 +59,7 @@ class YamlFormatterTest extends TestCase
 
         $this->assertEquals(
             file_get_contents(__DIR__ . "/yaml4.yml"),
-            $formatter->process(SerializerObject::instance($object->getCollection())->serialize())
+            $formatter->process(SerializerObject::instance($object->getCollection())->toArray())
         );
     }
 
