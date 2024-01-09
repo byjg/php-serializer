@@ -6,12 +6,20 @@ use ByJG\Serializer\PropertyPattern\PropertyPatternInterface;
 
 abstract class BindableObject implements BindableInterface
 {
-    public function bindFrom($source, ?PropertyPatternInterface $propertyPattern = null)
+    /**
+     * @param array|object $source
+     * @param PropertyPatternInterface|null $propertyPattern
+     */
+    public function bindFrom(array|object $source, ?PropertyPatternInterface $propertyPattern = null): void
     {
         BinderObject::bind($source, $this, $propertyPattern);
     }
 
-    public function bindTo($target, ?PropertyPatternInterface $propertyPattern = null)
+    /**
+     * @param array|object $target
+     * @param PropertyPatternInterface|null $propertyPattern
+     */
+    public function bindTo(array|object $target, ?PropertyPatternInterface $propertyPattern = null): void
     {
         BinderObject::bind($this, $target, $propertyPattern);
     }

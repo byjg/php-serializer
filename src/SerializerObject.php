@@ -7,34 +7,34 @@ use Symfony\Component\Yaml\Yaml;
 
 class SerializerObject
 {
-    protected $_model = null;
-    protected $_methodPattern = ['/([^A-Za-z0-9])/', ''];
-    protected $_methodGetPrefix = 'get';
-    protected $_stopAtFirstLevel = false;
-    protected $_onlyString = false;
-    protected $_currentLevel = 0;
-    protected $_doNotParse = [];
-    protected $_serializeNull = true;
+    protected mixed $_model = null;
+    protected array $_methodPattern = ['/([^A-Za-z0-9])/', ''];
+    protected string $_methodGetPrefix = 'get';
+    protected bool $_stopAtFirstLevel = false;
+    protected bool $_onlyString = false;
+    protected int $_currentLevel = 0;
+    protected array $_doNotParse = [];
+    protected bool $_serializeNull = true;
 
-    protected $_sourceType = "OBJECT";
+    protected string $_sourceType = "OBJECT";
 
-    public function __construct($model)
+    public function __construct(mixed $model)
     {
         $this->_model = $model;
     }
 
-    public static function instance($model)
+    public static function instance(mixed $model): self
     {
         return new SerializerObject($model);
     }
 
-    public function fromYaml()
+    public function fromYaml(): self
     {
         $this->_sourceType = "YAML";
         return $this;
     }
 
-    public function fromJson()
+    public function fromJson(): self
     {
         $this->_sourceType = "JSON";
         return $this;
@@ -45,7 +45,7 @@ class SerializerObject
      *
      * @return array
      */
-    public function serialize()
+    public function serialize(): array
     {
         if ($this->_sourceType == "YAML") {
             return Yaml::parse($this->_model);
@@ -57,7 +57,7 @@ class SerializerObject
         return $this->serializeProperties($this->_model);
     }
 
-    protected function serializeProperties($property)
+    protected function serializeProperties($property): mixed
     {
         // If Stop at First Level is active and the current level is greater than 1 return the
         // original object instead convert it to array;
@@ -69,7 +69,7 @@ class SerializerObject
             return $this->serializeArray($property);
         }
 
-        if ($property instanceof \stdClass) {
+        if ($property instanceof stdClass) {
             return $this->serializeStdClass($property);
         }
 
@@ -86,15 +86,15 @@ class SerializerObject
     /**
      * @return bool
      */
-    public function isStoppingAtFirstLevel()
+    public function isStoppingAtFirstLevel(): bool
     {
         return $this->_stopAtFirstLevel;
     }
 
     /**
-     * @param bool $stopAtFirstLevel
+     * @return SerializerObject
      */
-    public function withStopAtFirstLevel()
+    public function withStopAtFirstLevel(): self
     {
         $this->_stopAtFirstLevel = true;
         return $this;
@@ -104,7 +104,7 @@ class SerializerObject
      * @param array $array
      * @return array
      */
-    protected function serializeArray(array $array)
+    protected function serializeArray(array $array): array
     {
         $result = [];
         $this->_currentLevel++;
@@ -124,19 +124,19 @@ class SerializerObject
      * @param stdClass $stdClass
      * @return array
      */
-    protected function serializeStdClass(\stdClass $stdClass)
+    protected function serializeStdClass(stdClass $stdClass): array
     {
         return $this->serializeArray((array)$stdClass);
     }
 
     /**
-     * @param stdClass|object $object
+     * @param object $object
      * @return array|object
      */
-    protected function serializeObject($object)
+    protected function serializeObject(object $object): array|object
     {
-        // Check if this object can serialized
-        foreach ((array)$this->_doNotParse as $class) {
+        // Check if this object can serialize
+        foreach ($this->_doNotParse as $class) {
             if (is_a($object, $class)) {
                 return $object;
             }
@@ -170,10 +170,10 @@ class SerializerObject
     }
 
     /**
-     * @param $key
-     * @return array
+     * @param int $key
+     * @return string
      */
-    public function getMethodPattern($key)
+    public function getMethodPattern(int $key): string
     {
         return $this->_methodPattern[$key];
     }
@@ -181,8 +181,9 @@ class SerializerObject
     /**
      * @param $search
      * @param $replace
+     * @return SerializerObject
      */
-    public function withMethodPattern($search, $replace)
+    public function withMethodPattern($search, $replace): self
     {
         $this->_methodPattern = [$search, $replace];
         return $this;
@@ -191,15 +192,16 @@ class SerializerObject
     /**
      * @return string
      */
-    public function getMethodGetPrefix()
+    public function getMethodGetPrefix(): string
     {
         return $this->_methodGetPrefix;
     }
 
     /**
      * @param string $methodGetPrefix
+     * @return SerializerObject
      */
-    public function withMethodGetPrefix($methodGetPrefix)
+    public function withMethodGetPrefix(string $methodGetPrefix): self
     {
         $this->_methodGetPrefix = $methodGetPrefix;
         return $this;
@@ -208,16 +210,16 @@ class SerializerObject
     /**
      * @return boolean
      */
-    public function isOnlyString()
+    public function isOnlyString(): bool
     {
         return $this->_onlyString;
     }
 
     /**
-     * @param boolean $onlyString
+     * @param bool $value
      * @return $this
      */
-    public function withOnlyString($value = true)
+    public function withOnlyString(bool $value = true): self
     {
         $this->_onlyString = $value;
         return $this;
@@ -226,7 +228,7 @@ class SerializerObject
     /**
      * @return array
      */
-    public function getDoNotParse()
+    public function getDoNotParse(): array
     {
         return $this->_doNotParse;
     }
@@ -235,7 +237,7 @@ class SerializerObject
      * @param array $doNotParse
      * @return $this
      */
-    public function withDoNotParse(array $doNotParse)
+    public function withDoNotParse(array $doNotParse): self
     {
         $this->_doNotParse = $doNotParse;
         return $this;
@@ -244,16 +246,15 @@ class SerializerObject
     /**
      * @return bool
      */
-    public function isSerializingNull()
+    public function isSerializingNull(): bool
     {
         return $this->_serializeNull;
     }
 
     /**
-     * @param bool $buildNull
      * @return $this
      */
-    public function withDoNotSerializeNull()
+    public function withDoNotSerializeNull(): self
     {
         $this->_serializeNull = false;
         return $this;

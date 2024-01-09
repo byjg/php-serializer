@@ -1,7 +1,8 @@
 <?php
 
-namespace ByJG\Serializer;
+namespace Tests\Formatter;
 
+use ByJG\Serializer\SerializerObject;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\SampleModel;

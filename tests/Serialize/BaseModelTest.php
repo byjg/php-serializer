@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\Serializer;
+namespace Tests\Serialize;
 
 use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
 use PHPUnit\Framework\TestCase;

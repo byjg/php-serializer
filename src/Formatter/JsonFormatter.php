@@ -8,10 +8,10 @@ class JsonFormatter implements FormatterInterface
 {
 
     /**
-     * @param array|object $serializable
+     * @param object|array $serializable
      * @return string
      */
-    public function process($serializable)
+    public function process(object|array $serializable): string
     {
         if (is_array($serializable)) {
             return json_encode($serializable);

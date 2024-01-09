@@ -1,14 +1,17 @@
 <?php
 
-namespace ByJG\Serializer;
+namespace Tests\Serialize;
 
+use ByJG\Serializer\BinderObject;
 use ByJG\Serializer\Exception\InvalidArgumentException;
 use ByJG\Serializer\PropertyPattern\CamelToSnakeCase;
 use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
+use ByJG\Serializer\SerializerObject;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelPropertyPattern;
 use Tests\Sample\ModelPublic;
 use Tests\Sample\SampleModel;
+use TypeError;
 
 class BinderObjectTest extends TestCase
 {
@@ -93,7 +96,7 @@ class BinderObjectTest extends TestCase
 
     public function testBindToArray()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TypeError::class);
         $object1 = new SampleModel();
         $object1->Id = 10;
         $object1->setName('Joao');

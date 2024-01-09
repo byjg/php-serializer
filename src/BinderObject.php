@@ -2,13 +2,12 @@
 
 namespace ByJG\Serializer;
 
-use ByJG\Serializer\Exception\InvalidArgumentException;
 use ByJG\Serializer\PropertyPattern\PropertyPatternInterface;
 use stdClass;
 
 class BinderObject
 {
-    protected $propNameLower = [];
+    protected array $propNameLower = [];
 
     /**
      * Bind the properties from a source object to the properties matching to a target object
@@ -16,9 +15,8 @@ class BinderObject
      * @param mixed $source
      * @param mixed $target
      * @param PropertyPatternInterface|null $propertyPattern
-     * @throws InvalidArgumentException
      */
-    public static function bind($source, $target, ?PropertyPatternInterface $propertyPattern = null)
+    public static function bind(object|array $source, object|array $target, ?PropertyPatternInterface $propertyPattern = null): void
     {
         $binderObject = new BinderObject();
         $binderObject->bindObjectInternal($source, $target, $propertyPattern);
@@ -30,14 +28,9 @@ class BinderObject
      * @param mixed $source
      * @param mixed $target
      * @param PropertyPatternInterface|null $propertyPattern
-     * @throws InvalidArgumentException
      */
-    protected function bindObjectInternal($source, $target, ?PropertyPatternInterface $propertyPattern = null)
+    protected function bindObjectInternal(object|array $source, object $target, ?PropertyPatternInterface $propertyPattern = null): void
     {
-        if (is_array($target) || !is_object($target)) {
-            throw new InvalidArgumentException('Target object must have to be an object instance');
-        }
-
         $sourceArray = SerializerObject::instance($source)
                     ->withStopAtFirstLevel()
                     ->serialize();
@@ -61,7 +54,7 @@ class BinderObject
      * @param string $propName
      * @param string $value
      */
-    protected function setPropValue($obj, $propName, $value)
+    protected function setPropValue(object $obj, string $propName, mixed $value): void
     {
         if (method_exists($obj, 'set' . $propName)) {
             $obj->{'set' . $propName}($value);

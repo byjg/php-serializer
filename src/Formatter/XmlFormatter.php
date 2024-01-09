@@ -3,29 +3,30 @@
 namespace ByJG\Serializer\Formatter;
 
 use ByJG\Serializer\SerializerObject;
+use SimpleXMLElement;
 
 
 class XmlFormatter implements FormatterInterface
 {
 
-    protected $rootElement = "root";
+    protected string $rootElement = "root";
 
-    protected $listElement = "item";
+    protected string $listElement = "item";
 
-    protected $listElementSuffix = false;
+    protected bool $listElementSuffix = false;
 
     
     /**
-     * @param array|object $serializable
+     * @param object|array $serializable
      * @return mixed
      */
-    public function process($serializable)
+    public function process(object|array $serializable): string
     {
         $array = $serializable;
         if (!is_array($serializable)) {
             $array = SerializerObject::instance($serializable)->serialize();
         }
-        $xml = new \SimpleXMLElement("<?xml version=\"1.0\"?><{$this->rootElement}></{$this->rootElement}>");
+        $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><$this->rootElement></$this->rootElement>");
         $this->arrayToXml($array, $xml);
 
         return $xml->asXML();
@@ -33,19 +34,18 @@ class XmlFormatter implements FormatterInterface
 
     /**
      * @param array $array
-     * @param \SimpleXMLElement $xml
+     * @param SimpleXMLElement $xml
      */
-    protected function arrayToXml($array, \SimpleXMLElement &$xml)
+    protected function arrayToXml(array $array, SimpleXMLElement $xml): void
     {
         foreach ($array as $key => $value) {
             if (is_array($value)) {
                 if (!is_numeric($key)) {
-                    $subnode = $xml->addChild("$key");
-                    $this->arrayToXml($value, $subnode);
+                    $subNode = $xml->addChild("$key");
                 } else {
-                    $subnode = $xml->addChild($this->listElement . ($this->listElementSuffix ? $key : ""));
-                    $this->arrayToXml($value, $subnode);
+                    $subNode = $xml->addChild($this->listElement . ($this->listElementSuffix ? $key : ""));
                 }
+                $this->arrayToXml($value, $subNode);
             } else {
                 $xml->addChild("$key", htmlspecialchars("$value"));
             }
@@ -55,7 +55,7 @@ class XmlFormatter implements FormatterInterface
      * @param mixed $rootElement
      * @return XmlFormatter
      */
-    public function withRootElement($rootElement)
+    public function withRootElement(string $rootElement): self
     {
         $this->rootElement = $rootElement;
         return $this;
@@ -65,17 +65,16 @@ class XmlFormatter implements FormatterInterface
      * @param mixed $listElement
      * @return XmlFormatter
      */
-    public function withListElement($listElement)
+    public function withListElement(string $listElement): self
     {
         $this->listElement = $listElement;
         return $this;
     }
 
     /**
-     * @param mixed $listElementSuffix
      * @return XmlFormatter
      */
-    public function withListElementSuffix()
+    public function withListElementSuffix(): self
     {
         $this->listElementSuffix = true;
         return $this;

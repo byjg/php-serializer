@@ -1,10 +1,11 @@
 <?php
 
-namespace ByJG\Serializer;
+namespace Tests\Serialize;
 
 use ByJG\Serializer\Formatter\JsonFormatter;
 use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
+use ByJG\Serializer\SerializerObject;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Tests\Sample\ModelForceProperty;
