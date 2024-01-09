@@ -2,7 +2,7 @@
 
 namespace ByJG\Serializer\Formatter;
 
-use ByJG\Serializer\SerializerObject;
+use ByJG\Serializer\Serialize;
 use Symfony\Component\Yaml\Yaml;
 
 class YamlFormatter implements FormatterInterface
@@ -18,6 +18,6 @@ class YamlFormatter implements FormatterInterface
             return Yaml::dump($serializable, 2, 2);
         }
 
-        return Yaml::dump(SerializerObject::instance($serializable)->toArray(), 2, 2);
+        return Yaml::dump(Serialize::from($serializable)->toArray(), 2, 2);
     }
 }

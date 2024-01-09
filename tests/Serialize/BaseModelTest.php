@@ -9,7 +9,7 @@ use Tests\Sample\SampleModel;
 
 class BaseModelTest extends TestCase
 {
-    public function testBindFromObject()
+    public function testCopyFromObject()
     {
         $model = new ModelGetter(10, 'Testing');
 
@@ -19,7 +19,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals("Testing", $object->getName());
     }
 
-    public function testBindFromStdClass()
+    public function testCopyFromStdClass()
     {
         // Matching exact property names
         $model = new \stdClass();
@@ -42,7 +42,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals("Testing", $object->getName());
     }
 
-    public function testBindFromArray()
+    public function testCopyFromArray()
     {
         $array = array(
             "Id" => 10,
@@ -55,22 +55,22 @@ class BaseModelTest extends TestCase
         $this->assertEquals("Testing", $object->getName());
     }
 
-   public function testPropertyPatternBind()
+   public function testPropertyPatternCopy()
    {
        $obj = new \stdClass();
        $obj->Id_Model = 10;
        $obj->Client_Name = 'Testing';
 
-       // Testing Without Property Bind
+       // Testing Without Property Copy
        $object = new \Tests\Sample\ModelPropertyPattern();
-       $object->bindFrom($obj);
+       $object->copyFrom($obj);
 
        $this->assertEquals('', $object->getIdModel());
        $this->assertEquals('', $object->getClientName());
 
-       // Testing with Bind
+       // Testing with Copy
        $object = new \Tests\Sample\ModelPropertyPattern();
-       $object->bindFrom($obj, new SnakeToCamelCase());
+       $object->copyFrom($obj, new SnakeToCamelCase());
 
        $this->assertEquals(10, $object->getIdModel());
        $this->assertEquals("Testing", $object->getClientName());
@@ -82,7 +82,7 @@ class BaseModelTest extends TestCase
        $this->assertEquals("Testing", $object->getClientName());
    }
 
-   public function testPropertyPatternBind_2()
+   public function testPropertyPatternCopy_2()
    {
        // Other Testing
        $obj = new \stdClass();
@@ -98,7 +98,7 @@ class BaseModelTest extends TestCase
    /**
     * The current property pattern try do remove the underscore.
     */
-   public function testPropertyPatternBind_3()
+   public function testPropertyPatternCopy_3()
    {
        // Other Testing
        $obj = [
@@ -107,7 +107,7 @@ class BaseModelTest extends TestCase
        ];
 
        $object = new \Tests\Sample\ModelPropertyPattern();
-       $object->bindFrom($obj);
+       $object->copyFrom($obj);
 
        $this->assertEquals("1974-01-26", $object->getBirthdate());
        $this->assertEquals("Joao", $object->getClientName());
@@ -117,7 +117,7 @@ class BaseModelTest extends TestCase
     * The current property pattern try do remove the underscore.
     * The setPropertyPattern is done on constructor
     */
-   public function testPropertyPatternBind_4()
+   public function testPropertyPatternCopy_4()
    {
        // Other Testing
        $obj = [
@@ -125,7 +125,7 @@ class BaseModelTest extends TestCase
        ];
 
        $object = new \Tests\Sample\ModelPropertyPatternConstruct();
-       $object->bindFrom($obj);
+       $object->copyFrom($obj);
 
        $this->assertEquals("1974-01-26", $object->getBirth_date());
    }
@@ -133,7 +133,7 @@ class BaseModelTest extends TestCase
    /**
     * The current property pattern try do remove the underscore.
     */
-   public function testPropertyPatternBind_5()
+   public function testPropertyPatternCopy_5()
    {
        // Other Testing
        $obj = [

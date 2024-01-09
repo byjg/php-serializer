@@ -2,7 +2,7 @@
 
 namespace Tests\Formatter;
 
-use ByJG\Serializer\SerializerObject;
+use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\SampleModel;
@@ -42,7 +42,7 @@ class JsonFormatterTest extends TestCase
 
         $formatter = new JsonFormatter();
         $this->assertEquals('{"collection":[{"Id":10,"Name":"John"},{"Id":20,"Name":"Doe"}]}', $formatter->process($object));
-        $this->assertEquals('[{"Id":10,"Name":"John"},{"Id":20,"Name":"Doe"}]', $formatter->process(SerializerObject::instance($object->getCollection())->toArray()));
+        $this->assertEquals('[{"Id":10,"Name":"John"},{"Id":20,"Name":"Doe"}]', $formatter->process(Serialize::from($object->getCollection())->toArray()));
     }
 
 }

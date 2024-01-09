@@ -2,7 +2,7 @@
 
 namespace Tests\Formatter;
 
-use ByJG\Serializer\SerializerObject;
+use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\SampleModel;
@@ -59,7 +59,7 @@ class YamlFormatterTest extends TestCase
 
         $this->assertEquals(
             file_get_contents(__DIR__ . "/yaml4.yml"),
-            $formatter->process(SerializerObject::instance($object->getCollection())->toArray())
+            $formatter->process(Serialize::from($object->getCollection())->toArray())
         );
     }
 

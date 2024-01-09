@@ -2,7 +2,7 @@
 
 namespace ByJG\Serializer\Formatter;
 
-use ByJG\Serializer\SerializerObject;
+use ByJG\Serializer\Serialize;
 use SimpleXMLElement;
 
 
@@ -24,7 +24,7 @@ class XmlFormatter implements FormatterInterface
     {
         $array = $serializable;
         if (!is_array($serializable)) {
-            $array = SerializerObject::instance($serializable)->toArray();
+            $array = Serialize::from($serializable)->toArray();
         }
         $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><$this->rootElement></$this->rootElement>");
         $this->arrayToXml($array, $xml);

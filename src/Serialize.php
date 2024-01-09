@@ -2,10 +2,14 @@
 
 namespace ByJG\Serializer;
 
+use ByJG\Serializer\Formatter\JsonFormatter;
+use ByJG\Serializer\Formatter\PlainTextFormatter;
+use ByJG\Serializer\Formatter\XmlFormatter;
+use ByJG\Serializer\Formatter\YamlFormatter;
 use stdClass;
 use Symfony\Component\Yaml\Yaml;
 
-class SerializerObject
+class Serialize
 {
     protected mixed $_model = null;
     protected array $_methodPattern = ['/([^A-Za-z0-9])/', ''];
@@ -16,28 +20,29 @@ class SerializerObject
     protected array $_doNotParse = [];
     protected bool $_serializeNull = true;
 
-    protected string $_sourceType = "OBJECT";
-
-    public function __construct(mixed $model)
+    protected function __construct(mixed $model)
     {
         $this->_model = $model;
     }
 
-    public static function instance(mixed $model): self
+    public static function from(mixed $model): self
     {
-        return new SerializerObject($model);
+        return new Serialize($model);
     }
 
-    public function fromYaml(): self
+    public static function fromYaml(string $content): self
     {
-        $this->_sourceType = "YAML";
-        return $this;
+        return new Serialize(Yaml::parse($content));
     }
 
-    public function fromJson(): self
+    public static function fromJson(string $content): self
     {
-        $this->_sourceType = "JSON";
-        return $this;
+        return new Serialize(json_decode($content, true));
+    }
+
+    public static function fromPhpSerialize(string $content): self
+    {
+        return new Serialize(unserialize($content));
     }
 
     /**
@@ -47,18 +52,48 @@ class SerializerObject
      */
     public function toArray(): array
     {
-        if ($this->_sourceType == "YAML") {
-            return Yaml::parse($this->_model);
-        } elseif ($this->_sourceType == "JSON") {
-            return json_decode($this->_model, true);
-        }
-
-        $this->_currentLevel = 1;
-        return $this->parseProperties($this->_model);
+        return $this->parseProperties($this->_model, 1);
     }
 
-    protected function parseProperties($property): mixed
+    public function toPhpSerialize(bool $parse = false): string
     {
+        if ($parse) {
+            return serialize($this->parseProperties($this->_model, 1));
+        }
+        return serialize($this->_model);
+    }
+
+    public function toYaml(): string
+    {
+        $yamlFormatter = new YamlFormatter();
+        return $yamlFormatter->process($this->parseProperties($this->_model, 1));
+    }
+
+    public function toJson(): string
+    {
+        $jsonFormatter = new JsonFormatter();
+        return $jsonFormatter->process($this->parseProperties($this->_model, 1));
+    }
+
+    public function toXml(): string
+    {
+        $xmlFormatter = new XmlFormatter();
+        return $xmlFormatter->process($this->parseProperties($this->_model, 1));
+    }
+
+    public function toPlainText(): string
+    {
+        $plainTextFormatter = new PlainTextFormatter();
+        return $plainTextFormatter->process($this->parseProperties($this->_model, 1));
+    }
+
+
+    protected function parseProperties($property, $startLevel = null): mixed
+    {
+        if (!empty($startLevel)) {
+            $this->_currentLevel = $startLevel;
+        }
+
         // If Stop at First Level is active and the current level is greater than 1 return the
         // original object instead convert it to array;
         if ($this->isStoppingAtFirstLevel() && $this->_currentLevel > 1) {
@@ -92,7 +127,7 @@ class SerializerObject
     }
 
     /**
-     * @return SerializerObject
+     * @return Serialize
      */
     public function withStopAtFirstLevel(): self
     {
@@ -181,7 +216,7 @@ class SerializerObject
     /**
      * @param $search
      * @param $replace
-     * @return SerializerObject
+     * @return Serialize
      */
     public function withMethodPattern($search, $replace): self
     {
@@ -199,7 +234,7 @@ class SerializerObject
 
     /**
      * @param string $methodGetPrefix
-     * @return SerializerObject
+     * @return Serialize
      */
     public function withMethodGetPrefix(string $methodGetPrefix): self
     {

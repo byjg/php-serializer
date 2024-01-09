@@ -2,67 +2,66 @@
 
 namespace Tests\Serialize;
 
-use ByJG\Serializer\BinderObject;
-use ByJG\Serializer\Exception\InvalidArgumentException;
+use ByJG\Serializer\ObjectCopy;
 use ByJG\Serializer\PropertyPattern\CamelToSnakeCase;
 use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
-use ByJG\Serializer\SerializerObject;
+use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelPropertyPattern;
 use Tests\Sample\ModelPublic;
 use Tests\Sample\SampleModel;
 use TypeError;
 
-class BinderObjectTest extends TestCase
+class ObjectCopyTest extends TestCase
 {
-    public function testBind_Constructor()
+    public function testCopy_Constructor()
     {
         $object1 = new SampleModel( ['Id' => 10, 'Name' => 'Joao']);
         $this->assertEquals(10, $object1->Id);
         $this->assertEquals('Joao', $object1->getName());
     }
 
-    public function testBind_Array()
+    public function testCopy_Array()
     {
         $object1 = new SampleModel();
-        $object1->bindFrom( ['Id' => 10, 'Name' => 'Joao'] );
+        $object1->copyFrom( ['Id' => 10, 'Name' => 'Joao'] );
         $this->assertEquals(10, $object1->Id);
         $this->assertEquals('Joao', $object1->getName());
     }
 
-    public function testBind_StdClass()
+    public function testCopy_StdClass()
     {
         $stdClass = new \stdClass();
         $stdClass->Id = 10;
         $stdClass->Name = 'Joao';
 
         $object1 = new SampleModel();
-        $object1->bindFrom( $stdClass );
+        $object1->copyFrom( $stdClass );
         $this->assertEquals(10, $object1->Id);
         $this->assertEquals('Joao', $object1->getName());
     }
 
-    public function testBindTo_Object()
+    public function testCopyTo_Object()
     {
         $object1 = new SampleModel();
         $object1->Id = 10;
         $object1->setName('Joao');
 
         $object2 = new SampleModel();
-        $object1->bindTo($object2);
+        $object1->copyTo($object2);
 
         $this->assertEquals(10, $object2->Id);
         $this->assertEquals('Joao', $object2->getName());
     }
 
-    public function testBindTo_stdClass()
+    public function testCopyTo_stdClass()
     {
         $object1 = new SampleModel();
         $object1->Id = 10;
         $object1->setName('Joao');
 
         $object2 = new \stdClass();
-        $object1->bindTo($object2);
+        $object1->copyTo($object2);
 
         $this->assertEquals(10, $object2->Id);
         $this->assertEquals('Joao', $object2->Name);
@@ -80,7 +79,7 @@ class BinderObjectTest extends TestCase
         $this->assertEquals('Joao', $object2['Name']);
     }
 
-    public function testComplexBind()
+    public function testComplexCopy()
     {
         $model = new ModelPublic(20, 'JG');
 
@@ -94,7 +93,7 @@ class BinderObjectTest extends TestCase
         $this->assertEquals($model, $object->getName());
     }
 
-    public function testBindToArray()
+    public function testCopyToArray()
     {
         $this->expectException(TypeError::class);
         $object1 = new SampleModel();
@@ -103,7 +102,7 @@ class BinderObjectTest extends TestCase
 
         $array = [];
 
-        BinderObject::bind($object1, $array);
+        ObjectCopy::copy($object1, $array);
     }
 
     public function testToArrayFrom()
@@ -112,7 +111,7 @@ class BinderObjectTest extends TestCase
         $object1->Id = 10;
         $object1->setName('Joao');
 
-        $result = SerializerObject::instance($object1)->toArray();
+        $result = Serialize::from($object1)->toArray();
 
         $this->assertEquals(
             [
@@ -130,7 +129,7 @@ class BinderObjectTest extends TestCase
         $object1->setClientName('Joao');
         $object1->setIdModel(1);
 
-        $result = SerializerObject::instance($object1)->toArray();
+        $result = Serialize::from($object1)->toArray();
 
         $this->assertEquals(
             [
@@ -151,7 +150,7 @@ class BinderObjectTest extends TestCase
 
         $target = new \stdClass();
 
-        BinderObject::bind($source, $target, new SnakeToCamelCase());
+        ObjectCopy::copy($source, $target, new SnakeToCamelCase());
 
         $this->assertEquals(1, $target->idModel);
         $this->assertEquals('Joao', $target->clientName);
@@ -167,7 +166,7 @@ class BinderObjectTest extends TestCase
 
         $target = new \stdClass();
 
-        BinderObject::bind($source, $target, new CamelToSnakeCase());
+        ObjectCopy::copy($source, $target, new CamelToSnakeCase());
 
         $this->assertEquals(1, $target->id_model);
         $this->assertEquals('Joao', $target->client_name);

@@ -2,7 +2,7 @@
 
 namespace ByJG\Serializer\Formatter;
 
-use ByJG\Serializer\SerializerObject;
+use ByJG\Serializer\Serialize;
 
 class PlainTextFormatter implements FormatterInterface
 {
@@ -18,7 +18,7 @@ class PlainTextFormatter implements FormatterInterface
     public function process(array|object $serializable): string
     {
         if (!is_array($serializable)) {
-            return $this->processInternal(SerializerObject::instance($serializable)->toArray());
+            return $this->processInternal(Serialize::from($serializable)->toArray());
         }
 
         return $this->processInternal($serializable);
