@@ -23,4 +23,9 @@ class CamelToSnakeCase implements PropertyPatternInterface
     {
         return null;
     }
+
+    public function prepare($value)
+    {
+        return $value;
+    }
 }
