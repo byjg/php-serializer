@@ -66,6 +66,7 @@ abstract class ObjectCopy implements ObjectCopyInterface
 
         foreach ($sourceArray as $propName => $value) {
             if (!is_null($propertyPattern)) {
+                $propName = $propertyPattern->prepare($propName);
                 if (!is_null($propertyPattern->getCallback())) {
                     $propName = preg_replace_callback($propertyPattern->getRegEx(), $propertyPattern->getCallback(), $propName);
                 } else {
