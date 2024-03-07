@@ -6,6 +6,7 @@ use ByJG\Serializer\Formatter\JsonFormatter;
 use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
 use ByJG\Serializer\Serialize;
+use ByJG\Serializer\SerializerObject;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Tests\Sample\ModelForceProperty;
@@ -880,4 +881,29 @@ class SerializerObjectTest extends TestCase
 
         $this->assertEquals($expectedText, Serialize::from($model)->toPlainText());
     }
+
+    public function testIgnoreProperties()
+    {
+        $model = new stdClass();
+        $model->Id = 10;
+        $model->Name = 'Joao';
+        $model->Object1 = new ModelGetter(20, 'JG');
+        $model->Object2 = new ModelPublic(10, 'JG2');
+
+        $serializerObject = Serialize::from($model);
+        $serializerObject->withIgnoreProperties([
+            "Id",
+            'Object2'
+        ]);
+        $result = $serializerObject->toArray();
+
+        $this->assertEquals(
+            [
+                "Name" => 'Joao',
+                'Object1' => ['Name' => 'JG'],
+            ],
+            $result
+        );
+    }
+
 }

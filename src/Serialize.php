@@ -19,6 +19,7 @@ class Serialize
     protected int $_currentLevel = 0;
     protected array $_doNotParse = [];
     protected bool $_serializeNull = true;
+    protected array $_ignoreProperties = [];
 
     protected function __construct(mixed $model)
     {
@@ -145,6 +146,10 @@ class Serialize
         $this->_currentLevel++;
 
         foreach ($array as $key => $value) {
+            if (in_array($key, $this->_ignoreProperties)) {
+                continue;
+            }
+
             $result[$key] = $this->parseProperties($value);
 
             if ($result[$key] === null && !$this->isCopyingNullValues()) {
@@ -192,6 +197,10 @@ class Serialize
                     continue;
                 }
                 $value = $object->{$this->getMethodGetPrefix() . $propertyName}();
+            }
+
+            if (in_array($propertyName, $this->_ignoreProperties)) {
+                continue;
             }
 
             $result[$propertyName] = $this->parseProperties($value);
@@ -295,4 +304,15 @@ class Serialize
         return $this;
     }
 
+    public function withIgnoreProperties(array $properties): self
+    {
+        $this->_ignoreProperties = $properties;
+        return $this;
+    }
+
+    public function withoutIgnoreProperties(): self
+    {
+        $this->_ignoreProperties = [];
+        return $this;
+    }
 }
