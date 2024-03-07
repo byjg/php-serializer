@@ -806,4 +806,28 @@ class SerializerObjectTest extends TestCase
             SerializerObject::instance($yaml)->fromYaml()->serialize()
         );
     }
+
+    public function testIgnoreProperties()
+    {
+        $model = new stdClass();
+        $model->Id = 10;
+        $model->Name = 'Joao';
+        $model->Object1 = new ModelGetter(20, 'JG');
+        $model->Object2 = new ModelPublic(10, 'JG2');
+
+        $serializerObject = new SerializerObject($model);
+        $serializerObject->withIgnoreProperties([
+            "Id",
+            'Object2'
+        ]);
+        $result = $serializerObject->serialize();
+
+        $this->assertEquals(
+            [
+                "Name" => 'Joao',
+                'Object1' => ['Name' => 'JG'],
+            ],
+            $result
+        );
+    }
 }
