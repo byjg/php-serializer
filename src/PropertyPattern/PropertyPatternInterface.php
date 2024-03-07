@@ -11,4 +11,6 @@ interface PropertyPatternInterface
     public function getCallback(): ?Closure;
 
     public function getReplacement(): ?string;
+
+    public function prepare($value);
 }

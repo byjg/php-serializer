@@ -8,5 +8,5 @@ interface FormatterInterface
      * @param array|object $serializable
      * @return string
      */
-    public function process($serializable);
+    public function process(array|object $serializable): string;
 }

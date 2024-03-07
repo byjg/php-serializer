@@ -14,9 +14,10 @@ Just use the Serializer class with any kind of object, stdClass or array;
 
 ```php
 <?php
-$result = \ByJG\Serializer\SerializerObject::instance($data)->serialize();
-$result2 = \ByJG\Serializer\SerializerObject::instance($anyJsonString)->fromJson()->serialize();
-$result3 = \ByJG\Serializer\SerializerObject::instance($anyYamlString)->fromYaml()->serialize();
+$result = \ByJG\Serializer\Serialize::from($data)->toArray();
+$result2 = \ByJG\Serializer\Serialize::fromPhpSerialize($anyPhpSerializedString)->toArray();
+$result2 = \ByJG\Serializer\Serialize::fromJson($anyJsonString)->toArray();
+$result3 = \ByJG\Serializer\Serialize::fromYaml($anyYamlString)->toArray();
 ```
 
 In the examples above `$result`, `$result2` and `$result3` will be an associative array.
@@ -33,9 +34,32 @@ echo (new YamlFormatter())->process($data);
 echo (new PlainTextFormatter())->process($data);
 ```
 
+or you call directly from the Serializer:
+
+```php
+<?php
+$data = [ ... any array content ... ]
+
+echo Serialize::from($data)->toJson();
+echo Serialize::from($data)->toXml();
+echo Serialize::from($data)->toYaml();
+echo Serialize::from($data)->toPlainText();
+```
+
 ## Customizing the Serialization
 
-### Ignore null elements: `withDoNotSerializeNull()`
+These are the possible modifier for parse:
+
+| Method                   | Description                                     |
+|--------------------------|-------------------------------------------------|
+| withDoNotParseNullValues | Ignore null elements                            |
+| withDoNotParse           | Ignore some classes and return them as is       |
+| withOnlyString           | Return only string elements                     |
+| withMethodPattern        | use the pattern to convert method into property | 
+
+
+
+### Ignore null elements: `withDoNotParseNullValues()`
 
 The SerializerObject brings all properties by default. For example:
 
@@ -44,8 +68,8 @@ The SerializerObject brings all properties by default. For example:
 $myclass->setName('Joao');
 $myclass->setAge(null);
 
-$serializer = new \ByJG\Serializer\SerializerObject($myclass);
-$result = $serializer->serialize();
+$serializer = new \ByJG\Serializer\Serialize($myclass);
+$result = $serializer->toArray();
 print_r($result);
 
 // Will return:
@@ -60,9 +84,9 @@ But you can setup for ignore the null elements:
 
 ```php
 <?php
-$result = \ByJG\Serializer\SerializerObject::instance($myclass)
-            ->withDoNotSerializeNull()
-            ->serialize();
+$result = \ByJG\Serializer\Serialize::from($myclass)
+            ->withDoNotParseNullValues()
+            ->toArray();
 print_r($result);
 
 // And the result will be:
@@ -81,38 +105,77 @@ Setting this option below the whole classes defined in the setDoNotParse will be
 
 ```php
 <?php
-$result = \ByJG\Serializer\SerializerObject::instance($myclass)
+$result = \ByJG\Serializer\Serialize::from($myclass)
             ->withDoNotParse([
                 MyClass::class
             ])
-            ->serialize();
+            ->toArray();
 ```
 
-## Create a *bindable* object
+### Return only string elements: `withOnlyString()`
 
-Add to the object the method `bind` that allows set contents from another object
+Sometimes we want to serialize the object and return only the string elements.
+
+```php
+<?php
+$model = new stdClass();
+$model->varFalse = false;
+$model->varTrue = true;
+$model->varZero = 0;
+$model->varZeroStr = '0';
+$model->varNull = null;
+$model->varEmptyString = '';
+
+$result = \ByJG\Serializer\Serialize::from($myclass)
+            ->withOnlyString()
+            ->toArray();
+
+// It will return:
+// Array
+// (
+//     [varFalse] => ''
+//     [varTrue] => '1'
+//     [varZero] => '0'
+//     [varZeroStr] => '0'
+//     [varNull] => ''
+//     [varEmptyString] => ''
+// )
+``` 
+
+### Use the pattern to convert method into property: `withMethodPattern($pattern, $replace)`
+
+In the class we might have the name `property` name different from the getter method. 
+
+The default configuration is to remove everything in the `property` 
+that doesn't match with the `$pattern = '/([^A-Za-z0-9])/'`
+
+If you need something different you can use the `withMethodPattern` to define your own pattern.
+
+## Create a class can copy from/to any object
+
+Add to the object the method `copyFrom` and `copyTo` that allows set property contents from/to another object
 
 ```php
 <?php
 // Create the class
-class MyClass extends BindableObject
+class MyClass extends ObjectCopy
 {}
 
-// Bind any data into the properties of myclass
-$myclass->bindFrom($data);
+// Copy the properties from $data into the properties that match on $myclass
+$myclass->copyFrom($data);
 
-// You can convert to array all properties
-$myclass->bindTo($otherobject);
+// Copy the properties from $myclass into the properties that match on $otherObject
+$myclass->copyTo($otherobject);
 ```
 
 ## Copy contents from any object to another
 
 ```php
 // Set all properties from $source that matches with the property in $target
-BinderObject::bind($source, $target);
+ObjectCopy::copy($source, $target);
 
 // Convert all properties of any object into array
-SerializerObject::serialize($source);
+SerializerObject::from($source)->toArry;
 ```
 
 ### Copy contents from an object with CamelCase properties to another with snake_case properties
@@ -137,7 +200,7 @@ $source->idModel = 1;
 $source->clientName = 'John';
 $source->age = 30;
 
-BinderObject::bind($source, $target, new CamelToSnakeCase());
+ObjectCopy::copy($source, $target, new CamelToSnakeCase());
 ```
 
 ### Copy contents from an object with snake_case properties to another with CamelCase properties
@@ -162,7 +225,7 @@ $source->id_model = 1;
 $source->client_name = 'John';
 $source->age = 30;
 
-BinderObject::bind($source, $target, new SnakeToCamelCase());
+ObjectCopy::copy($source, $target, new SnakeToCamelCase());
 ```
 
 
@@ -175,7 +238,7 @@ composer require "byjg/serialize"
 ## Test
 
 ```
-vendor/bin/phpunit
+./vendor/bin/phpunit
 ```
 
 ## Dependencies
@@ -184,6 +247,7 @@ vendor/bin/phpunit
 flowchart TD
     byjg/serializer --> ext-json
     byjg/serializer --> symfony/yaml
+    byjg/serializer --> ext-simplexml
 ```
 
 ----
