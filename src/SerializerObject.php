@@ -15,6 +15,7 @@ class SerializerObject
     protected $_currentLevel = 0;
     protected $_doNotParse = [];
     protected $_serializeNull = true;
+    protected $_ignoreProperties = [];
 
     protected $_sourceType = "OBJECT";
 
@@ -110,6 +111,10 @@ class SerializerObject
         $this->_currentLevel++;
 
         foreach ($array as $key => $value) {
+            if (in_array($key, $this->_ignoreProperties)) {
+                continue;
+            }
+
             $result[$key] = $this->serializeProperties($value);
 
             if ($result[$key] === null && !$this->isSerializingNull()) {
@@ -157,6 +162,10 @@ class SerializerObject
                     continue;
                 }
                 $value = $object->{$this->getMethodGetPrefix() . $propertyName}();
+            }
+
+            if (in_array($propertyName, $this->_ignoreProperties)) {
+                continue;
             }
 
             $result[$propertyName] = $this->serializeProperties($value);
@@ -259,4 +268,15 @@ class SerializerObject
         return $this;
     }
 
+    public function withIgnoreProperties(array $properties)
+    {
+        $this->_ignoreProperties = $properties;
+        return $this;
+    }
+
+    public function withoutIgnoreProperties()
+    {
+        $this->_ignoreProperties = [];
+        return $this;
+    }
 }
