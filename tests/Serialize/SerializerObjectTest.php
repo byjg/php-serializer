@@ -905,5 +905,4 @@ class SerializerObjectTest extends TestCase
             $result
         );
     }
-
 }
