@@ -1,7 +1,8 @@
 <?php
 
-namespace ByJG\Serializer;
+namespace Tests\Formatter;
 
+use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\SampleModel;
@@ -41,7 +42,7 @@ class PlainTextFormatterTest extends TestCase
 
         $formatter = new PlainTextFormatter();
         $this->assertEquals("10\nJohn\n\n20\nDoe\n\n\n", $formatter->process($object));
-        $this->assertEquals("10\nJohn\n\n20\nDoe\n\n", $formatter->process(SerializerObject::instance($object->getCollection())->serialize()));
+        $this->assertEquals("10\nJohn\n\n20\nDoe\n\n", $formatter->process(Serialize::from($object->getCollection())->toArray()));
     }
 
 }

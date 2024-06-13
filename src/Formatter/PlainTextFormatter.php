@@ -2,30 +2,30 @@
 
 namespace ByJG\Serializer\Formatter;
 
-use ByJG\Serializer\SerializerObject;
+use ByJG\Serializer\Serialize;
 
 class PlainTextFormatter implements FormatterInterface
 {
 
-    protected $breakLine = "\n";
-    protected $startOfLine = "";
-    protected $ignorePropertyName = true;
+    protected string $breakLine = "\n";
+    protected string $startOfLine = "";
+    protected bool $ignorePropertyName = true;
 
     /**
-     * @param array $serializable
+     * @param array|object $serializable
      * @return mixed
      */
-    public function process($serializable)
+    public function process(array|object $serializable): string
     {
         if (!is_array($serializable)) {
-            return $this->processInternal(SerializerObject::instance($serializable)->serialize());
+            return $this->processInternal(Serialize::from($serializable)->toArray());
         }
 
         return $this->processInternal($serializable);
         
     }
 
-    protected function processInternal($serializable)
+    protected function processInternal(array|object $serializable): string
     {
         $result = "";
 
