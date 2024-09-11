@@ -15,7 +15,7 @@ class ModelForceProperty
     protected $nonExistante = "30";
 
     /**
-     * @return string
+     * @return int
      */
     public function getFakeProp()
     {

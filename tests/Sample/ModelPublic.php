@@ -4,18 +4,18 @@ namespace Tests\Sample;
 
 use ByJG\Serializer\BaseModel;
 
-class ModelPublic extends BaseModel
+class ModelPublic
 {
 
-    public $Id = "";
-    public $Name = "";
+    public ?int $Id = null;
+    public ?string $Name = null;
 
     /**
      * ModelPublic constructor.
-     * @param int $Id
-     * @param string $Name
+     * @param ?int $Id
+     * @param ?string $Name
      */
-    public function __construct($Id, $Name)
+    public function __construct(?int $Id, ?string $Name)
     {
         $this->Id = $Id;
         $this->Name = $Name;

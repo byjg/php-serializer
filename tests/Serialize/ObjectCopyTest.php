@@ -7,6 +7,7 @@ use ByJG\Serializer\PropertyPattern\CamelToSnakeCase;
 use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
 use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 use Tests\Sample\ModelPropertyPattern;
 use Tests\Sample\ModelPublic;
 use Tests\Sample\SampleModel;
@@ -31,7 +32,7 @@ class ObjectCopyTest extends TestCase
 
     public function testCopy_StdClass()
     {
-        $stdClass = new \stdClass();
+        $stdClass = new stdClass();
         $stdClass->Id = 10;
         $stdClass->Name = 'Joao';
 
@@ -60,7 +61,7 @@ class ObjectCopyTest extends TestCase
         $object1->Id = 10;
         $object1->setName('Joao');
 
-        $object2 = new \stdClass();
+        $object2 = new stdClass();
         $object1->copyTo($object2);
 
         $this->assertEquals(10, $object2->Id);
@@ -83,7 +84,7 @@ class ObjectCopyTest extends TestCase
     {
         $model = new ModelPublic(20, 'JG');
 
-        $data = new \stdClass();
+        $data = new stdClass();
         $data->Id = 10;
         $data->Name = $model;
 
@@ -143,12 +144,12 @@ class ObjectCopyTest extends TestCase
 
     public function testPropertyPatterSnakeToCamel()
     {
-        $source = new \stdClass();
+        $source = new stdClass();
         $source->id_model = 1;
         $source->client_name = 'Joao';
         $source->age = 49;
 
-        $target = new \stdClass();
+        $target = new stdClass();
 
         ObjectCopy::copy($source, $target, new SnakeToCamelCase());
 
@@ -159,12 +160,12 @@ class ObjectCopyTest extends TestCase
 
     public function testPropertyPatterCamelToSnake()
     {
-        $source = new \stdClass();
+        $source = new stdClass();
         $source->idModel = 1;
         $source->clientName = 'Joao';
         $source->age = 49;
 
-        $target = new \stdClass();
+        $target = new stdClass();
 
         ObjectCopy::copy($source, $target, new CamelToSnakeCase());
 

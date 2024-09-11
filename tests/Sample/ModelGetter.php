@@ -4,7 +4,7 @@ namespace Tests\Sample;
 
 use ByJG\Serializer\BaseModel;
 
-class ModelGetter extends BaseModel
+class ModelGetter
 {
 
     protected $_Id = "";

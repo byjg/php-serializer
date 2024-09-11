@@ -4,7 +4,11 @@ namespace Tests\Serialize;
 
 use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 use Tests\Sample\ModelGetter;
+use Tests\Sample\ModelPropertyPattern;
+use Tests\Sample\ModelPropertyPatternAnnotation;
+use Tests\Sample\ModelPropertyPatternConstruct;
 use Tests\Sample\SampleModel;
 
 class BaseModelTest extends TestCase
@@ -22,7 +26,7 @@ class BaseModelTest extends TestCase
     public function testCopyFromStdClass()
     {
         // Matching exact property names
-        $model = new \stdClass();
+        $model = new stdClass();
         $model->Id = 10;
         $model->Name = "Testing";
 
@@ -32,7 +36,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals("Testing", $object->getName());
 
         // Matching with different case letters
-        $model2 = new \stdClass();
+        $model2 = new stdClass();
         $model2->id = 10;
         $model2->name = "Testing";
 
@@ -57,26 +61,26 @@ class BaseModelTest extends TestCase
 
    public function testPropertyPatternCopy()
    {
-       $obj = new \stdClass();
+       $obj = new stdClass();
        $obj->Id_Model = 10;
        $obj->Client_Name = 'Testing';
 
        // Testing Without Property Copy
-       $object = new \Tests\Sample\ModelPropertyPattern();
+       $object = new ModelPropertyPattern();
        $object->copyFrom($obj);
 
        $this->assertEquals('', $object->getIdModel());
        $this->assertEquals('', $object->getClientName());
 
        // Testing with Copy
-       $object = new \Tests\Sample\ModelPropertyPattern();
+       $object = new ModelPropertyPattern();
        $object->copyFrom($obj, new SnakeToCamelCase());
 
        $this->assertEquals(10, $object->getIdModel());
        $this->assertEquals("Testing", $object->getClientName());
 
        // Testing Constructor
-       $object = new \Tests\Sample\ModelPropertyPattern($obj, new SnakeToCamelCase());
+       $object = new ModelPropertyPattern($obj, new SnakeToCamelCase());
 
        $this->assertEquals(10, $object->getIdModel());
        $this->assertEquals("Testing", $object->getClientName());
@@ -85,11 +89,11 @@ class BaseModelTest extends TestCase
    public function testPropertyPatternCopy_2()
    {
        // Other Testing
-       $obj = new \stdClass();
+       $obj = new stdClass();
        $obj->IdModel = 10;
        $obj->ClientName = 'Testing';
 
-       $object = new \Tests\Sample\ModelPropertyPattern($obj);
+       $object = new ModelPropertyPattern($obj);
 
        $this->assertEquals(10, $object->getIdModel());
        $this->assertEquals("Testing", $object->getClientName());
@@ -106,7 +110,7 @@ class BaseModelTest extends TestCase
            "birthdate" => "1974-01-26"
        ];
 
-       $object = new \Tests\Sample\ModelPropertyPattern();
+       $object = new ModelPropertyPattern();
        $object->copyFrom($obj);
 
        $this->assertEquals("1974-01-26", $object->getBirthdate());
@@ -124,7 +128,7 @@ class BaseModelTest extends TestCase
            "birth_date" => "1974-01-26"
        ];
 
-       $object = new \Tests\Sample\ModelPropertyPatternConstruct();
+       $object = new ModelPropertyPatternConstruct();
        $object->copyFrom($obj);
 
        $this->assertEquals("1974-01-26", $object->getBirth_date());
@@ -140,7 +144,7 @@ class BaseModelTest extends TestCase
            "birth_date" => "1974-01-26"
        ];
 
-       $object = new \Tests\Sample\ModelPropertyPatternAnnotation($obj);
+       $object = new ModelPropertyPatternAnnotation($obj);
 
        $this->assertEquals("1974-01-26", $object->getBirth_date());
    }
