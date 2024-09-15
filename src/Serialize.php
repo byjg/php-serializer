@@ -26,22 +26,22 @@ class Serialize
         $this->_model = $model;
     }
 
-    public static function from(object|array $model): self
+    public static function from(object|array $model): static
     {
         return new Serialize($model);
     }
 
-    public static function fromYaml(string $content): self
+    public static function fromYaml(string $content): static
     {
         return new Serialize(Yaml::parse($content));
     }
 
-    public static function fromJson(string $content): self
+    public static function fromJson(string $content): static
     {
         return new Serialize(json_decode($content, true));
     }
 
-    public static function fromPhpSerialize(string $content): self
+    public static function fromPhpSerialize(string $content): static
     {
         return new Serialize(unserialize($content));
     }
@@ -128,9 +128,9 @@ class Serialize
     }
 
     /**
-     * @return Serialize
+     * @return $this
      */
-    public function withStopAtFirstLevel(): self
+    public function withStopAtFirstLevel(): static
     {
         $this->_stopAtFirstLevel = true;
         return $this;
@@ -188,7 +188,7 @@ class Serialize
 
         foreach ((array)$object as $key => $value) {
             $propertyName = $key;
-            if ($key[0] == "\0") {
+            if (str_starts_with($key, "\0")) {
                 // validate protected;
                 $keyName = substr($key, strrpos($key, "\0"));
                 $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
@@ -225,9 +225,9 @@ class Serialize
     /**
      * @param $search
      * @param $replace
-     * @return Serialize
+     * @return $this
      */
-    public function withMethodPattern($search, $replace): self
+    public function withMethodPattern($search, $replace): static
     {
         $this->_methodPattern = [$search, $replace];
         return $this;
@@ -243,9 +243,9 @@ class Serialize
 
     /**
      * @param string $methodGetPrefix
-     * @return Serialize
+     * @return $this
      */
-    public function withMethodGetPrefix(string $methodGetPrefix): self
+    public function withMethodGetPrefix(string $methodGetPrefix): static
     {
         $this->_methodGetPrefix = $methodGetPrefix;
         return $this;
@@ -263,7 +263,7 @@ class Serialize
      * @param bool $value
      * @return $this
      */
-    public function withOnlyString(bool $value = true): self
+    public function withOnlyString(bool $value = true): static
     {
         $this->_onlyString = $value;
         return $this;
@@ -281,7 +281,7 @@ class Serialize
      * @param array $doNotParse
      * @return $this
      */
-    public function withDoNotParse(array $doNotParse): self
+    public function withDoNotParse(array $doNotParse): static
     {
         $this->_doNotParse = $doNotParse;
         return $this;
@@ -298,19 +298,19 @@ class Serialize
     /**
      * @return $this
      */
-    public function withDoNotParseNullValues(): self
+    public function withDoNotParseNullValues(): static
     {
         $this->_serializeNull = false;
         return $this;
     }
 
-    public function withIgnoreProperties(array $properties): self
+    public function withIgnoreProperties(array $properties): static
     {
         $this->_ignoreProperties = $properties;
         return $this;
     }
 
-    public function withoutIgnoreProperties(): self
+    public function withoutIgnoreProperties(): static
     {
         $this->_ignoreProperties = [];
         return $this;

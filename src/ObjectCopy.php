@@ -3,6 +3,7 @@
 namespace ByJG\Serializer;
 
 use ByJG\Serializer\PropertyPattern\PropertyPatternInterface;
+use Closure;
 use stdClass;
 
 abstract class ObjectCopy implements ObjectCopyInterface
@@ -32,7 +33,7 @@ abstract class ObjectCopy implements ObjectCopyInterface
      * @param mixed $target
      * @param PropertyPatternInterface|null $propertyPattern
      */
-    public static function copy(object|array $source, object|array $target, ?PropertyPatternInterface $propertyPattern = null): void
+    public static function copy(object|array $source, object|array $target, ?PropertyPatternInterface $propertyPattern = null, Closure $changeValue = null): void
     {
         $sourceArray = Serialize::from($source)
             ->withStopAtFirstLevel()
@@ -65,15 +66,14 @@ abstract class ObjectCopy implements ObjectCopyInterface
         };
 
         foreach ($sourceArray as $propName => $value) {
+            $targetName = $propName;
             if (!is_null($propertyPattern)) {
-                $propName = $propertyPattern->prepare($propName);
-                if (!is_null($propertyPattern->getCallback())) {
-                    $propName = preg_replace_callback($propertyPattern->getRegEx(), $propertyPattern->getCallback(), $propName);
-                } else {
-                    $propName = preg_replace($propertyPattern->getRegEx(), $propertyPattern->getReplacement(), $propName);
-                }
+                $targetName = $propertyPattern->map($propName);
             }
-            $setPropValue($target, $propName, $value);
+            if (!is_null($changeValue)) {
+                $value = $changeValue($propName, $targetName, $value);
+            }
+            $setPropValue($target, $targetName, $value);
         }
     }
 }

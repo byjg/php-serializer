@@ -2,15 +2,7 @@
 
 namespace ByJG\Serializer\PropertyPattern;
 
-use Closure;
-
 interface PropertyPatternInterface
 {
-    public function getRegEx(): string;
-
-    public function getCallback(): ?Closure;
-
-    public function getReplacement(): ?string;
-
-    public function prepare($value);
+    public function map(string $sourcePropertyName): string;
 }

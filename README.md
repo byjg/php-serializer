@@ -228,6 +228,39 @@ $source->age = 30;
 ObjectCopy::copy($source, $target, new SnakeToCamelCase());
 ```
 
+### Copy contents from an object with different name properties on the target
+
+```php
+class Source
+{
+    public $id_model;
+    public $client_name;
+    public $age;
+}
+
+class Target
+{
+    public $SomeId;
+    public $SomeName;
+    public $SomeAge;
+}
+
+$source = new Source();
+$source->id_model = 1;
+$source->client_name = 'John';
+$source->age = 30;
+
+ObjectCopy::copy(
+    $source,
+    $target,
+    new DifferentTargetProperty([
+        "id_model" => "SomeId", 
+        "client_name" => "SomeName", 
+        "age" => "SomeAge"
+    ])
+);
+```
+
 
 ## Install
 

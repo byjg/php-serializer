@@ -4,6 +4,7 @@ namespace Tests\Serialize;
 
 use ByJG\Serializer\ObjectCopy;
 use ByJG\Serializer\PropertyPattern\CamelToSnakeCase;
+use ByJG\Serializer\PropertyPattern\DifferentTargetProperty;
 use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
 use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
@@ -25,7 +26,7 @@ class ObjectCopyTest extends TestCase
     public function testCopy_Array()
     {
         $object1 = new SampleModel();
-        $object1->copyFrom( ['Id' => 10, 'Name' => 'Joao'] );
+        $object1->copyFrom(['Id' => 10, 'Name' => 'Joao']);
         $this->assertEquals(10, $object1->Id);
         $this->assertEquals('Joao', $object1->getName());
     }
@@ -37,7 +38,7 @@ class ObjectCopyTest extends TestCase
         $stdClass->Name = 'Joao';
 
         $object1 = new SampleModel();
-        $object1->copyFrom( $stdClass );
+        $object1->copyFrom($stdClass);
         $this->assertEquals(10, $object1->Id);
         $this->assertEquals('Joao', $object1->getName());
     }
@@ -142,6 +143,21 @@ class ObjectCopyTest extends TestCase
         );
     }
 
+    public function testObjectCopy()
+    {
+        $source = [
+            "Id" => 1,
+            "Name" => "Joao",
+            "Ignored" => "Ignored"
+        ];
+
+        $target = new ModelPublic(5, "Test");
+        ObjectCopy::copy($source, $target, new SnakeToCamelCase());
+
+        $this->assertEquals(1, $target->Id);
+        $this->assertEquals('Joao', $target->Name);
+    }
+
     public function testPropertyPatterSnakeToCamel()
     {
         $source = new stdClass();
@@ -150,13 +166,13 @@ class ObjectCopyTest extends TestCase
         $source->age = 49;
 
         $target = new stdClass();
-
         ObjectCopy::copy($source, $target, new SnakeToCamelCase());
 
         $this->assertEquals(1, $target->idModel);
         $this->assertEquals('Joao', $target->clientName);
         $this->assertEquals(49, $target->age);
     }
+
 
     public function testPropertyPatterCamelToSnake()
     {
@@ -172,5 +188,41 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals(1, $target->id_model);
         $this->assertEquals('Joao', $target->client_name);
         $this->assertEquals(49, $target->age);
+    }
+
+    public function testPropertyDifferentName()
+    {
+        $source = new stdClass();
+        $source->idModel = 1;
+        $source->clientName = 'Joao';
+        $source->age = 49;
+
+        $target = new stdClass();
+
+        ObjectCopy::copy($source, $target, new DifferentTargetProperty(['idModel' => 'x', 'clientName' => 'y']));
+
+        $this->assertEquals(1, $target->x);
+        $this->assertEquals('Joao', $target->y);
+        $this->assertEquals(49, $target->age);
+
+    }
+
+    public function testPropertyDifferentNameAndChangeValue()
+    {
+        $source = new stdClass();
+        $source->idModel = 1;
+        $source->clientName = 'Joao';
+        $source->age = 49;
+
+        $target = new stdClass();
+
+        ObjectCopy::copy($source, $target, new DifferentTargetProperty(['idModel' => 'x', 'clientName' => 'y']), function ($propName, $targetName, $value) {
+            return "$propName-$targetName-$value";
+        });
+
+        $this->assertEquals("idModel-x-1", $target->x);
+        $this->assertEquals('clientName-y-Joao', $target->y);
+        $this->assertEquals("age-age-49", $target->age);
+
     }
 }

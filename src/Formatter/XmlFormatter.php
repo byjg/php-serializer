@@ -18,7 +18,7 @@ class XmlFormatter implements FormatterInterface
     
     /**
      * @param object|array $serializable
-     * @return mixed
+     * @return string
      */
     public function process(object|array $serializable): string
     {

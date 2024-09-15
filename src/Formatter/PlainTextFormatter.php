@@ -13,7 +13,7 @@ class PlainTextFormatter implements FormatterInterface
 
     /**
      * @param array|object $serializable
-     * @return mixed
+     * @return string
      */
     public function process(array|object $serializable): string
     {
@@ -42,30 +42,30 @@ class PlainTextFormatter implements FormatterInterface
     }
 
     /**
-     * @param mixed $breakLine
-     * @return PlainTextFormatter
+     * @param string $breakLine
+     * @return $this
      */
-    public function withBreakLine($breakLine)
+    public function withBreakLine(string $breakLine): static
     {
         $this->breakLine = $breakLine;
         return $this;
     }
 
     /**
-     * @param mixed $startOfLine
-     * @return PlainTextFormatter
+     * @param string $startOfLine
+     * @return $this
      */
-    public function withStartOfLine($startOfLine)
+    public function withStartOfLine(string $startOfLine): static
     {
         $this->startOfLine = $startOfLine;
         return $this;
     }
 
     /**
-     * @param mixed $ignorePropertyName
-     * @return PlainTextFormatter
+     * @param bool $ignorePropertyName
+     * @return $this
      */
-    public function withIgnorePropertyName($ignorePropertyName)
+    public function withIgnorePropertyName(bool $ignorePropertyName): static
     {
         $this->ignorePropertyName = $ignorePropertyName;
         return $this;

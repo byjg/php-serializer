@@ -12,8 +12,8 @@ class ModelGetter
 
     /**
      * ModelGetter constructor.
-     * @param int $Id
-     * @param string $Name
+     * @param int|null $Id
+     * @param string|null $Name
      */
     public function __construct($Id, $Name)
     {

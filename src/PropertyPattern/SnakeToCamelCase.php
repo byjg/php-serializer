@@ -2,30 +2,16 @@
 
 namespace ByJG\Serializer\PropertyPattern;
 
-use Closure;
-
 class SnakeToCamelCase implements PropertyPatternInterface
 {
-
-    public function getRegEx(): string
+    public function map(string $sourcePropertyName): string
     {
-        return '/_([a-z])/i';
-    }
-
-    public function getCallback(): ?Closure
-    {
-        return function ($matches) {
-            return strtoupper($matches[1]);
-        };
-    }
-
-    public function getReplacement(): ?string
-    {
-        return null;
-    }
-
-    public function prepare($value)
-    {
-        return strtolower($value);
+        return preg_replace_callback(
+            '/_([a-z])/i',
+            function ($matches) {
+                return strtoupper($matches[1]);
+            },
+            strtolower($sourcePropertyName)
+        );
     }
 }

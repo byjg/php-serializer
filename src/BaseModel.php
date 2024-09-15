@@ -11,10 +11,10 @@ abstract class BaseModel extends ObjectCopy
      * Create a BaseModel that has inherited ObjectCopy and toArray() method
      * IteratorInterface
      *
-     * @param null $object
+     * @param array|object|null $object
      * @param PropertyPatternInterface|null $propertyPattern
      */
-    public function __construct($object = null, ?PropertyPatternInterface $propertyPattern = null)
+    public function __construct(array|object|null $object = null, ?PropertyPatternInterface $propertyPattern = null)
     {
         if (!is_null($object)) {
             $this->copyFrom($object, $propertyPattern);
