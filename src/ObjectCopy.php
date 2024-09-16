@@ -10,18 +10,18 @@ abstract class ObjectCopy implements ObjectCopyInterface
 {
     /**
      * @param array|object $source
-     * @param PropertyPatternInterface|null $propertyPattern
+     * @param \Closure|PropertyPatternInterface|null $propertyPattern
      */
-    public function copyFrom(array|object $source, ?PropertyPatternInterface $propertyPattern = null): void
+    public function copyFrom(array|object $source, PropertyPatternInterface|\Closure|null $propertyPattern = null): void
     {
         ObjectCopy::copy($source, $this, $propertyPattern);
     }
 
     /**
      * @param array|object $target
-     * @param PropertyPatternInterface|null $propertyPattern
+     * @param Closure|PropertyPatternInterface|null $propertyPattern
      */
-    public function copyTo(array|object $target, ?PropertyPatternInterface $propertyPattern = null): void
+    public function copyTo(array|object $target, PropertyPatternInterface|Closure|null $propertyPattern = null): void
     {
         ObjectCopy::copy($this, $target, $propertyPattern);
     }
@@ -31,9 +31,10 @@ abstract class ObjectCopy implements ObjectCopyInterface
      *
      * @param mixed $source
      * @param mixed $target
-     * @param PropertyPatternInterface|null $propertyPattern
+     * @param PropertyPatternInterface|Closure|null $propertyPattern
+     * @param Closure|null $changeValue
      */
-    public static function copy(object|array $source, object|array $target, ?PropertyPatternInterface $propertyPattern = null, Closure $changeValue = null): void
+    public static function copy(object|array $source, object|array $target, PropertyPatternInterface|Closure|null $propertyPattern = null, Closure $changeValue = null): void
     {
         $sourceArray = Serialize::from($source)
             ->withStopAtFirstLevel()
@@ -68,7 +69,7 @@ abstract class ObjectCopy implements ObjectCopyInterface
         foreach ($sourceArray as $propName => $value) {
             $targetName = $propName;
             if (!is_null($propertyPattern)) {
-                $targetName = $propertyPattern->map($propName);
+                $targetName = $propertyPattern instanceof PropertyPatternInterface ? $propertyPattern->map($propName) : $propertyPattern($propName);
             }
             if (!is_null($changeValue)) {
                 $value = $changeValue($propName, $targetName, $value);

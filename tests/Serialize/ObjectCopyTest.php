@@ -225,4 +225,23 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals("age-age-49", $target->age);
 
     }
+
+    public function testClosure()
+    {
+        $source = new stdClass();
+        $source->idModel = 1;
+        $source->clientName = 'Joao';
+        $source->age = 49;
+
+        $target = new stdClass();
+
+        ObjectCopy::copy($source, $target, function ($propName) {
+            return $propName . 'X';
+        });
+
+        $this->assertEquals(1, $target->idModelX);
+        $this->assertEquals('Joao', $target->clientNameX);
+        $this->assertEquals(49, $target->ageX);
+
+    }
 }
