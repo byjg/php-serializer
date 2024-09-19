@@ -228,10 +228,10 @@ class Serialize
                 /** @psalm-suppress InvalidArgument */
                 $attributes = $reflection->getProperty($keyName ?? $propertyName)->getAttributes($attributeClass, $flags);
                 if (count($attributes) == 0) {
-                    $parsedValue = $attributeFunction(null, $parsedValue);
+                    $parsedValue = $attributeFunction(null, $parsedValue, $keyName ?? $propertyName);
                 } else {
                     foreach ($attributes as $attribute) {
-                        $parsedValue = $attributeFunction($attribute->newInstance(), $parsedValue);
+                        $parsedValue = $attributeFunction($attribute->newInstance(), $parsedValue, $keyName ?? $propertyName);
                     }
                 }
             }

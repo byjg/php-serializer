@@ -77,7 +77,7 @@ echo Serialize::from($data)->toJson();
 echo Serialize::from($data)->toXml();
 echo Serialize::from($data)->toYaml();
 echo Serialize::from($data)->toPlainText();
-echo Serialize::from($data)->parseAttributes($attributeClass, $flags, fn($instanceAttribute, $parsedValue));
+echo Serialize::from($data)->parseAttributes($attributeClass, $flags, fn($instanceAttribute, $parsedValue, $propertyName));
 ```
 
 ### Customizing the Serialization

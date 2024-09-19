@@ -913,17 +913,18 @@ class SerializerObjectTest extends TestCase
         $model = new ModelGetter(10, 'Joao');
 
         /** @var SampleAttribute $attribute */
-        $result = Serialize::from($model)->parseAttributes(SampleAttribute::class, ReflectionAttribute::IS_INSTANCEOF, function ($attribute, $value) {
-            return "$value: " . $attribute?->getElementName();
+        $result = Serialize::from($model)->parseAttributes(SampleAttribute::class, ReflectionAttribute::IS_INSTANCEOF, function ($attribute, $value, $propertyName) {
+            return "['$propertyName', '$value', '" . $attribute?->getElementName() . "']";
         });
 
         $this->assertEquals(
             [
-                "Id" => "10: ",
-                "Name" => "Joao: Attribute is set",
+                "Id" => "['_Id', '10', '']",
+                "Name" => "['_Name', 'Joao', 'Attribute is set']"
             ],
             $result
         );
+
 
     }
 }
