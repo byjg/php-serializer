@@ -8,6 +8,7 @@ use ByJG\Serializer\Formatter\XmlFormatter;
 use ByJG\Serializer\Serialize;
 use ByJG\Serializer\SerializerObject;
 use PHPUnit\Framework\TestCase;
+use ReflectionAttribute;
 use stdClass;
 use Tests\Sample\ModelForceProperty;
 use Tests\Sample\ModelGetter;
@@ -15,6 +16,7 @@ use Tests\Sample\ModelList;
 use Tests\Sample\ModelList2;
 use Tests\Sample\ModelList3;
 use Tests\Sample\ModelPublic;
+use Tests\Sample\SampleAttribute;
 
 class SerializerObjectTest extends TestCase
 {
@@ -904,5 +906,24 @@ class SerializerObjectTest extends TestCase
             ],
             $result
         );
+    }
+
+    public function testParseAttributes()
+    {
+        $model = new ModelGetter(10, 'Joao');
+
+        /** @var SampleAttribute $attribute */
+        $result = Serialize::from($model)->parseAttributes(SampleAttribute::class, ReflectionAttribute::IS_INSTANCEOF, function ($attribute, $value) {
+            return "$value: " . $attribute?->getElementName();
+        });
+
+        $this->assertEquals(
+            [
+                "Id" => "10: ",
+                "Name" => "Joao: Attribute is set",
+            ],
+            $result
+        );
+
     }
 }

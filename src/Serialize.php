@@ -6,6 +6,10 @@ use ByJG\Serializer\Formatter\JsonFormatter;
 use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
 use ByJG\Serializer\Formatter\YamlFormatter;
+use ByJG\XmlUtil\Attributes\XmlProperty;
+use Closure;
+use ReflectionClass;
+use ReflectionException;
 use stdClass;
 use Symfony\Component\Yaml\Yaml;
 
@@ -88,8 +92,13 @@ class Serialize
         return $plainTextFormatter->process($this->parseProperties($this->_model, 1));
     }
 
+    public function parseAttributes(string $attributeClass, int $flags, ?Closure $attributeFunction): array
+    {
+        return $this->parseProperties($this->_model, 1, $attributeClass, $flags, $attributeFunction);
+    }
 
-    protected function parseProperties($property, $startLevel = null): mixed
+
+    protected function parseProperties($property, $startLevel = null, ?string $attributeClass = null, ?int $flags = null, ?Closure $attributeFunction = null): mixed
     {
         if (!empty($startLevel)) {
             $this->_currentLevel = $startLevel;
@@ -110,7 +119,7 @@ class Serialize
         }
 
         if (is_object($property)) {
-            return $this->parseObject($property);
+            return $this->parseObject($property, $attributeClass, $flags, $attributeFunction);
         }
 
         if ($this->isOnlyString()) {
@@ -171,9 +180,13 @@ class Serialize
 
     /**
      * @param object $object
+     * @param string|null $attributeClass
+     * @param int|null $flags
+     * @param Closure|null $attributeFunction
      * @return array|object
+     * @throws ReflectionException
      */
-    protected function parseObject(object $object): array|object
+    protected function parseObject(object $object, ?string $attributeClass = null, ?int $flags = null, ?Closure $attributeFunction = null): array|object
     {
         // Check if this object can serialize
         foreach ($this->_doNotParse as $class) {
@@ -186,11 +199,17 @@ class Serialize
         $result = [];
         $this->_currentLevel++;
 
+        $reflection = null;
+        if ($attributeClass !== null) {
+            $reflection = new ReflectionClass($object);
+        }
+
         foreach ((array)$object as $key => $value) {
             $propertyName = $key;
+            $keyName = null;
             if (str_starts_with($key, "\0")) {
                 // validate protected;
-                $keyName = substr($key, strrpos($key, "\0"));
+                $keyName = trim(substr($key, strrpos($key, "\0")));
                 $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
 
                 if (!method_exists($object, $this->getMethodGetPrefix() . $propertyName)) {
@@ -203,11 +222,25 @@ class Serialize
                 continue;
             }
 
-            $result[$propertyName] = $this->parseProperties($value);
+            $parsedValue = $this->parseProperties($value);
 
-            if ($result[$propertyName] === null && !$this->isCopyingNullValues()) {
-                unset($result[$propertyName]);
+            if (!is_null($reflection)) {
+                /** @psalm-suppress InvalidArgument */
+                $attributes = $reflection->getProperty($keyName ?? $propertyName)->getAttributes($attributeClass, $flags);
+                if (count($attributes) == 0) {
+                    $parsedValue = $attributeFunction(null, $parsedValue);
+                } else {
+                    foreach ($attributes as $attribute) {
+                        $parsedValue = $attributeFunction($attribute->newInstance(), $parsedValue);
+                    }
+                }
             }
+
+            if ($parsedValue === null && !$this->isCopyingNullValues()) {
+                continue;
+            }
+
+            $result[$propertyName] = $parsedValue;
         }
 
         return $result;

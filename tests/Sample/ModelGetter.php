@@ -8,6 +8,8 @@ class ModelGetter
 {
 
     protected $_Id = "";
+
+    #[SampleAttribute("Attribute is set")]
     protected $_Name = "";
 
     /**
