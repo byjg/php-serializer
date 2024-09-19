@@ -111,11 +111,11 @@ class Serialize
         }
 
         if (is_array($property)) {
-            return $this->parseArray($property);
+            return $this->parseArray($property, $attributeFunction);
         }
 
         if ($property instanceof stdClass) {
-            return $this->parseStdClass($property);
+            return $this->parseStdClass($property, $attributeFunction);
         }
 
         if (is_object($property)) {
@@ -149,7 +149,7 @@ class Serialize
      * @param array $array
      * @return array
      */
-    protected function parseArray(array $array): array
+    protected function parseArray(array $array, ?\Closure $attributeFunction = null): array
     {
         $result = [];
         $this->_currentLevel++;
@@ -159,11 +159,17 @@ class Serialize
                 continue;
             }
 
-            $result[$key] = $this->parseProperties($value);
+            $parsedValue = $this->parseProperties($value);
 
-            if ($result[$key] === null && !$this->isCopyingNullValues()) {
-                unset($result[$key]);
+            if (!is_null($attributeFunction)) {
+                $parsedValue = $attributeFunction(null, $parsedValue, $key);
             }
+
+            if ($parsedValue === null && !$this->isCopyingNullValues()) {
+                continue;
+            }
+
+            $result[$key] = $parsedValue;
         }
 
         return $result;
@@ -173,9 +179,9 @@ class Serialize
      * @param stdClass $stdClass
      * @return array
      */
-    protected function parseStdClass(stdClass $stdClass): array
+    protected function parseStdClass(stdClass $stdClass, ?\Closure $attributeFunction = null): array
     {
-        return $this->parseArray((array)$stdClass);
+        return $this->parseArray((array)$stdClass, $attributeFunction);
     }
 
     /**

@@ -924,7 +924,28 @@ class SerializerObjectTest extends TestCase
             ],
             $result
         );
+    }
 
+    public function testParseAttributesStdClass()
+    {
+        // This test is a safeguard to guarantee the function will be called
+        // even if the object is an array or a stdClass
 
+        $model = new \stdClass();
+        $model->Id = 10;
+        $model->Name = 'Joao';
+
+        /** @var SampleAttribute $attribute */
+        $result = Serialize::from($model)->parseAttributes(SampleAttribute::class, ReflectionAttribute::IS_INSTANCEOF, function ($attribute, $value, $propertyName) {
+            return "['$propertyName', '$value', '" . $attribute?->getElementName() . "']";
+        });
+
+        $this->assertEquals(
+            [
+                "Id" => "['Id', '10', '']",
+                "Name" => "['Name', 'Joao', '']"
+            ],
+            $result
+        );
     }
 }
