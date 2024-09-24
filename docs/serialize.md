@@ -205,11 +205,10 @@ $model->Name = "John";
 
 $result = Serialize::from($data)
             ->parseAttributes(
-                SampleAttribute::class, 
-                ReflectionAttribute::IS_INSTANCEOF, 
-                function ($attribute, $value) {
+                function ($attribute, $value, $keyName, $propertyName, $getterName) {
                     return "$value: " . $attribute?->getElementName();
-                }
+                },
+                SampleAttribute::class, 
             );
 
 // Will return:
