@@ -36,45 +36,46 @@ abstract class ObjectCopy implements ObjectCopyInterface
      */
     public static function copy(object|array $source, object|array $target, PropertyPatternInterface|Closure|null $propertyPattern = null, Closure $changeValue = null): void
     {
-        $sourceArray = Serialize::from($source)
-            ->withStopAtFirstLevel()
-            ->toArray();
-        
         $propNameLower = [];
 
-        $setPropValue = function(object $obj, string $propName, mixed $value) use ($propNameLower) {
-            if (method_exists($obj, 'set' . $propName)) {
-                $obj->{'set' . $propName}($value);
-            } elseif (isset($obj->{$propName}) || $obj instanceof stdClass) {
-                $obj->{$propName} = $value;
-            } else {
-                // Check if source property have property case name different from target
-                $className = get_class($obj);
-                if (!isset($propNameLower[$className])) {
-                    $propNameLower[$className] = [];
+        $sourceArray = Serialize::from($source)
+            ->withStopAtFirstLevel()
+            ->parseAttributes(
+                function ($attribute, $value, $keyName, $propertyName, $getterName) use ($propertyPattern, $changeValue, $target, $propNameLower) {
+                    // ----------------------------------------------
+                    // Extract the target name
+                    $targetName = $propertyName;
+                    if (!is_null($propertyPattern)) {
+                        $targetName = $propertyPattern instanceof PropertyPatternInterface ? $propertyPattern->map($propertyName) : $propertyPattern($propertyName);
+                    }
+                    if (!is_null($changeValue)) {
+                        $value = $changeValue($propertyName, $targetName, $value);
+                    }
 
-                    $classVars = get_class_vars($className);
-                    foreach ($classVars as $varKey => $varValue) {
-                        $propNameLower[$className][strtolower($varKey)] = $varKey;
+                    // ----------------------------------------------
+                    // Set the value to the target
+                    if (method_exists($target, 'set' . $targetName)) {
+                        $target->{'set' . $targetName}($value);
+                    } elseif (isset($target->{$targetName}) || $target instanceof stdClass) {
+                        $target->{$targetName} = $value;
+                    } else {
+                        // Check if source property have property case name different from target
+                        $className = get_class($target);
+                        if (!isset($propNameLower[$className])) {
+                            $propNameLower[$className] = [];
+
+                            $classVars = get_class_vars($className);
+                            foreach ($classVars as $varKey => $varValue) {
+                                $propNameLower[$className][strtolower($varKey)] = $varKey;
+                            }
+                        }
+
+                        $propLower = strtolower($targetName);
+                        if (isset($propNameLower[$className][$propLower])) {
+                            $target->{$propNameLower[$className][$propLower]} = $value;
+                        }
                     }
                 }
-
-                $propLower = strtolower($propName);
-                if (isset($propNameLower[$className][$propLower])) {
-                    $obj->{$propNameLower[$className][$propLower]} = $value;
-                }
-            }
-        };
-
-        foreach ($sourceArray as $propName => $value) {
-            $targetName = $propName;
-            if (!is_null($propertyPattern)) {
-                $targetName = $propertyPattern instanceof PropertyPatternInterface ? $propertyPattern->map($propName) : $propertyPattern($propName);
-            }
-            if (!is_null($changeValue)) {
-                $value = $changeValue($propName, $targetName, $value);
-            }
-            $setPropValue($target, $targetName, $value);
-        }
+            );
     }
 }
