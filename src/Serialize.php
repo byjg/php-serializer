@@ -186,43 +186,128 @@ class Serialize
         return $this->parseArray((array)$stdClass, $attributeFunction);
     }
 
-    protected function cache(string $objectName, string $propertyName = null, string $getter = null, string $keyName = null, object $attribute = null): mixed
+    protected function _cacheKey(string $objectName)
     {
-        // If the object is not in the cache, create it
-        if (!isset(self::$cache[$objectName][$this->getMethodPattern(0)][$this->getMethodPattern(1)])) {
-            self::$cache[$objectName][$this->getMethodPattern(0)][$this->getMethodPattern(1)] = [];
+        return $objectName . '|' . $this->_methodPattern[0] . '|' . $this->_methodPattern[1];
+    }
+
+    protected function cacheGet($objectName): array
+    {
+        $key = $this->_cacheKey($objectName);
+
+        if (!isset(self::$cache[$key])) {
+            self::$cache[$key] = [];
         }
 
-        // If the property is not passed, return the object
-        if (empty($propertyName)) {
-            return self::$cache[$objectName][$this->getMethodPattern(0)][$this->getMethodPattern(1)];
-        }
+        return self::$cache[$key];
+    }
 
-        // If the property is not in the cache, create it
-        if (!isset(self::$cache[$objectName][$this->getMethodPattern(0)][$this->getMethodPattern(1)][$propertyName])) {
-            self::$cache[$objectName][$this->getMethodPattern(0)][$this->getMethodPattern(1)][$propertyName] = [
+    protected function cacheGetProperty(string $objectName, string $propertyName): array
+    {
+        $key = $this->_cacheKey($objectName);
+
+        if (!isset(self::$cache[$key][$propertyName])) {
+            self::$cache[$key][$propertyName] = [
                 "getter" => null,
                 "keyName" => null,
                 "attributes" => []
             ];
         }
 
-        // If the getter is passed, cache it
+        return self::$cache[$key][$propertyName];
+    }
+
+    protected function cacheSetGetter(string $objectName, string $propertyName, ?string $getter, ?string $keyName): void
+    {
+        $key = $this->_cacheKey($objectName);
+
+        self::$cache[$key][$propertyName]["getter"] = $getter;
+        self::$cache[$key][$propertyName]["keyName"] = $keyName;
+    }
+
+    protected function cacheSetAttributes(string $objectName, string $propertyName, object $attribute): void
+    {
+        $key = $this->_cacheKey($objectName);
+
+        self::$cache[$key][$propertyName]["attributes"][get_class($attribute)] = $attribute;
+    }
+
+    protected function cacheGetAttributes(string $objectName, string $propertyName, string $attribute): object|null
+    {
+        $key = $this->_cacheKey($objectName);
+
+        return self::$cache[$key][$propertyName]["attributes"][$attribute] ?? null;
+    }
+
+    // This is the stage to get the first parse of the object and cache the properties
+    public function cacheObject(object $object, array &$result, ?string $attributeClass, ?Closure $attributeFunction): array
+    {
+        $cachedObject = $this->cacheGet(get_class($object));
+        if (!empty($cachedObject)) {
+            return $cachedObject;
+        }
+
+        // Parse the object properties and cache the attributes
+        foreach ((array)$object as $key => $value) {
+            $propertyName = $key;
+            $getter = null;
+            $keyName = null;
+            if (str_starts_with($key, "\0")) {
+                // validate protected;
+                $keyName = trim(substr($key, strrpos($key, "\0")));
+                $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
+
+                if (!method_exists($object, $this->getMethodGetPrefix() . $propertyName)) {
+                    continue;
+                }
+
+                $getter = $this->getMethodGetPrefix() . $propertyName;
+            }
+
+            $keyName = $keyName ?? $propertyName;
+
+            $this->cacheSetGetter(get_class($object), $propertyName, getter: $getter, keyName: $keyName);
+
+            $reflection = new ReflectionClass($object);
+            $attributes = $reflection->getProperty($keyName)->getAttributes(null, ReflectionAttribute::IS_INSTANCEOF);
+            foreach ($attributes as $attribute) {
+                $newAttribute = $attribute->newInstance();
+                $this->cacheSetAttributes(get_class($object), $propertyName, attribute: $newAttribute);
+            }
+
+            $this->setValue($result, $object, $propertyName, $this->cacheGetProperty(get_class($object), $propertyName), $attributeClass, $attributeFunction);
+        }
+
+        return [];  // Don't need to parse inside the object
+    }
+
+    // Once the properties are cached, we can get the array based on the cached properties
+    protected function setValue(array &$result, object $object, string $propertyName, array $cachedProperty, ?string $attributeClass, ?Closure $attributeFunction): void
+    {
+        if (in_array($propertyName, $this->_ignoreProperties)) {
+            return;
+        }
+
+        $getter = $cachedProperty["getter"];
+        $keyName = $cachedProperty["keyName"];
         if (!empty($getter)) {
-            self::$cache[$objectName][$this->getMethodPattern(0)][$this->getMethodPattern(1)][$propertyName]["getter"] = $getter;
+            $value = $object->$getter();
+        } else {
+            $value = $object->$propertyName;
         }
 
-        if (!empty($keyName)) {
-            self::$cache[$objectName][$this->getMethodPattern(0)][$this->getMethodPattern(1)][$propertyName]["keyName"] = $keyName;
+        $parsedValue = $this->parseProperties($value);
+
+        if (!is_null($attributeFunction)) {
+            $attributes = $this->cacheGetAttributes(get_class($object), $propertyName, $attributeClass ?? '.');
+            $parsedValue = $attributeFunction($attributes ?? null, $parsedValue, $keyName, $propertyName, $getter);
         }
 
-        // If the attribute is passed, cache it
-        if (!empty($attribute)) {
-            self::$cache[$objectName][$this->getMethodPattern(0)][$this->getMethodPattern(1)][$propertyName]["attributes"][] = $attribute;
+        if ($parsedValue === null && !$this->isCopyingNullValues()) {
+            return;
         }
 
-        return self::$cache[$objectName][$this->getMethodPattern(0)][$this->getMethodPattern(1)][$propertyName];
-
+        $result[$propertyName] = $parsedValue;
     }
 
     /**
@@ -245,76 +330,11 @@ class Serialize
         $result = [];
         $this->_currentLevel++;
 
-
-        $cachedObject = $this->cache(get_class($object));
-
-        // Parse the object properties and cache the attributes
-        if (empty($cachedObject)) {
-            foreach ((array)$object as $key => $value) {
-                $propertyName = $key;
-                $getter = null;
-                $keyName = null;
-                if (str_starts_with($key, "\0")) {
-                    // validate protected;
-                    $keyName = trim(substr($key, strrpos($key, "\0")));
-                    $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
-
-                    if (!method_exists($object, $this->getMethodGetPrefix() . $propertyName)) {
-                        continue;
-                    }
-
-                    $getter = $this->getMethodGetPrefix() . $propertyName;
-                }
-
-                $keyName = $keyName ?? $propertyName;
-
-                $this->cache(get_class($object), $propertyName, getter: $getter, keyName: $keyName);
-
-                $reflection = new ReflectionClass($object);
-                $attributes = $reflection->getProperty($keyName)->getAttributes(null, ReflectionAttribute::IS_INSTANCEOF);
-                foreach ($attributes as $attribute) {
-                    $newAttribute = $attribute->newInstance();
-                    $this->cache(get_class($object), $propertyName, attribute: $newAttribute);
-                }
-            }
-
-            $cachedObject = $this->cache(get_class($object));
-        }
+        $cachedObject = $this->cacheObject($object, $result, $attributeClass, $attributeFunction);
 
         // Get the values based on the cached properties
         foreach ($cachedObject as $propertyName => $cachedProperty) {
-            if (in_array($propertyName, $this->_ignoreProperties)) {
-                continue;
-            }
-
-            $getter = $cachedProperty["getter"];
-            $keyName = $cachedProperty["keyName"];
-            if (!empty($getter)) {
-                $value = $object->$getter();
-            } else {
-                $value = $object->$propertyName;
-            }
-
-            $parsedValue = $this->parseProperties($value);
-
-            if (!is_null($attributeFunction)) {
-                $attributes = $cachedProperty["attributes"];
-                if (count($attributes) == 0 || $attributeClass === null) {
-                    $parsedValue = $attributeFunction(null, $parsedValue, $keyName, $propertyName, $getter);
-                } else {
-                    foreach ($attributes as $attribute) {
-                        if ($attribute instanceof $attributeClass) {
-                            $parsedValue = $attributeFunction($attribute, $parsedValue, $keyName, $propertyName, $getter);
-                        }
-                    }
-                }
-            }
-
-            if ($parsedValue === null && !$this->isCopyingNullValues()) {
-                continue;
-            }
-
-            $result[$propertyName] = $parsedValue;
+            $this->setValue($result, $object, $propertyName, $cachedProperty, $attributeClass, $attributeFunction);
         }
 
         return $result;
