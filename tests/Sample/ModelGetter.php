@@ -4,16 +4,18 @@ namespace Tests\Sample;
 
 use ByJG\Serializer\BaseModel;
 
-class ModelGetter extends BaseModel
+class ModelGetter
 {
 
     protected $_Id = "";
+
+    #[SampleAttribute("Attribute is set")]
     protected $_Name = "";
 
     /**
      * ModelGetter constructor.
-     * @param int $Id
-     * @param string $Name
+     * @param int|null $Id
+     * @param string|null $Name
      */
     public function __construct($Id, $Name)
     {

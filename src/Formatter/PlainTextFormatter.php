@@ -2,30 +2,30 @@
 
 namespace ByJG\Serializer\Formatter;
 
-use ByJG\Serializer\SerializerObject;
+use ByJG\Serializer\Serialize;
 
 class PlainTextFormatter implements FormatterInterface
 {
 
-    protected $breakLine = "\n";
-    protected $startOfLine = "";
-    protected $ignorePropertyName = true;
+    protected string $breakLine = "\n";
+    protected string $startOfLine = "";
+    protected bool $ignorePropertyName = true;
 
     /**
-     * @param array $serializable
-     * @return mixed
+     * @param array|object $serializable
+     * @return string
      */
-    public function process($serializable)
+    public function process(array|object $serializable): string
     {
         if (!is_array($serializable)) {
-            return $this->processInternal(SerializerObject::instance($serializable)->serialize());
+            return $this->processInternal(Serialize::from($serializable)->toArray());
         }
 
         return $this->processInternal($serializable);
         
     }
 
-    protected function processInternal($serializable)
+    protected function processInternal(array|object $serializable): string
     {
         $result = "";
 
@@ -42,30 +42,30 @@ class PlainTextFormatter implements FormatterInterface
     }
 
     /**
-     * @param mixed $breakLine
-     * @return PlainTextFormatter
+     * @param string $breakLine
+     * @return $this
      */
-    public function withBreakLine($breakLine)
+    public function withBreakLine(string $breakLine): static
     {
         $this->breakLine = $breakLine;
         return $this;
     }
 
     /**
-     * @param mixed $startOfLine
-     * @return PlainTextFormatter
+     * @param string $startOfLine
+     * @return $this
      */
-    public function withStartOfLine($startOfLine)
+    public function withStartOfLine(string $startOfLine): static
     {
         $this->startOfLine = $startOfLine;
         return $this;
     }
 
     /**
-     * @param mixed $ignorePropertyName
-     * @return PlainTextFormatter
+     * @param bool $ignorePropertyName
+     * @return $this
      */
-    public function withIgnorePropertyName($ignorePropertyName)
+    public function withIgnorePropertyName(bool $ignorePropertyName): static
     {
         $this->ignorePropertyName = $ignorePropertyName;
         return $this;

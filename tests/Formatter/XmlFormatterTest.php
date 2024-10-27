@@ -1,7 +1,8 @@
 <?php
 
-namespace ByJG\Serializer;
+namespace Tests\Formatter;
 
+use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelGetter;
 use Tests\Sample\SampleModel;
@@ -28,7 +29,7 @@ class XmlFormatterTest extends TestCase
         $object->setName("Joao");
 
         $formatter = new XmlFormatter();
-        $this->assertEquals("<?xml version=\"1.0\"?>\n<root><Id>10</Id><Name>Joao</Name></root>\n", $formatter->process(SerializerObject::instance($object)->serialize()));
+        $this->assertEquals("<?xml version=\"1.0\"?>\n<root><Id>10</Id><Name>Joao</Name></root>\n", $formatter->process(Serialize::from($object)->toArray()));
         $this->assertEquals("<?xml version=\"1.0\"?>\n<test><Id>10</Id><Name>Joao</Name></test>\n", $formatter->withRootElement("test")->process($object));
     }
 
@@ -42,7 +43,7 @@ class XmlFormatterTest extends TestCase
         $this->assertEquals("<?xml version=\"1.0\"?>\n<root><collection><model0><Id>10</Id><Name>John</Name></model0><model1><Id>20</Id><Name>Doe</Name></model1></collection></root>\n", $formatter->withListElement("model")->withListElementSuffix()->process($object));
 
         $formatter = new XmlFormatter();
-        $this->assertEquals("<?xml version=\"1.0\"?>\n<root><item><Id>10</Id><Name>John</Name></item><item><Id>20</Id><Name>Doe</Name></item></root>\n", $formatter->process(SerializerObject::instance($object->getCollection())->serialize()));
+        $this->assertEquals("<?xml version=\"1.0\"?>\n<root><item><Id>10</Id><Name>John</Name></item><item><Id>20</Id><Name>Doe</Name></item></root>\n", $formatter->process(Serialize::from($object->getCollection())->toArray()));
     }
 
 }

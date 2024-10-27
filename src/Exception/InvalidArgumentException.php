@@ -3,7 +3,9 @@
 namespace ByJG\Serializer\Exception;
 
 
-class InvalidArgumentException extends \Exception
+use Exception;
+
+class InvalidArgumentException extends Exception
 {
 
 }

@@ -4,26 +4,26 @@ namespace ByJG\Serializer;
 
 use ByJG\Serializer\PropertyPattern\PropertyPatternInterface;
 
-abstract class BaseModel extends BindableObject
+abstract class BaseModel extends ObjectCopy
 {
 
     /**
-     * Construct a model and optionally can set (bind) your properties base and the attribute matching from SingleRow,
+     * Create a BaseModel that has inherited ObjectCopy and toArray() method
      * IteratorInterface
      *
-     * @param null $object
+     * @param array|object|null $object
      * @param PropertyPatternInterface|null $propertyPattern
      */
-    public function __construct($object = null, ?PropertyPatternInterface $propertyPattern = null)
+    public function __construct(array|object|null $object = null, ?PropertyPatternInterface $propertyPattern = null)
     {
         if (!is_null($object)) {
-            $this->bindFrom($object, $propertyPattern);
+            $this->copyFrom($object, $propertyPattern);
         }
     }
 
-    public function toArray()
+    public function toArray(): array
     {
-        return SerializerObject::instance($this)->serialize();
+        return Serialize::from($this)->toArray();
     }
 
 }
