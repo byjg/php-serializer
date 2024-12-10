@@ -1,10 +1,14 @@
+---
+sidebar_position: 1
+---
+
 # Serialize class
 
-Using the class `Serialize` you can convert any object to an array or other formats.
+Using the `Serialize` class, you can convert any object into an array or other formats.
 
-During the process you can apply some modifiers to customize the serialization.
+During the process, you can apply modifiers to customize the serialization.
 
-Here is the how `Serialize` works:
+Here is how `Serialize` works:
 
 ```mermaid
 block-beta
@@ -41,19 +45,19 @@ columns 1
 
 ## Examples
 
-### Converting any object/content into array
+### Converting any object/content into an array
 
-Just use the Serializer class with any kind of object, stdClass or array;
+Just use the `Serialize` class with any kind of object, `stdClass`, or array:
 
 ```php
 <?php
 $result = \ByJG\Serializer\Serialize::from($data)->toArray();
 $result2 = \ByJG\Serializer\Serialize::fromPhpSerialize($anyPhpSerializedString)->toArray();
-$result2 = \ByJG\Serializer\Serialize::fromJson($anyJsonString)->toArray();
-$result3 = \ByJG\Serializer\Serialize::fromYaml($anyYamlString)->toArray();
+$result3 = \ByJG\Serializer\Serialize::fromJson($anyJsonString)->toArray();
+$result4 = \ByJG\Serializer\Serialize::fromYaml($anyYamlString)->toArray();
 ```
 
-In the examples above `$result`, `$result2` and `$result3` will be an associative array.
+In the examples above, `$result`, `$result2`, `$result3`, and `$result4` will be associative arrays.
 
 ### Formatting an array into JSON, YAML or ZML
 
@@ -67,7 +71,7 @@ echo (new YamlFormatter())->process($data);
 echo (new PlainTextFormatter())->process($data);
 ```
 
-or you call directly from the Serializer:
+Alternatively, you can call directly from the `Serialize` class:
 
 ```php
 <?php
@@ -82,7 +86,7 @@ echo Serialize::from($data)->parseAttributes($attributeClass, $flags, fn($instan
 
 ### Customizing the Serialization
 
-These are the possible modifier for parse:
+These are the possible modifiers for parsing:
 
 | Method                   | Description                                     |
 |--------------------------|-------------------------------------------------|
@@ -95,7 +99,7 @@ These are the possible modifier for parse:
 
 #### Ignore null elements: `withDoNotParseNullValues()`
 
-The SerializerObject brings all properties by default. For example:
+By default, the `Serialize` class includes all properties. For example:
 
 ```php
 <?php
@@ -114,7 +118,7 @@ print_r($result);
 // )
 ```
 
-But you can setup for ignore the null elements:
+To ignore null elements:
 
 ```php
 <?php
@@ -131,11 +135,9 @@ print_r($result);
 
 ```
 
-#### Do not parse some classes: `withDoNotParse([object])`
+#### Do not parse specific classes: `withDoNotParse([object])`
 
-Sometimes we want to serialize the object but ignore some class types.
-
-Setting this option below the whole classes defined in the setDoNotParse will be ignored and not parsed:
+To serialize an object but ignore specific class types:
 
 ```php
 <?php
@@ -148,7 +150,7 @@ $result = \ByJG\Serializer\Serialize::from($myclass)
 
 #### Return only string elements: `withOnlyString()`
 
-Sometimes we want to serialize the object and return only the string elements.
+To serialize an object and return only string elements:
 
 ```php
 <?php
@@ -176,7 +178,7 @@ $result = \ByJG\Serializer\Serialize::from($myclass)
 // )
 ``` 
 
-#### Use the pattern to convert method into property: `withMethodPattern($pattern, $replace)`
+#### Use the pattern to convert method into properties: `withMethodPattern($pattern, $replace)`
 
 In the class we might have the name `property` name different from the getter method.
 

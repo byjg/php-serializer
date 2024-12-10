@@ -1,8 +1,12 @@
+---
+sidebar_position: 3
+---
+
 # ObjectCopy Interface 
 
-ObjectCopyInterface is an interface that exposes the methods `copyFrom` and `copyTo` that allows set property contents from/to another object.
+`ObjectCopyInterface` is an interface that exposes the methods `copyFrom` and `copyTo`, which allow you to set property contents from or to another object.
 
-You can either implement this interface or extend the class `ObjectCopy`
+You can either implement this interface or extend the class `ObjectCopy`.
 
 ```php
 <?php

@@ -1,9 +1,13 @@
+---
+sidebar_position: 2
+---
+
 # ObjectCopy class
 
-The class ObjectCopy is used to copy the contents from one object to another.
+The `ObjectCopy` class is used to copy the contents from one object to another.
 
-The target object doesn't need to have the same properties as the source object 
-as you can apply transformations that allow you match source and target. 
+The target object doesn't need to have the same properties as the source object, as you can apply transformations 
+that allow you to match the source and target.
 
 ```php
 Object::copy(
@@ -16,7 +20,7 @@ Object::copy(
 
 ## Examples
 
-### Copy contents from an object to another
+### Copy contents from one object to another
 
 ```php
 $soruce = [ "idModel" => 1 , "clientName" => "John", "age" => 30 ];
@@ -32,7 +36,7 @@ $target = new Target();
 ObjectCopy::copy($source, $target);
 ```
 
-### Copy from CamelCase properties to another with snake_case properties
+### Copy from CamelCase properties to snake_case properties
 
 ```php
 class Source
@@ -57,7 +61,7 @@ $source->age = 30;
 ObjectCopy::copy($source, $target, new CamelToSnakeCase());
 ```
 
-### Copy from snake_case properties to another with CamelCase properties
+### Copy from snake_case properties to CamelCase properties
 
 ```php
 class Source
@@ -82,7 +86,7 @@ $source->age = 30;
 ObjectCopy::copy($source, $target, new SnakeToCamelCase());
 ```
 
-### Copy contents and use a map to match the properties
+### Copy contents and use a map to match properties
 
 ```php
 class Source
@@ -119,13 +123,13 @@ ObjectCopy::copy(
 
 ```php
 $propertyPattern = function ($propertyName) {
-    // Execute the logic to match the property name in the target
-    // ex: change case, change name, different setter, etc
+    // Execute logic to match the property name in the target
+    // ex: change case, change name, different setter, etc.
 };
 
 $changeValue = function ($sourceName, $targetName, $valueFound) {
-    // Execute the logic to change the value before set in the target
-    // ex: change the date format, change the value, etc
+    // Execute logic to change the value before setting it in the target
+    // ex: change the date format, modify the value, etc.
 };
 
 Object::copy(
