@@ -13,9 +13,9 @@ class PlainTextFormatter implements FormatterInterface
 
     /**
      * @param array|object $serializable
-     * @return string
+     * @return string|bool
      */
-    public function process(array|object $serializable): string
+    public function process(array|object $serializable): string|bool
     {
         if (!is_array($serializable)) {
             return $this->processInternal(Serialize::from($serializable)->toArray());

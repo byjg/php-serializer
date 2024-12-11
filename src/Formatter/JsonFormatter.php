@@ -9,9 +9,9 @@ class JsonFormatter implements FormatterInterface
 
     /**
      * @param object|array $serializable
-     * @return string
+     * @return string|bool
      */
-    public function process(object|array $serializable): string
+    public function process(object|array $serializable): string|bool
     {
         if (is_array($serializable)) {
             return json_encode($serializable);

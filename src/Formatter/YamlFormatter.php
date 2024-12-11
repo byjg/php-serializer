@@ -10,9 +10,9 @@ class YamlFormatter implements FormatterInterface
 
     /**
      * @param object|array $serializable
-     * @return string
+     * @return string|bool
      */
-    public function process(object|array $serializable): string
+    public function process(object|array $serializable): string|bool
     {
         if (is_array($serializable)) {
             return Yaml::dump($serializable, 2, 2);

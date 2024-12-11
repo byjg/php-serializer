@@ -6,7 +6,7 @@ interface FormatterInterface
 {
     /**
      * @param array|object $serializable
-     * @return string
+     * @return string|bool
      */
-    public function process(array|object $serializable): string;
+    public function process(array|object $serializable): string|bool;
 }

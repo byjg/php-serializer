@@ -18,9 +18,9 @@ class XmlFormatter implements FormatterInterface
     
     /**
      * @param object|array $serializable
-     * @return string
+     * @return string|bool
      */
-    public function process(object|array $serializable): string
+    public function process(object|array $serializable): string|bool
     {
         $array = $serializable;
         if (!is_array($serializable)) {
