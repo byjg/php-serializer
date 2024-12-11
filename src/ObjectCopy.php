@@ -34,7 +34,7 @@ abstract class ObjectCopy implements ObjectCopyInterface
      * @param PropertyPatternInterface|Closure|null $propertyPattern
      * @param Closure|null $changeValue
      */
-    public static function copy(object|array $source, object|array $target, PropertyPatternInterface|Closure|null $propertyPattern = null, Closure $changeValue = null): void
+    public static function copy(object|array $source, object|array $target, PropertyPatternInterface|Closure|null $propertyPattern = null, ?Closure $changeValue = null): void
     {
         $propNameLower = [];
 

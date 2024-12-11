@@ -94,7 +94,7 @@ class Serialize
         return $plainTextFormatter->process($this->parseProperties($this->_model, 1));
     }
 
-    public function parseAttributes(?Closure $attributeFunction, string $attributeClass = null): array
+    public function parseAttributes(?Closure $attributeFunction, ?string $attributeClass = null): array
     {
         return $this->parseProperties($this->_model, 1, $attributeClass, $attributeFunction);
     }
