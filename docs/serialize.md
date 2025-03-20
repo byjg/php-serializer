@@ -30,6 +30,7 @@ columns 1
         t5["withDoNotParse()"]
         t6["withDoNotParseNullValues()"]
         t7["withIgnoreProperties()"]
+        t8["withoutIgnoreProperties()"]
     end
 
     down2<["&nbsp;&nbsp;&nbsp;"]>(down)
@@ -39,7 +40,9 @@ columns 1
         o2["toXml()"]
         o3["toYaml()"]
         o4["toPlainText()"]
-        o5["parseAttributes()"]
+        o5["toPhpSerialize()"]
+        o6["toArray()"]
+        o7["parseAttributes()"]
     end
 ```
 
@@ -59,7 +62,7 @@ $result4 = \ByJG\Serializer\Serialize::fromYaml($anyYamlString)->toArray();
 
 In the examples above, `$result`, `$result2`, `$result3`, and `$result4` will be associative arrays.
 
-### Formatting an array into JSON, YAML or ZML
+### Formatting an array into JSON, YAML, XML, or Plain Text
 
 ```php
 <?php
@@ -81,6 +84,7 @@ echo Serialize::from($data)->toJson();
 echo Serialize::from($data)->toXml();
 echo Serialize::from($data)->toYaml();
 echo Serialize::from($data)->toPlainText();
+echo Serialize::from($data)->toPhpSerialize(); // Serialize to PHP's native serialization format
 echo Serialize::from($data)->parseAttributes($attributeClass, $flags, fn($instanceAttribute, $parsedValue, $propertyName));
 ```
 
@@ -88,14 +92,16 @@ echo Serialize::from($data)->parseAttributes($attributeClass, $flags, fn($instan
 
 These are the possible modifiers for parsing:
 
-| Method                   | Description                                     |
-|--------------------------|-------------------------------------------------|
-| withDoNotParseNullValues | Ignore null elements                            |
-| withDoNotParse           | Ignore some classes and return them as is       |
-| withOnlyString           | Return only string elements                     |
-| withMethodPattern        | use the pattern to convert method into property |
-
-
+| Method                   | Description                                                  |
+|--------------------------|--------------------------------------------------------------|
+| withDoNotParseNullValues | Ignore null elements                                         |
+| withDoNotParse           | Ignore some classes and return them as is                    |
+| withOnlyString           | Return only string elements                                  |
+| withMethodPattern        | Use the pattern to convert method into property              |
+| withMethodGetPrefix      | Set the prefix for getter methods (default is 'get')         |
+| withStopAtFirstLevel     | Only parse the first level of nested objects                 |
+| withIgnoreProperties     | Specify properties to ignore during serialization            |
+| withoutIgnoreProperties  | Clear the list of properties to ignore during serialization  |
 
 #### Ignore null elements: `withDoNotParseNullValues()`
 
@@ -187,10 +193,55 @@ that doesn't match with the `$pattern = '/([^A-Za-z0-9])/'`
 
 If you need something different you can use the `withMethodPattern` to define your own pattern.
 
+#### Set the prefix for getter methods: `withMethodGetPrefix($prefix)`
+
+By default, the `Serialize` class uses 'get' as the prefix for getter methods. You can change this using the `withMethodGetPrefix` method:
+
+```php
+<?php
+$result = \ByJG\Serializer\Serialize::from($myclass)
+            ->withMethodGetPrefix('fetch')
+            ->toArray();
+```
+
+#### Only parse the first level of nested objects: `withStopAtFirstLevel()`
+
+To only parse the first level of nested objects:
+
+```php
+<?php
+$result = \ByJG\Serializer\Serialize::from($myclass)
+            ->withStopAtFirstLevel()
+            ->toArray();
+```
+
+#### Ignore specific properties: `withIgnoreProperties([$prop1, $prop2])`
+
+To ignore specific properties during serialization:
+
+```php
+<?php
+$result = \ByJG\Serializer\Serialize::from($myclass)
+            ->withIgnoreProperties(['password', 'secretKey'])
+            ->toArray();
+```
+
+#### Clear the list of ignored properties: `withoutIgnoreProperties()`
+
+To clear the list of properties to ignore:
+
+```php
+<?php
+$result = \ByJG\Serializer\Serialize::from($myclass)
+            ->withIgnoreProperties(['password'])
+            ->withoutIgnoreProperties() // Clear the ignore list
+            ->toArray();
+```
+
 #### parseAttributes
 
 You can parse the attributes of an object using the `parseAttributes` method.
-This method will search for an specific attribute in the object and will parse it using the `$attributeClass` and `$flags` parameters.
+This method will search for a specific attribute in the object and will parse it using the `$attributeClass` parameter.
 For every property it will call the callback function with the instance attribute if it was found and the parsed value.
 
 ```php
