@@ -245,6 +245,24 @@ This method will search for a specific attribute in the object and will parse it
 For every property it will call the callback function with the instance attribute if it was found and the parsed value.
 
 ```php
+/**
+ * @param Closure|null $attributeFunction A callback function to process attributes
+ * @param string|null $attributeClass Optional class name of attribute to filter by
+ * @return array The processed properties array
+ */
+public function parseAttributes(?Closure $attributeFunction, ?string $attributeClass = null): array
+```
+
+The callback function receives these parameters:
+- `$attribute`: The attribute instance if found, or null
+- `$value`: The parsed value of the property
+- `$keyName`: The property key name in the array
+- `$propertyName`: The original property name
+- `$getterName`: The getter method name if it exists
+
+Example:
+
+```php
 class Model
 {
     public $Id = "";
@@ -256,12 +274,12 @@ $model = new Model();
 $model->Id = "123";
 $model->Name = "John";
 
-$result = Serialize::from($data)
+$result = Serialize::from($model)
             ->parseAttributes(
                 function ($attribute, $value, $keyName, $propertyName, $getterName) {
                     return "$value: " . $attribute?->getElementName();
                 },
-                SampleAttribute::class, 
+                SampleAttribute::class
             );
 
 // Will return:
@@ -271,3 +289,36 @@ $result = Serialize::from($data)
 //     [Name] => "John: Message"
 // )
 ```
+
+This method is particularly useful when working with PHP 8 attributes to customize serialization based on metadata annotations.
+
+## BaseModel class
+
+The library provides an abstract `BaseModel` class that extends `ObjectCopy` and adds convenient functionality:
+
+```php
+<?php
+// Create a class that extends BaseModel
+class User extends BaseModel
+{
+    public $id;
+    public $name;
+    public $email;
+}
+
+// Initialize with data
+$userData = ['id' => 1, 'name' => 'John', 'email' => 'john@example.com'];
+$user = new User($userData);
+
+// Or initialize empty and copy data later
+$user = new User();
+$user->copyFrom($userData);
+
+// Get array representation
+$array = $user->toArray();
+```
+
+The `BaseModel` class gives your models:
+- Automatic ability to copy data from arrays or objects via constructor
+- Built-in `toArray()` method for easy serialization
+- All functionality from `ObjectCopy` (copyFrom and copyTo methods)

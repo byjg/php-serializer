@@ -8,26 +8,20 @@
 
 A powerful PHP library for seamless object serialization, conversion, and property manipulation.
 
-## Overview
+## Features
 
-The PHP Serializer library provides a comprehensive solution for data transformation and object manipulation in PHP applications. It offers three main components:
+- **Format Conversion**: Transform objects to JSON, XML, YAML, or Arrays, and back again
+- **Property Control**: Filter, transform, and manipulate object properties during conversion
+- **Object Mapping**: Copy properties between different object structures with intelligent mapping
+- **Property Pattern Matching**: Customize how properties are matched and transformed
+- **Attribute Support**: Process PHP attributes during serialization and deserialization
+- **Type Safety**: Maintain data types during transformations
 
-### 1. Serialize
+## Quick Examples
 
-Convert any PHP object, array, or `stdClass` into various formats:
-- JSON
-- XML
-- YAML
-- Array
-
-With powerful features like:
-- Property filtering
-- Custom transformations
-- Attribute parsing
-- Nested object handling
+### Convert an object to JSON
 
 ```php
-// Example: Convert an object to JSON
 $object = new MyClass();
 $json = \ByJG\Serializer\Serialize::instance()
     ->from($object)
@@ -35,29 +29,17 @@ $json = \ByJG\Serializer\Serialize::instance()
     ->toJson();
 ```
 
-### 2. ObjectCopy
-
-Copy content between objects with different property structures:
-- Match properties between different objects
-- Apply transformations during copying
-- Handle nested objects
-- Support for arrays and objects
+### Copy properties between objects
 
 ```php
-// Example: Copy properties from one object to another
 $source = ["id" => 1, "name" => "John"];
 $target = new User();
 \ByJG\Serializer\ObjectCopy::copy($source, $target);
 ```
 
-### 3. ObjectCopyInterface
-
-Implement this interface in your classes to enable seamless object copying:
-- `copyFrom()`: Copy properties from another object
-- `copyTo()`: Copy properties to another object
+### Create a copyable object
 
 ```php
-// Example: Class implementing ObjectCopyInterface
 class User extends \ByJG\Serializer\ObjectCopy
 {
     public $id;
@@ -69,16 +51,17 @@ class User extends \ByJG\Serializer\ObjectCopy
 
 ## Documentation
 
-For detailed documentation on each component, please refer to:
+| Component               | Description                                           | Link                                         |
+|-------------------------|-------------------------------------------------------|----------------------------------------------|
+| **Serialize**           | Core component for converting objects between formats | [Documentation](docs/serialize.md)           |
+| **ObjectCopy**          | Copy properties between different object structures   | [Documentation](docs/objectcopy.md)          |
+| **ObjectCopyInterface** | Interface for implementing copyable objects           | [Documentation](docs/objectcopyinterface.md) |
 
-- [Serialize](docs/serialize.md) - Convert objects to different formats
-- [ObjectCopy](docs/objectcopy.md) - Copy content between objects
-- [ObjectCopyInterface](docs/objectcopyinterface.md) - Interface for object copying
 
 ## Installation
 
 ```bash
-composer require "byjg/serialize"
+composer require "byjg/serializer"
 ```
 
 ## Testing

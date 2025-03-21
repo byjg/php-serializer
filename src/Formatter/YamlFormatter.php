@@ -12,6 +12,7 @@ class YamlFormatter implements FormatterInterface
      * @param object|array $serializable
      * @return string|bool
      */
+    #[\Override]
     public function process(object|array $serializable): string|bool
     {
         if (is_array($serializable)) {

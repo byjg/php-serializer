@@ -15,6 +15,7 @@ class PlainTextFormatter implements FormatterInterface
      * @param array|object $serializable
      * @return string|bool
      */
+    #[\Override]
     public function process(array|object $serializable): string|bool
     {
         if (!is_array($serializable)) {

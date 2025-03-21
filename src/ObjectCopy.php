@@ -12,6 +12,7 @@ abstract class ObjectCopy implements ObjectCopyInterface
      * @param array|object $source
      * @param \Closure|PropertyPatternInterface|null $propertyPattern
      */
+    #[\Override]
     public function copyFrom(array|object $source, PropertyPatternInterface|\Closure|null $propertyPattern = null): void
     {
         ObjectCopy::copy($source, $this, $propertyPattern);
@@ -21,6 +22,7 @@ abstract class ObjectCopy implements ObjectCopyInterface
      * @param array|object $target
      * @param Closure|PropertyPatternInterface|null $propertyPattern
      */
+    #[\Override]
     public function copyTo(array|object $target, PropertyPatternInterface|Closure|null $propertyPattern = null): void
     {
         ObjectCopy::copy($this, $target, $propertyPattern);

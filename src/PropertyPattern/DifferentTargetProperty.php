@@ -11,6 +11,7 @@ class DifferentTargetProperty implements PropertyPatternInterface
         $this->mapFields = $mapFields;
     }
 
+    #[\Override]
     public function map(string $sourcePropertyName): string|null
     {
         return $this->mapFields[$sourcePropertyName] ?? $sourcePropertyName;

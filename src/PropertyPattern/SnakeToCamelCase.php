@@ -4,6 +4,7 @@ namespace ByJG\Serializer\PropertyPattern;
 
 class SnakeToCamelCase implements PropertyPatternInterface
 {
+    #[\Override]
     public function map(string $sourcePropertyName): string|null
     {
         return preg_replace_callback(
