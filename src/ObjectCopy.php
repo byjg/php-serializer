@@ -52,7 +52,7 @@ abstract class ObjectCopy implements ObjectCopyInterface
                     $targetName = $propertyName;
                     if (!is_null($propertyHandler)) {
                         $targetName = $propertyHandler->mapName($propertyName);
-                        $value = $propertyHandler->changeValue($propertyName, $targetName, $value);
+                        $value = $propertyHandler->transformValue($propertyName, $targetName, $value);
                     }
 
                     // ----------------------------------------------

@@ -37,7 +37,7 @@ class SnakeToCamelCase implements PropertyHandlerInterface
      * @inheritDoc
      */
     #[\Override]
-    public function changeValue(string $propertyName, string $targetName, mixed $value): mixed
+    public function transformValue(string $propertyName, string $targetName, mixed $value): mixed
     {
         if ($this->valueHandler !== null) {
             return ($this->valueHandler)($propertyName, $targetName, $value);

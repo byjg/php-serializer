@@ -20,5 +20,5 @@ interface PropertyHandlerInterface
      * @param mixed $value The value to be changed
      * @return mixed The modified value
      */
-    public function changeValue(string $propertyName, string $targetName, mixed $value): mixed;
+    public function transformValue(string $propertyName, string $targetName, mixed $value): mixed;
 } 
