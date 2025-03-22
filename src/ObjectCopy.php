@@ -2,56 +2,57 @@
 
 namespace ByJG\Serializer;
 
-use ByJG\Serializer\PropertyPattern\PropertyPatternInterface;
-use Closure;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use stdClass;
 
 abstract class ObjectCopy implements ObjectCopyInterface
 {
     /**
-     * @param array|object $source
-     * @param \Closure|PropertyPatternInterface|null $propertyPattern
+     * Copies properties from the source to this object
+     * 
+     * @param array|object $source The source object to copy from
+     * @param PropertyHandlerInterface|null $propertyHandler The property handler
      */
     #[\Override]
-    public function copyFrom(array|object $source, PropertyPatternInterface|\Closure|null $propertyPattern = null): void
+    public function copyFrom(array|object $source, ?PropertyHandlerInterface $propertyHandler = null): void
     {
-        ObjectCopy::copy($source, $this, $propertyPattern);
+        ObjectCopy::copy($source, $this, $propertyHandler);
     }
 
     /**
-     * @param array|object $target
-     * @param Closure|PropertyPatternInterface|null $propertyPattern
+     * Copies properties from this object to the target
+     * 
+     * @param array|object $target The target object to copy to
+     * @param PropertyHandlerInterface|null $propertyHandler The property handler
      */
     #[\Override]
-    public function copyTo(array|object $target, PropertyPatternInterface|Closure|null $propertyPattern = null): void
+    public function copyTo(array|object $target, ?PropertyHandlerInterface $propertyHandler = null): void
     {
-        ObjectCopy::copy($this, $target, $propertyPattern);
+        ObjectCopy::copy($this, $target, $propertyHandler);
     }
 
     /**
      * Copy the properties from a source object to the properties matching to a target object
      *
-     * @param mixed $source
-     * @param mixed $target
-     * @param PropertyPatternInterface|Closure|null $propertyPattern
-     * @param Closure|null $changeValue
+     * @param object|array $source The source object
+     * @param object|array $target The target object
+     * @param PropertyHandlerInterface|null $propertyHandler The property handler
+     * @return void
      */
-    public static function copy(object|array $source, object|array $target, PropertyPatternInterface|Closure|null $propertyPattern = null, ?Closure $changeValue = null): void
+    public static function copy(object|array $source, object|array $target, ?PropertyHandlerInterface $propertyHandler = null): void
     {
         $propNameLower = [];
 
         $sourceArray = Serialize::from($source)
             ->withStopAtFirstLevel()
             ->parseAttributes(
-                function ($attribute, $value, $keyName, $propertyName, $getterName) use ($propertyPattern, $changeValue, $target, $propNameLower) {
+                function ($attribute, $value, $keyName, $propertyName, $getterName) use ($propertyHandler, $target, $propNameLower) {
                     // ----------------------------------------------
                     // Extract the target name
                     $targetName = $propertyName;
-                    if (!is_null($propertyPattern)) {
-                        $targetName = $propertyPattern instanceof PropertyPatternInterface ? $propertyPattern->map($propertyName) : $propertyPattern($propertyName);
-                    }
-                    if (!is_null($changeValue)) {
-                        $value = $changeValue($propertyName, $targetName, $value);
+                    if (!is_null($propertyHandler)) {
+                        $targetName = $propertyHandler->mapName($propertyName);
+                        $value = $propertyHandler->changeValue($propertyName, $targetName, $value);
                     }
 
                     // ----------------------------------------------

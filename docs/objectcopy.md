@@ -13,8 +13,7 @@ that allow you to match the source and target.
 ObjectCopy::copy(
     object|array $source, 
     object|array $target, 
-    PropertyPatternInterface|Closure|null $propertyPattern = null, 
-    Closure $changeValue = null
+    ?PropertyHandlerInterface $propertyHandler = null
 ): void
 ```
 
@@ -113,7 +112,7 @@ $target = new Target();
 ObjectCopy::copy(
     $source,
     $target,
-    new DifferentTargetProperty([
+    new PropertyNameMapper([
         "id_model" => "SomeId", 
         "client_name" => "SomeName", 
         "age" => "SomeAge"
@@ -121,117 +120,167 @@ ObjectCopy::copy(
 );
 ```
 
-### Custom Property Mapping and Value Transformation
+### Property Mapping with Value Transformation
 
-You can use closures to customize how properties are mapped and values are transformed:
+You can transform values during property copying by passing a closure to the property handler constructor:
 
 ```php
-// Custom property mapping
-$propertyPattern = function ($propertyName) {
-    // Execute logic to match the property name in the target
-    // ex: change case, change name, different setter, etc.
-    return 'custom_' . $propertyName;
-};
-
-// Custom value transformation
-$changeValue = function ($sourceName, $targetName, $valueFound) {
-    // Execute logic to change the value before setting it in the target
-    // ex: change the date format, modify the value, etc.
-    return strtoupper($valueFound);
-};
-
 $source = new Source();
+$source->id_model = 1;
+$source->client_name = 'John';
+$source->age = 30;
+
 $target = new Target();
 
-ObjectCopy::copy(
-    $source, 
-    $target, 
-    $propertyPattern,
-    $changeValue
-);
+// Value transformation function
+$valueHandler = function ($propertyName, $targetName, $value) {
+    if ($targetName === 'clientName') {
+        return strtoupper($value);
+    }
+    if ($targetName === 'age') {
+        return $value + 1;
+    }
+    return $value;
+};
+
+// Apply both property mapping and value transformation
+ObjectCopy::copy($source, $target, new SnakeToCamelCase($valueHandler));
+
+// Result:
+// $target->idModel = 1;
+// $target->clientName = 'JOHN';
+// $target->age = 31;
 ```
 
-The `changeValue` parameter is a closure that gets called for each property with:
-- `$sourceName`: The original property name from the source object
-- `$targetName`: The mapped property name for the target (after applying the property pattern)
-- `$valueFound`: The value from the source object
-
-This allows you to transform values during the copying process, such as:
-- Converting data types (string to int, etc.)
-- Formatting dates or numbers
-- Applying string transformations
-- Creating complex objects from simple values
+The `valueHandler` closure receives:
+- `$propertyName`: The original property name from the source object
+- `$targetName`: The mapped property name for the target (after applying the name mapping)
+- `$value`: The value from the source object
 
 Example with date formatting:
 ```php
 // Source has dates as strings, but target needs DateTime objects
-$changeValue = function ($sourceName, $targetName, $valueFound) {
-    if (in_array($targetName, ['createdAt', 'updatedAt']) && is_string($valueFound)) {
-        return new DateTime($valueFound);
+$valueHandler = function ($propertyName, $targetName, $value) {
+    if (in_array($targetName, ['createdAt', 'updatedAt']) && is_string($value)) {
+        return new DateTime($value);
     }
-    return $valueFound;
+    return $value;
 };
 
-ObjectCopy::copy($source, $target, null, $changeValue);
+ObjectCopy::copy($source, $target, new SnakeToCamelCase($valueHandler));
 ```
 
-## Available Property Pattern Classes
+## Available Property Handler Classes
 
-The library provides several built-in property pattern classes:
+The library provides several built-in property handler classes:
 
 1. **CamelToSnakeCase**: Converts camelCase property names to snake_case
    ```php
    use ByJG\Serializer\ObjectCopy;
-   use ByJG\Serializer\PropertyPattern\CamelToSnakeCase;
+   use ByJG\Serializer\PropertyHandler\CamelToSnakeCase;
    
-   // Example: "idModel" becomes "id_model"
+   // Basic usage: "idModel" becomes "id_model"
    ObjectCopy::copy($source, $target, new CamelToSnakeCase());
+   
+   // With value transformation
+   $valueHandler = function ($propName, $targetName, $value) {
+       // Transform values here
+       return $value;
+   };
+   ObjectCopy::copy($source, $target, new CamelToSnakeCase($valueHandler));
    ```
 
 2. **SnakeToCamelCase**: Converts snake_case property names to camelCase
    ```php
    use ByJG\Serializer\ObjectCopy;
-   use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
+   use ByJG\Serializer\PropertyHandler\SnakeToCamelCase;
    
-   // Example: "id_model" becomes "idModel"
+   // Basic usage: "id_model" becomes "idModel"
    ObjectCopy::copy($source, $target, new SnakeToCamelCase());
+   
+   // With value transformation
+   $valueHandler = function ($propName, $targetName, $value) {
+       // Transform values here
+       return $value;
+   };
+   ObjectCopy::copy($source, $target, new SnakeToCamelCase($valueHandler));
    ```
 
-3. **DifferentTargetProperty**: Maps source properties to different target properties using an array
+3. **PropertyNameMapper**: Maps source properties to different target properties using an array
    ```php
    use ByJG\Serializer\ObjectCopy;
-   use ByJG\Serializer\PropertyPattern\DifferentTargetProperty;
+   use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
    
-   // Map specific property names from source to target
+   // Basic usage
    ObjectCopy::copy(
        $source, 
        $target, 
-       new DifferentTargetProperty([
+       new PropertyNameMapper([
            "sourceProperty" => "targetProperty",
            "firstName" => "givenName",
            "lastName" => "familyName"
        ])
    );
+   
+   // With value transformation
+   $valueHandler = function ($propName, $targetName, $value) {
+       // Transform values here
+       return $value;
+   };
+   ObjectCopy::copy(
+       $source, 
+       $target, 
+       new PropertyNameMapper([
+           "sourceProperty" => "targetProperty"
+       ], $valueHandler)
+   );
    ```
 
-## Creating Custom Property Pattern Classes
+## Creating Custom Property Handler Classes
 
-You can create your own property pattern class by implementing the `PropertyPatternInterface`:
+You can create your own property handler class by implementing the `PropertyHandlerInterface`:
 
 ```php
-use ByJG\Serializer\PropertyPattern\PropertyPatternInterface;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 
-class MyCustomPropertyPattern implements PropertyPatternInterface
+class MyCustomPropertyHandler implements PropertyHandlerInterface
 {
-    public function map(string $sourcePropertyName): string|null
+    private ?Closure $valueHandler;
+    
+    public function __construct(?Closure $valueHandler = null)
+    {
+        $this->valueHandler = $valueHandler;
+    }
+    
+    public function mapName(string $property): string
     {
         // Implement your custom property name mapping logic here
-        // Return the mapped property name for the target
-        // or null if the property should be skipped
-        return "prefix_" . $sourcePropertyName;
+        return "prefix_" . $property;
+    }
+    
+    public function changeValue(string $propertyName, string $targetName, mixed $value): mixed
+    {
+        // Apply custom value transformation
+        if ($this->valueHandler !== null) {
+            return ($this->valueHandler)($propertyName, $targetName, $value);
+        }
+        
+        // Or implement your own logic without a closure
+        if ($targetName === 'prefix_age') {
+            return (int)$value * 2;
+        }
+        
+        return $value;
     }
 }
 
 // Then use it:
-ObjectCopy::copy($source, $target, new MyCustomPropertyPattern());
+ObjectCopy::copy($source, $target, new MyCustomPropertyHandler());
+
+// Or with a custom value handler:
+$valueHandler = function ($propName, $targetName, $value) {
+    // Custom transformations
+    return $value;
+};
+ObjectCopy::copy($source, $target, new MyCustomPropertyHandler($valueHandler));
 ```

@@ -3,9 +3,9 @@
 namespace Tests\Serialize;
 
 use ByJG\Serializer\ObjectCopy;
-use ByJG\Serializer\PropertyPattern\CamelToSnakeCase;
-use ByJG\Serializer\PropertyPattern\DifferentTargetProperty;
-use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
+use ByJG\Serializer\PropertyHandler\CamelToSnakeCase;
+use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
+use ByJG\Serializer\PropertyHandler\SnakeToCamelCase;
 use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -199,15 +199,14 @@ class ObjectCopyTest extends TestCase
 
         $target = new stdClass();
 
-        ObjectCopy::copy($source, $target, new DifferentTargetProperty(['idModel' => 'x', 'clientName' => 'y']));
+        ObjectCopy::copy($source, $target, new PropertyNameMapper(['idModel' => 'x', 'clientName' => 'y']));
 
         $this->assertEquals(1, $target->x);
         $this->assertEquals('Joao', $target->y);
         $this->assertEquals(49, $target->age);
-
     }
 
-    public function testPropertyDifferentNameAndChangeValue()
+    public function testPropertyHandlerWithValueTransformation()
     {
         $source = new stdClass();
         $source->idModel = 1;
@@ -216,32 +215,41 @@ class ObjectCopyTest extends TestCase
 
         $target = new stdClass();
 
-        ObjectCopy::copy($source, $target, new DifferentTargetProperty(['idModel' => 'x', 'clientName' => 'y']), function ($propName, $targetName, $value) {
+        $valueHandler = function ($propName, $targetName, $value) {
             return "$propName-$targetName-$value";
-        });
+        };
+
+        ObjectCopy::copy(
+            $source, 
+            $target, 
+            new PropertyNameMapper(['idModel' => 'x', 'clientName' => 'y'], $valueHandler)
+        );
 
         $this->assertEquals("idModel-x-1", $target->x);
         $this->assertEquals('clientName-y-Joao', $target->y);
         $this->assertEquals("age-age-49", $target->age);
-
     }
 
-    public function testClosure()
+    public function testValueTransformationWithSnakeToCamel()
     {
         $source = new stdClass();
-        $source->idModel = 1;
-        $source->clientName = 'Joao';
+        $source->id_model = 1;
+        $source->client_name = 'Joao';
         $source->age = 49;
 
         $target = new stdClass();
 
-        ObjectCopy::copy($source, $target, function ($propName) {
-            return $propName . 'X';
-        });
+        $valueHandler = function ($propName, $targetName, $value) {
+            if ($targetName === 'clientName') {
+                return strtoupper($value);
+            }
+            return $value;
+        };
 
-        $this->assertEquals(1, $target->idModelX);
-        $this->assertEquals('Joao', $target->clientNameX);
-        $this->assertEquals(49, $target->ageX);
+        ObjectCopy::copy($source, $target, new SnakeToCamelCase($valueHandler));
 
+        $this->assertEquals(1, $target->idModel);
+        $this->assertEquals('JOAO', $target->clientName);
+        $this->assertEquals(49, $target->age);
     }
 }

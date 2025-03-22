@@ -2,7 +2,7 @@
 
 namespace Tests\Serialize;
 
-use ByJG\Serializer\PropertyPattern\SnakeToCamelCase;
+use ByJG\Serializer\PropertyHandler\SnakeToCamelCase;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Tests\Sample\ModelGetter;
@@ -72,7 +72,7 @@ class BaseModelTest extends TestCase
        $this->assertEquals('', $object->getIdModel());
        $this->assertEquals('', $object->getClientName());
 
-       // Testing with Copy
+       // Testing with Property Handler
        $object = new ModelPropertyPattern();
        $object->copyFrom($obj, new SnakeToCamelCase());
 
