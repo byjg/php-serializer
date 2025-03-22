@@ -6,6 +6,7 @@ use Closure;
 
 class PropertyNameMapper implements PropertyHandlerInterface
 {
+    /** @var array<string, string> */
     protected array $mapFields;
     protected ?Closure $valueHandler;
 
