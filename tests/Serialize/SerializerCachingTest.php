@@ -5,6 +5,7 @@ namespace Tests\Serialize;
 use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
 use Tests\Sample\ModelGetter;
+use PHPUnit\Framework\Attributes\Group;
 
 class SerializerCachingTest extends TestCase
 {
@@ -86,9 +87,7 @@ class SerializerCachingTest extends TestCase
         );
     }
     
-    /**
-     * @group performance
-     */
+    #[Group('performance')]
     public function testPropertyCaching()
     {
         // Create a complex object with nested properties
@@ -125,9 +124,7 @@ class SerializerCachingTest extends TestCase
         );
     }
     
-    /**
-     * @group performance
-     */
+    #[Group('performance')]
     public function testCacheObjectMethod()
     {
         // Create a complex model object
