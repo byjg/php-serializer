@@ -16,6 +16,8 @@ use Symfony\Component\Yaml\Yaml;
 class Serialize
 {
     private static array $cache = [];
+    private static array $reflectionCache = [];
+    private static array $methodExistsCache = [];
 
     protected mixed $_model = null;
     protected array $_methodPattern = ['/([^A-Za-z0-9])/', ''];
@@ -26,6 +28,7 @@ class Serialize
     protected array $_doNotParse = [];
     protected bool $_serializeNull = true;
     protected array $_ignoreProperties = [];
+    protected array $_ignorePropertiesMap = [];
 
     protected function __construct(mixed $model)
     {
@@ -112,21 +115,24 @@ class Serialize
             return $property;
         }
 
-        if (is_array($property)) {
+        // Fast type detection using gettype
+        $type = gettype($property);
+        
+        if ($type === 'array') {
             return $this->parseArray($property, $attributeFunction);
         }
 
-        if ($property instanceof stdClass) {
-            return $this->parseStdClass($property, $attributeFunction);
-        }
-
-        if (is_object($property)) {
+        if ($type === 'object') {
+            if ($property instanceof stdClass) {
+                return $this->parseStdClass($property, $attributeFunction);
+            }
             return $this->parseObject($property, $attributeClass, $attributeFunction);
         }
 
-        if ($this->isOnlyString()) {
-            $property = "$property";
+        if ($this->isOnlyString() && $type !== 'string') {
+            $property = (string)$property;
         }
+        
         return $property;
     }
 
@@ -155,9 +161,15 @@ class Serialize
     {
         $result = [];
         $this->_currentLevel++;
+        
+        // Check if we need to filter null values
+        $copyNulls = $this->isCopyingNullValues();
+        $ignorePropertiesMap = $this->_ignorePropertiesMap;
+        $hasIgnoreProperties = !empty($ignorePropertiesMap);
 
         foreach ($array as $key => $value) {
-            if (in_array($key, $this->_ignoreProperties)) {
+            // Fast check if property should be ignored - using isset is much faster than in_array
+            if ($hasIgnoreProperties && isset($ignorePropertiesMap[$key])) {
                 continue;
             }
 
@@ -167,7 +179,8 @@ class Serialize
                 $parsedValue = $attributeFunction(null, $parsedValue, $key, $key, null);
             }
 
-            if ($parsedValue === null && !$this->isCopyingNullValues()) {
+            // Skip null values if needed
+            if ($parsedValue === null && !$copyNulls) {
                 continue;
             }
 
@@ -242,40 +255,61 @@ class Serialize
     // This is the stage to get the first parse of the object and cache the properties
     public function cacheObject(object $object, array &$result, ?string $attributeClass, ?Closure $attributeFunction): array
     {
-        $cachedObject = $this->cacheGet(get_class($object));
+        $className = get_class($object);
+        $cachedObject = $this->cacheGet($className);
         if (!empty($cachedObject)) {
             return $cachedObject;
         }
+
+        // Cache reflection object for this class
+        if (!isset(self::$reflectionCache[$className])) {
+            self::$reflectionCache[$className] = new ReflectionClass($object);
+        }
+        $reflection = self::$reflectionCache[$className];
 
         // Parse the object properties and cache the attributes
         foreach ((array)$object as $key => $value) {
             $propertyName = $key;
             $getter = null;
             $keyName = null;
+            
+            // More efficient property name extraction using regex
             if (str_starts_with($key, "\0")) {
-                // validate protected;
-                $keyName = trim(substr($key, strrpos($key, "\0")));
-                $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
-
-                if (!method_exists($object, $this->getMethodGetPrefix() . $propertyName)) {
-                    continue;
+                if (preg_match('/^\0[^\\0]*\0(.+)$/', $key, $matches)) {
+                    $keyName = $matches[1];
+                    
+                    // For anonymous classes, extract just the property name (remove path and class)
+                    if (str_contains($keyName, '$0')) {
+                        $keyName = substr($keyName, strrpos($keyName, '$0') + 2);
+                    }
+                    
+                    $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
+                    
+                    $getterMethod = $this->getMethodGetPrefix() . $propertyName;
+                    if (!$this->methodExists($object, $getterMethod)) {
+                        continue;
+                    }
+                    
+                    $getter = $getterMethod;
                 }
-
-                $getter = $this->getMethodGetPrefix() . $propertyName;
             }
 
             $keyName = $keyName ?? $propertyName;
 
-            $this->cacheSetGetter(get_class($object), $propertyName, getter: $getter, keyName: $keyName);
+            $this->cacheSetGetter($className, $propertyName, getter: $getter, keyName: $keyName);
 
-            $reflection = new ReflectionClass($object);
-            $attributes = $reflection->getProperty($keyName)->getAttributes(null, ReflectionAttribute::IS_INSTANCEOF);
-            foreach ($attributes as $attribute) {
-                $newAttribute = $attribute->newInstance();
-                $this->cacheSetAttributes(get_class($object), $propertyName, attribute: $newAttribute);
+            try {
+                $property = $reflection->getProperty($keyName);
+                $attributes = $property->getAttributes(null, ReflectionAttribute::IS_INSTANCEOF);
+                foreach ($attributes as $attribute) {
+                    $newAttribute = $attribute->newInstance();
+                    $this->cacheSetAttributes($className, $propertyName, attribute: $newAttribute);
+                }
+            } catch (ReflectionException) {
+                // Property doesn't exist in the reflection API, skip attributes
             }
 
-            $this->setValue($result, $object, $propertyName, $this->cacheGetProperty(get_class($object), $propertyName), $attributeClass, $attributeFunction);
+            $this->setValue($result, $object, $propertyName, $this->cacheGetProperty($className, $propertyName), $attributeClass, $attributeFunction);
         }
 
         return [];  // Don't need to parse inside the object
@@ -284,29 +318,46 @@ class Serialize
     // Once the properties are cached, we can get the array based on the cached properties
     protected function setValue(array &$result, object $object, string $propertyName, array $cachedProperty, ?string $attributeClass, ?Closure $attributeFunction): void
     {
-        if (in_array($propertyName, $this->_ignoreProperties)) {
+        // Fast check if property should be ignored - using isset is much faster than in_array
+        if (isset($this->_ignorePropertiesMap[$propertyName])) {
             return;
         }
 
         $getter = $cachedProperty["getter"];
         $keyName = $cachedProperty["keyName"];
-        if (!empty($getter)) {
-            $value = $object->$getter();
-        } else {
-            $value = $object->$propertyName;
-        }
-
+        $objectClass = get_class($object);
+        
+        // Get property value using getter or direct access
+        $value = !empty($getter) ? $object->$getter() : $object->$propertyName;
+        
+        // Parse the value
         $parsedValue = $this->parseProperties($value);
 
+        // Process with attribute function if provided
         if (!is_null($attributeFunction)) {
-            $attributes = $this->cacheGetAttributes(get_class($object), $propertyName, $attributeClass ?? '.');
-            $parsedValue = $attributeFunction($attributes ?? null, $parsedValue, $keyName, $propertyName, $getter);
+            // Only look up attributes if we have an attribute class
+            $attributes = $attributeClass ? 
+                $this->cacheGetAttributes($objectClass, $propertyName, $attributeClass) : 
+                null;
+                
+            $parsedValue = $attributeFunction($attributes, $parsedValue, $keyName, $propertyName, $getter);
         }
 
+        // Skip null values if not copying them
         if ($parsedValue === null && !$this->isCopyingNullValues()) {
             return;
         }
 
+        // For anonymous classes, use the simple property name instead of the internal representation
+        if (str_starts_with($objectClass, "class@anonymous")) {
+            // Extract the simple property name if it's a getter
+            if (!empty($getter)) {
+                $simplePropertyName = lcfirst(substr($getter, strlen($this->_methodGetPrefix)));
+                $result[$simplePropertyName] = $parsedValue;
+                return;
+            }
+        }
+        
         $result[$propertyName] = $parsedValue;
     }
 
@@ -319,11 +370,18 @@ class Serialize
      */
     protected function parseObject(object $object, ?string $attributeClass = null, ?Closure $attributeFunction = null): array|object
     {
-        // Check if this object can serialize
+        $className = get_class($object);
+        
+        // Quick check for non-parseable objects
         foreach ($this->_doNotParse as $class) {
-            if (is_a($object, $class)) {
+            if ($className === $class || is_subclass_of($object, $class)) {
                 return $object;
             }
+        }
+
+        // Special case for anonymous classes
+        if (str_starts_with($className, "class@anonymous")) {
+            return $this->parseAnonymousClass($object, $attributeClass, $attributeFunction);
         }
 
         // Start Serialize object
@@ -333,8 +391,70 @@ class Serialize
         $cachedObject = $this->cacheObject($object, $result, $attributeClass, $attributeFunction);
 
         // Get the values based on the cached properties
-        foreach ($cachedObject as $propertyName => $cachedProperty) {
-            $this->setValue($result, $object, $propertyName, $cachedProperty, $attributeClass, $attributeFunction);
+        if (!empty($cachedObject)) {
+            foreach ($cachedObject as $propertyName => $cachedProperty) {
+                $this->setValue($result, $object, $propertyName, $cachedProperty, $attributeClass, $attributeFunction);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Parse an anonymous class using its getter methods
+     */
+    protected function parseAnonymousClass(object $object, ?string $attributeClass = null, ?Closure $attributeFunction = null): array
+    {
+        $result = [];
+        $this->_currentLevel++;
+
+        // Use reflection to get property names with original casing
+        $reflectionClass = new ReflectionClass($object);
+        $propertyMap = [];
+        
+        // Map all property names to their original casing
+        foreach ($reflectionClass->getProperties() as $property) {
+            $propertyMap[strtolower($property->getName())] = $property->getName();
+        }
+
+        // Process getters
+        $methods = get_class_methods($object);
+        $prefix = $this->getMethodGetPrefix();
+        $prefixLen = strlen($prefix);
+        $processedProperties = [];
+
+        foreach ($methods as $method) {
+            // Check if method starts with the getter prefix
+            if (str_starts_with($method, $prefix) && strlen($method) > $prefixLen) {
+                // Extract property name from getter (e.g., "getId" -> "id")
+                $propertyKey = lcfirst(substr($method, $prefixLen));
+                
+                // Use original property casing if available
+                $propertyName = $propertyMap[strtolower($propertyKey)] ?? $propertyKey;
+                
+                // Get the value using the getter
+                $value = $object->$method();
+                
+                // Parse the value
+                $parsedValue = $this->parseProperties($value);
+                
+                // Add to result array
+                $result[$propertyName] = $parsedValue;
+                $processedProperties[strtolower($propertyName)] = true;
+            }
+        }
+
+        // Then process public properties
+        $objVars = get_object_vars($object);
+        foreach ($objVars as $key => $value) {
+            // Only add public properties that weren't already processed via getters
+            if (!isset($processedProperties[strtolower($key)])) {
+                // Parse the value
+                $parsedValue = $this->parseProperties($value);
+                
+                // Add to result array
+                $result[$key] = $parsedValue;
+            }
         }
 
         return $result;
@@ -434,12 +554,26 @@ class Serialize
     public function withIgnoreProperties(array $properties): static
     {
         $this->_ignoreProperties = $properties;
+        $this->_ignorePropertiesMap = array_flip($properties);
         return $this;
     }
 
     public function withoutIgnoreProperties(): static
     {
         $this->_ignoreProperties = [];
+        $this->_ignorePropertiesMap = [];
         return $this;
+    }
+
+    protected function methodExists(object $object, string $method): bool
+    {
+        $className = get_class($object);
+        $key = $className . '::' . $method;
+        
+        if (!isset(self::$methodExistsCache[$key])) {
+            self::$methodExistsCache[$key] = method_exists($object, $method);
+        }
+        
+        return self::$methodExistsCache[$key];
     }
 }
