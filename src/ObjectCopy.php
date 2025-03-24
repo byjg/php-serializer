@@ -46,7 +46,7 @@ abstract class ObjectCopy implements ObjectCopyInterface
         $sourceArray = Serialize::from($source)
             ->withStopAtFirstLevel()
             ->parseAttributes(
-                function ($attribute, $value, $keyName, $propertyName, $source) use ($propertyHandler, $target, $propNameLower) {
+                function ($attribute, $value, $keyName, $propertyName) use ($propertyHandler, $target, $propNameLower, $source) {
                     // ----------------------------------------------
                     // Extract the target name
                     $targetName = $propertyName;

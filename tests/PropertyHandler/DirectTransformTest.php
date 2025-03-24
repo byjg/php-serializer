@@ -2,6 +2,7 @@
 
 namespace Tests\PropertyHandler;
 
+use ByJG\Serializer\ObjectCopy;
 use ByJG\Serializer\PropertyHandler\DirectTransform;
 use PHPUnit\Framework\TestCase;
 
@@ -64,11 +65,14 @@ class DirectTransformTest extends TestCase
                 return $value;
             }
         );
+
+        $resultObject = new \stdClass();
+        ObjectCopy::copy($testObject, $resultObject, $directTransform);
         
         // Test value transformation with instance access
-        $this->assertSame('Admin (John)', $directTransform->transformValue('role', 'role', 'Admin', $testObject));
+        $this->assertSame('Admin (John)', $resultObject->role);
         
         // Test normal value transformation
-        $this->assertSame('User', $directTransform->transformValue('type', 'type', 'User', $testObject));
+        $this->assertSame('John', $resultObject->name);
     }
 } 
