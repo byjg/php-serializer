@@ -4,20 +4,15 @@ namespace ByJG\Serializer\PropertyHandler;
 
 use Closure;
 
-class PropertyNameMapper implements PropertyHandlerInterface
+class PropertyNameMapper extends DirectTransform
 {
-    /** @var array<string, string> */
-    protected array $mapFields;
-    protected ?Closure $valueHandler;
-
     /**
-     * @param array $mapFields Map of source property names to target property names
+     * @param array<string, string> $mapFields Map of source property names to target property names
      * @param Closure|null $valueHandler Optional closure to handle value transformation
      */
-    public function __construct(array $mapFields, ?Closure $valueHandler = null)
+    public function __construct(protected array $mapFields, ?Closure $valueHandler = null)
     {
-        $this->mapFields = $mapFields;
-        $this->valueHandler = $valueHandler;
+        parent::__construct($valueHandler);
     }
 
     /**
@@ -28,17 +23,4 @@ class PropertyNameMapper implements PropertyHandlerInterface
     {
         return $this->mapFields[$property] ?? $property;
     }
-
-    /**
-     * @inheritDoc
-     */
-    #[\Override]
-    public function transformValue(string $propertyName, string $targetName, mixed $value): mixed
-    {
-        if ($this->valueHandler !== null) {
-            return ($this->valueHandler)($propertyName, $targetName, $value);
-        }
-        
-        return $value;
-    }
-} 
+}

@@ -51,11 +51,12 @@ class User extends \ByJG\Serializer\ObjectCopy
 
 ## Documentation
 
-| Component               | Description                                           | Link                                         |
-|-------------------------|-------------------------------------------------------|----------------------------------------------|
-| **Serialize**           | Core component for converting objects between formats | [Documentation](docs/serialize.md)           |
-| **ObjectCopy**          | Copy properties between different object structures   | [Documentation](docs/objectcopy.md)          |
-| **ObjectCopyInterface** | Interface for implementing copyable objects           | [Documentation](docs/objectcopyinterface.md) |
+| Component               | Description                                                     | Link                                         |
+|-------------------------|-----------------------------------------------------------------|----------------------------------------------|
+| **Serialize**           | Core component for converting objects between formats           | [Documentation](docs/serialize.md)           |
+| **ObjectCopy**          | Copy properties between different object structures             | [Documentation](docs/objectcopy.md)          |
+| **ObjectCopyInterface** | Interface for implementing copyable objects                     | [Documentation](docs/objectcopyinterface.md) |
+| **DirectTransform**     | Basic property handler for direct transformations in ObjectCopy | [Documentation](docs/directtransform.md)     |
 
 
 ## Installation

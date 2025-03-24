@@ -156,6 +156,7 @@ The `valueHandler` closure receives:
 - `$propertyName`: The original property name from the source object
 - `$targetName`: The mapped property name for the target (after applying the name mapping)
 - `$value`: The value from the source object
+- `$instance`: The complete source object instance (optional)
 
 Example with date formatting:
 ```php
@@ -168,6 +169,21 @@ $valueHandler = function ($propertyName, $targetName, $value) {
 };
 
 ObjectCopy::copy($source, $target, new SnakeToCamelCase($valueHandler));
+```
+
+Example with access to other properties in the source object:
+```php
+// Use other properties from the source object when transforming values
+$valueHandler = function ($propertyName, $targetName, $value, $source) {
+    if ($targetName === 'fullName') {
+        return $source->firstName . ' ' . $source->lastName;
+    }
+    return $value;
+};
+
+ObjectCopy::copy($source, $target, new PropertyNameMapper([
+    "firstName" => "fullName"
+], $valueHandler));
 ```
 
 ## Available Property Handler Classes
@@ -183,8 +199,8 @@ The library provides several built-in property handler classes:
    ObjectCopy::copy($source, $target, new CamelToSnakeCase());
    
    // With value transformation
-   $valueHandler = function ($propName, $targetName, $value) {
-       // Transform values here
+   $valueHandler = function ($propName, $targetName, $value, $source = null) {
+       // Transform values here, with optional access to full source object
        return $value;
    };
    ObjectCopy::copy($source, $target, new CamelToSnakeCase($valueHandler));
@@ -199,8 +215,8 @@ The library provides several built-in property handler classes:
    ObjectCopy::copy($source, $target, new SnakeToCamelCase());
    
    // With value transformation
-   $valueHandler = function ($propName, $targetName, $value) {
-       // Transform values here
+   $valueHandler = function ($propName, $targetName, $value, $source = null) {
+       // Transform values here, with optional access to full source object
        return $value;
    };
    ObjectCopy::copy($source, $target, new SnakeToCamelCase($valueHandler));
@@ -223,15 +239,21 @@ The library provides several built-in property handler classes:
    );
    
    // With value transformation
-   $valueHandler = function ($propName, $targetName, $value) {
-       // Transform values here
+   $valueHandler = function ($propName, $targetName, $value, $source = null) {
+       // Transform values here, with optional access to full source object
+       if ($targetName === 'givenName' && $source !== null) {
+           // You can access other properties in the source object
+           return ucfirst($value) . ' (' . $source->nickname . ')';
+       }
        return $value;
    };
    ObjectCopy::copy(
        $source, 
        $target, 
        new PropertyNameMapper([
-           "sourceProperty" => "targetProperty"
+           "sourceProperty" => "targetProperty",
+           "firstName" => "givenName",
+           "lastName" => "familyName"
        ], $valueHandler)
    );
    ```
@@ -258,16 +280,24 @@ class MyCustomPropertyHandler implements PropertyHandlerInterface
         return "prefix_" . $property;
     }
     
-    public function changeValue(string $propertyName, string $targetName, mixed $value): mixed
+    public function transformValue(string $propertyName, string $targetName, mixed $value, mixed $instance = null): mixed
     {
         // Apply custom value transformation
         if ($this->valueHandler !== null) {
-            return ($this->valueHandler)($propertyName, $targetName, $value);
+            return ($this->valueHandler)($propertyName, $targetName, $value, $instance);
         }
         
         // Or implement your own logic without a closure
         if ($targetName === 'prefix_age') {
             return (int)$value * 2;
+        }
+        
+        // You can also use other properties from the source object
+        if ($targetName === 'prefix_fullName' && $instance !== null) {
+            // Access other properties from the source object
+            $firstName = isset($instance->firstName) ? $instance->firstName : '';
+            $lastName = isset($instance->lastName) ? $instance->lastName : '';
+            return trim($firstName . ' ' . $lastName);
         }
         
         return $value;
@@ -278,8 +308,8 @@ class MyCustomPropertyHandler implements PropertyHandlerInterface
 ObjectCopy::copy($source, $target, new MyCustomPropertyHandler());
 
 // Or with a custom value handler:
-$valueHandler = function ($propName, $targetName, $value) {
-    // Custom transformations
+$valueHandler = function ($propName, $targetName, $value, $source = null) {
+    // Custom transformations that can access other properties in $source
     return $value;
 };
 ObjectCopy::copy($source, $target, new MyCustomPropertyHandler($valueHandler));

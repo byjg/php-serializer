@@ -4,18 +4,8 @@ namespace ByJG\Serializer\PropertyHandler;
 
 use Closure;
 
-class SnakeToCamelCase implements PropertyHandlerInterface
+class SnakeToCamelCase extends DirectTransform
 {
-    private ?Closure $valueHandler;
-
-    /**
-     * @param Closure|null $valueHandler Optional closure to handle value transformation
-     */
-    public function __construct(?Closure $valueHandler = null)
-    {
-        $this->valueHandler = $valueHandler;
-    }
-
     /**
      * @inheritDoc
      */
@@ -32,17 +22,4 @@ class SnakeToCamelCase implements PropertyHandlerInterface
         
         return $result !== null ? $result : $property;
     }
-
-    /**
-     * @inheritDoc
-     */
-    #[\Override]
-    public function transformValue(string $propertyName, string $targetName, mixed $value): mixed
-    {
-        if ($this->valueHandler !== null) {
-            return ($this->valueHandler)($propertyName, $targetName, $value);
-        }
-        
-        return $value;
-    }
-} 
+}
