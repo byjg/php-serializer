@@ -292,33 +292,11 @@ $result = Serialize::from($model)
 
 This method is particularly useful when working with PHP 8 attributes to customize serialization based on metadata annotations.
 
-## BaseModel class
+## Related Components
 
-The library provides an abstract `BaseModel` class that extends `ObjectCopy` and adds convenient functionality:
+The PHP Serializer library includes several other components to help with object manipulation:
 
-```php
-<?php
-// Create a class that extends BaseModel
-class User extends BaseModel
-{
-    public $id;
-    public $name;
-    public $email;
-}
-
-// Initialize with data
-$userData = ['id' => 1, 'name' => 'John', 'email' => 'john@example.com'];
-$user = new User($userData);
-
-// Or initialize empty and copy data later
-$user = new User();
-$user->copyFrom($userData);
-
-// Get array representation
-$array = $user->toArray();
-```
-
-The `BaseModel` class gives your models:
-- Automatic ability to copy data from arrays or objects via constructor
-- Built-in `toArray()` method for easy serialization
-- All functionality from `ObjectCopy` (copyFrom and copyTo methods)
+- **ObjectCopy**: [See dedicated documentation](objectcopy.md)
+- **ObjectCopyTrait**: [See dedicated documentation](objectcopytrait.md)
+- **BaseModel**: [See dedicated documentation](basemodel.md)
+- **DirectTransform**: [See dedicated documentation](directtransform.md)

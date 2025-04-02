@@ -5,13 +5,14 @@ namespace ByJG\Serializer;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 
 /**
- * Base model that implements the ObjectCopy functionality
+ * Base model that implements the ObjectCopyInterface functionality
  */
-abstract class BaseModel extends ObjectCopy
+abstract class BaseModel implements ObjectCopyInterface
 {
+    use ObjectCopyTrait;
+    
     /**
-     * Create a BaseModel that has inherited ObjectCopy and toArray() method
-     * IteratorInterface
+     * Create a BaseModel that implements ObjectCopyInterface and toArray() method
      *
      * @param array|object|null $object The source object to copy properties from
      * @param PropertyHandlerInterface|null $propertyHandler Property handling interface

@@ -102,4 +102,9 @@ The `DirectTransform` class serves as the base class for more specialized proper
 - `SnakeToCamelCase`: Converts snake_case properties to camelCase
 - `PropertyNameMapper`: Maps specific property names to different target names
 
-Each of these handlers can also accept a value transformation function. 
+For detailed examples of these specialized handlers, see the [ObjectCopy documentation](objectcopy.md#available-property-handler-classes).
+
+## Related Components
+
+- [ObjectCopy](objectcopy.md) - Main utility class for property copying
+- [PropertyHandlerInterface](objectcopy.md#creating-custom-property-handler-classes) - Interface implemented by this class 

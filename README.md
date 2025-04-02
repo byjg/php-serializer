@@ -40,8 +40,10 @@ $target = new User();
 ### Create a copyable object
 
 ```php
-class User extends \ByJG\Serializer\ObjectCopy
+class User implements \ByJG\Serializer\ObjectCopyInterface
 {
+    use \ByJG\Serializer\ObjectCopyTrait;
+    
     public $id;
     public $name;
     
@@ -54,8 +56,10 @@ class User extends \ByJG\Serializer\ObjectCopy
 | Component               | Description                                                     | Link                                         |
 |-------------------------|-----------------------------------------------------------------|----------------------------------------------|
 | **Serialize**           | Core component for converting objects between formats           | [Documentation](docs/serialize.md)           |
-| **ObjectCopy**          | Copy properties between different object structures             | [Documentation](docs/objectcopy.md)          |
+| **ObjectCopy**          | Final utility class for copying properties between objects      | [Documentation](docs/objectcopy.md)          |
+| **ObjectCopyTrait**     | Trait implementing copyable object functionality                | [Documentation](docs/objectcopytrait.md)     |
 | **ObjectCopyInterface** | Interface for implementing copyable objects                     | [Documentation](docs/objectcopyinterface.md) |
+| **BaseModel**           | Abstract base class with object copying functionality           | [Documentation](docs/basemodel.md)           |
 | **DirectTransform**     | Basic property handler for direct transformations in ObjectCopy | [Documentation](docs/directtransform.md)     |
 
 

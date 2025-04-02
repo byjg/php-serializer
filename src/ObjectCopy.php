@@ -5,32 +5,11 @@ namespace ByJG\Serializer;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use stdClass;
 
-abstract class ObjectCopy implements ObjectCopyInterface
+/**
+ * Final class for copying properties between objects
+ */
+final class ObjectCopy
 {
-    /**
-     * Copies properties from the source to this object
-     * 
-     * @param array|object $source The source object to copy from
-     * @param PropertyHandlerInterface|null $propertyHandler The property handler
-     */
-    #[\Override]
-    public function copyFrom(array|object $source, ?PropertyHandlerInterface $propertyHandler = null): void
-    {
-        ObjectCopy::copy($source, $this, $propertyHandler);
-    }
-
-    /**
-     * Copies properties from this object to the target
-     * 
-     * @param array|object $target The target object to copy to
-     * @param PropertyHandlerInterface|null $propertyHandler The property handler
-     */
-    #[\Override]
-    public function copyTo(array|object $target, ?PropertyHandlerInterface $propertyHandler = null): void
-    {
-        ObjectCopy::copy($this, $target, $propertyHandler);
-    }
-
     /**
      * Copy the properties from a source object to the properties matching to a target object
      *

@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # ObjectCopy class
 
-The `ObjectCopy` class is used to copy the contents from one object to another.
+The `ObjectCopy` class is a final utility class used to copy the contents from one object to another.
 
 The target object doesn't need to have the same properties as the source object, as you can apply transformations 
 that allow you to match the source and target.
@@ -314,3 +314,10 @@ $valueHandler = function ($propName, $targetName, $value, $source = null) {
 };
 ObjectCopy::copy($source, $target, new MyCustomPropertyHandler($valueHandler));
 ```
+
+## Related Components
+
+- [ObjectCopyInterface](objectcopyinterface.md) - Interface for defining copyable objects
+- [ObjectCopyTrait](objectcopytrait.md) - Trait implementing the interface methods
+- [BaseModel](basemodel.md) - Abstract base class with copying functionality
+- [DirectTransform](directtransform.md) - Base property handler class

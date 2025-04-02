@@ -84,41 +84,18 @@ class MyCustomClass implements ObjectCopyInterface
 
 ## Using PropertyHandlerInterface
 
-The `PropertyHandlerInterface` provides two key methods:
+The `PropertyHandlerInterface` defines two key methods that property handlers must implement:
 
 1. `mapName(string $property): string` - Maps a source property name to a target property name
-2. `changeValue(string $propertyName, string $targetName, mixed $value): mixed` - Transforms the value during copying
+2. `transformValue(string $propertyName, string $targetName, mixed $value, mixed $instance = null): mixed` - Transforms the value during copying
 
-You can use the built-in property handlers:
+Various implementations of this interface are available for common transformation scenarios. For detailed examples and available property handlers, see:
 
-```php
-use ByJG\Serializer\PropertyHandler\CamelToSnakeCase;
-use ByJG\Serializer\PropertyHandler\SnakeToCamelCase;
-use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
+- [Property Handlers in ObjectCopy documentation](objectcopy.md#available-property-handler-classes)
+- [Creating Custom Property Handlers](objectcopy.md#creating-custom-property-handler-classes)
 
-// Convert camelCase to snake_case
-$myclass->copyTo($otherObject, new CamelToSnakeCase());
+## Related Components
 
-// Convert snake_case to camelCase
-$myclass->copyFrom($data, new SnakeToCamelCase());
-
-// Map specific properties to different names
-$myclass->copyFrom(
-    $data, 
-    new PropertyNameMapper([
-        "source_prop" => "targetProp",
-        "old_name" => "newName"
-    ])
-);
-```
-
-Each property handler can also accept an optional closure for value transformation:
-
-```php
-$valueHandler = function ($propName, $targetName, $value) {
-    // Transform values here based on property names or values
-    return $value;
-};
-
-$myclass->copyFrom($data, new SnakeToCamelCase($valueHandler));
-```
+- [ObjectCopyTrait](objectcopytrait.md) - Trait implementing this interface
+- [BaseModel](basemodel.md) - Abstract base class implementing this interface
+- [ObjectCopy](objectcopy.md) - Utility class for property copying
