@@ -2,6 +2,7 @@
 
 namespace ByJG\Serializer;
 
+use ByJG\Serializer\Formatter\CsvFormatter;
 use ByJG\Serializer\Formatter\JsonFormatter;
 use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
@@ -48,6 +49,54 @@ class Serialize
     public static function fromJson(string $content): static
     {
         return new Serialize(json_decode($content, true));
+    }
+
+    /**
+     * Create a Serialize instance from CSV content
+     *
+     * @param string $content CSV content
+     * @param bool $hasHeader Whether the CSV has a header row (default: true)
+     * @return static
+     */
+    public static function fromCsv(string $content, bool $hasHeader = true): static
+    {
+        $lines = explode("\n", trim($content));
+        if (empty($lines)) {
+            return new Serialize([]);
+        }
+
+        $data = [];
+        $headers = [];
+
+        foreach ($lines as $index => $line) {
+            if (empty(trim($line))) {
+                continue;
+            }
+
+            $row = str_getcsv($line);
+
+            // If this is the first row and we have headers
+            if ($index === 0 && $hasHeader) {
+                $headers = $row;
+                continue;
+            }
+
+            // If we have headers, create an associative array
+            if ($hasHeader && !empty($headers)) {
+                $assocRow = [];
+                foreach ($row as $i => $value) {
+                    if (isset($headers[$i])) {
+                        $assocRow[$headers[$i]] = $value;
+                    }
+                }
+                $data[] = $assocRow;
+            } else {
+                // No headers, just add the row as is
+                $data[] = $row;
+            }
+        }
+
+        return new Serialize($data);
     }
 
     public static function fromPhpSerialize(string $content): static
@@ -130,6 +179,16 @@ class Serialize
         return $this->_processWithFormatter(new PlainTextFormatter());
     }
 
+    /**
+     * Convert the model to CSV format
+     *
+     * @return string|bool CSV representation of the model
+     */
+    public function toCsv(): string|bool
+    {
+        return $this->_processWithFormatter(new CsvFormatter());
+    }
+
     public function parseAttributes(?Closure $attributeFunction, ?string $attributeClass = null): array
     {
         return $this->parseProperties($this->model, 1, $attributeClass, $attributeFunction);
@@ -150,7 +209,7 @@ class Serialize
 
         // Fast type detection using gettype
         $type = gettype($property);
-        
+
         if ($type === 'array') {
             return $this->parseArray($property, $attributeFunction);
         }
@@ -165,7 +224,7 @@ class Serialize
         if ($this->isOnlyString() && $type !== 'string') {
             $property = (string)$property;
         }
-        
+
         return $property;
     }
 
@@ -194,7 +253,7 @@ class Serialize
     {
         $result = [];
         $this->currentLevel++;
-        
+
         // Check if we need to filter null values
         $copyNulls = $this->isCopyingNullValues();
         $ignorePropertiesMap = $this->ignorePropertiesMap;
@@ -305,24 +364,24 @@ class Serialize
             $propertyName = $key;
             $getter = null;
             $keyName = null;
-            
+
             // More efficient property name extraction using regex
             if (str_starts_with($key, "\0")) {
                 if (preg_match('/^\0[^\\0]*\0(.+)$/', $key, $matches)) {
                     $keyName = $matches[1];
-                    
+
                     // For anonymous classes, extract just the property name (remove path and class)
                     if (str_contains($keyName, '$0')) {
                         $keyName = substr($keyName, strrpos($keyName, '$0') + 2);
                     }
-                    
+
                     $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
-                    
+
                     $getterMethod = $this->getMethodGetPrefix() . $propertyName;
                     if (!$this->methodExists($object, $getterMethod)) {
                         continue;
                     }
-                    
+
                     $getter = $getterMethod;
                 }
             }
@@ -359,10 +418,10 @@ class Serialize
         $getter = $cachedProperty["getter"];
         $keyName = $cachedProperty["keyName"];
         $objectClass = get_class($object);
-        
+
         // Get property value using getter or direct access
         $value = !empty($getter) ? $object->$getter() : $object->$propertyName;
-        
+
         // Parse the value
         $parsedValue = $this->parseProperties($value);
 
@@ -372,7 +431,7 @@ class Serialize
             $attributes = $attributeClass ? 
                 $this->cacheGetAttributes($objectClass, $propertyName, $attributeClass) : 
                 null;
-                
+
             $parsedValue = $attributeFunction($attributes, $parsedValue, $keyName, $propertyName, $getter);
         }
 
@@ -390,7 +449,7 @@ class Serialize
                 return;
             }
         }
-        
+
         $result[$propertyName] = $parsedValue;
     }
 
@@ -404,7 +463,7 @@ class Serialize
     protected function parseObject(object $object, ?string $attributeClass = null, ?Closure $attributeFunction = null): array|object
     {
         $className = get_class($object);
-        
+
         // Quick check for non-parseable objects
         foreach ($this->doNotParse as $class) {
             if ($className === $class || is_subclass_of($object, $class)) {
@@ -444,7 +503,7 @@ class Serialize
         // Use reflection to get property names with original casing
         $reflectionClass = new ReflectionClass($object);
         $propertyMap = [];
-        
+
         // Map all property names to their original casing
         foreach ($reflectionClass->getProperties() as $property) {
             $propertyMap[strtolower($property->getName())] = $property->getName();
@@ -461,16 +520,16 @@ class Serialize
             if (str_starts_with($method, $prefix) && strlen($method) > $prefixLen) {
                 // Extract property name from getter (e.g., "getId" -> "id")
                 $propertyKey = lcfirst(substr($method, $prefixLen));
-                
+
                 // Use original property casing if available
                 $propertyName = $propertyMap[strtolower($propertyKey)] ?? $propertyKey;
-                
+
                 // Get the value using the getter
                 $value = $object->$method();
-                
+
                 // Parse the value
                 $parsedValue = $this->parseProperties($value);
-                
+
                 // Add to result array
                 $result[$propertyName] = $parsedValue;
                 $processedProperties[strtolower($propertyName)] = true;
@@ -484,7 +543,7 @@ class Serialize
             if (!isset($processedProperties[strtolower($key)])) {
                 // Parse the value
                 $parsedValue = $this->parseProperties($value);
-                
+
                 // Add to result array
                 $result[$key] = $parsedValue;
             }
@@ -602,11 +661,11 @@ class Serialize
     {
         $className = get_class($object);
         $key = $className . '::' . $method;
-        
+
         if (!isset(self::$_methodExistsCache[$key])) {
             self::$_methodExistsCache[$key] = method_exists($object, $method);
         }
-        
+
         return self::$_methodExistsCache[$key];
     }
 }

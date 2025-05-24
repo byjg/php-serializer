@@ -18,10 +18,11 @@ columns 1
         f2["fromPhpSerialize()"]
         f3["fromJson()"]
         f4["fromYaml()"]
+        f5["fromCsv()"]
     end
-    
+
     down<["&nbsp;&nbsp;&nbsp;"]>(down)
-    
+
     block:Transformers
         t1["withStopAtFirstLevel()"]
         t2["withMethodPattern()"]
@@ -40,9 +41,10 @@ columns 1
         o2["toXml()"]
         o3["toYaml()"]
         o4["toPlainText()"]
-        o5["toPhpSerialize()"]
-        o6["toArray()"]
-        o7["parseAttributes()"]
+        o5["toCsv()"]
+        o6["toPhpSerialize()"]
+        o7["toArray()"]
+        o8["parseAttributes()"]
     end
 ```
 
@@ -52,17 +54,35 @@ columns 1
 
 Just use the `Serialize` class with any kind of object, `stdClass`, or array:
 
+#### Basic Conversion
+
 ```php
 <?php
 $result = \ByJG\Serializer\Serialize::from($data)->toArray();
 $result2 = \ByJG\Serializer\Serialize::fromPhpSerialize($anyPhpSerializedString)->toArray();
 $result3 = \ByJG\Serializer\Serialize::fromJson($anyJsonString)->toArray();
 $result4 = \ByJG\Serializer\Serialize::fromYaml($anyYamlString)->toArray();
+$result5 = \ByJG\Serializer\Serialize::fromCsv($anyCsvString)->toArray();
 ```
 
-In the examples above, `$result`, `$result2`, `$result3`, and `$result4` will be associative arrays.
+In the examples above, `$result`, `$result2`, `$result3`, `$result4`, and `$result5` will be associative arrays.
 
-### Formatting an array into JSON, YAML, XML, or Plain Text
+#### CSV Conversion with Headers
+
+When working with CSV data, you can specify whether the CSV has a header row:
+
+```php
+<?php
+// With headers (default)
+$result = \ByJG\Serializer\Serialize::fromCsv($csvWithHeaders)->toArray();
+
+// Without headers
+$result = \ByJG\Serializer\Serialize::fromCsv($csvWithoutHeaders, false)->toArray();
+```
+
+When `hasHeader` is set to `true` (default), the first row of the CSV is treated as column names, and each subsequent row is converted to an associative array using these column names as keys. When `hasHeader` is set to `false`, each row is treated as a simple indexed array.
+
+### Formatting an array into JSON, YAML, XML, CSV, or Plain Text
 
 ```php
 <?php
@@ -71,6 +91,7 @@ $data = [ ... any array content ... ]
 echo (new JsonFormatter())->process($data);
 echo (new XmlFormatter())->process($data);
 echo (new YamlFormatter())->process($data);
+echo (new CsvFormatter())->process($data);
 echo (new PlainTextFormatter())->process($data);
 ```
 
@@ -83,6 +104,7 @@ $data = [ ... any array content ... ]
 echo Serialize::from($data)->toJson();
 echo Serialize::from($data)->toXml();
 echo Serialize::from($data)->toYaml();
+echo Serialize::from($data)->toCsv();
 echo Serialize::from($data)->toPlainText();
 echo Serialize::from($data)->toPhpSerialize(); // Serialize to PHP's native serialization format
 echo Serialize::from($data)->parseAttributes($attributeClass, $flags, fn($instanceAttribute, $parsedValue, $propertyName));
