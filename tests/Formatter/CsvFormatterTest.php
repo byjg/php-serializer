@@ -97,7 +97,7 @@ class CsvFormatterTest extends TestCase
         ];
 
         $csv = Serialize::from($data)->toCsv();
-        $result = Serialize::fromCsv($csv)->toArray();
+        $result = Serialize::fromCsv(is_bool($csv) ? "" : $csv)->toArray();
 
         $this->assertEquals($data, $result);
     }

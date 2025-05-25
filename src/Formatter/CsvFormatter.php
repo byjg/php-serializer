@@ -59,7 +59,7 @@ class CsvFormatter implements FormatterInterface
         $line = stream_get_contents($f);
         fclose($f);
 
-        return $line;
+        return $line === false ? "" : $line;
     }
 
     /**
