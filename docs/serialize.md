@@ -99,7 +99,7 @@ Alternatively, you can call directly from the `Serialize` class:
 
 ```php
 <?php
-$data = [ ... any array content ... ]
+$data = [ ... any array content or model object ... ]
 
 echo Serialize::from($data)->toJson();
 echo Serialize::from($data)->toXml();
@@ -107,8 +107,10 @@ echo Serialize::from($data)->toYaml();
 echo Serialize::from($data)->toCsv();
 echo Serialize::from($data)->toPlainText();
 echo Serialize::from($data)->toPhpSerialize(); // Serialize to PHP's native serialization format
-echo Serialize::from($data)->parseAttributes($attributeClass, $flags, fn($instanceAttribute, $parsedValue, $propertyName));
+$array = Serialize::from($data)->parseAttributes(fn($attribute, $value, $keyName, $propertyName, $getterName) => $value, $attributeClass);
 ```
+
+Note: The one-liner above produces an array similarly to toArray(), but gives you a per-property hook via the callback. The callback receives ($attribute, $value, $keyName, $propertyName, $getterName) and must return the value to store for that property. Pass the fully qualified attribute class name as $attributeClass to receive an instance (or null) for properties that declare that PHP 8 attribute; for plain arrays/stdClass, `$attribute` will be null.
 
 ### Customizing the Serialization
 
@@ -134,8 +136,7 @@ By default, the `Serialize` class includes all properties. For example:
 $myclass->setName('Joao');
 $myclass->setAge(null);
 
-$serializer = new \ByJG\Serializer\Serialize($myclass);
-$result = $serializer->toArray();
+$result = \ByJG\Serializer\Serialize::from($myclass)->toArray();
 print_r($result);
 
 // Will return:
@@ -276,11 +277,11 @@ public function parseAttributes(?Closure $attributeFunction, ?string $attributeC
 ```
 
 The callback function receives these parameters:
-- `$attribute`: The attribute instance if found, or null
-- `$value`: The parsed value of the property
-- `$keyName`: The property key name in the array
-- `$propertyName`: The original property name
-- `$getterName`: The getter method name if it exists
+- `$attribute`: Instance of `$attributeClass` if found on the property, otherwise null (will always be null if `$attributeClass` is null, or when parsing plain arrays)
+- `$value`: The parsed value of the property (after applying Serialize rules/modifiers)
+- `$keyName`: The declared class property name as seen by reflection (used to read attributes)
+- `$propertyName`: The key that will be written to the output array for this property
+- `$getterName`: The getter method used to read the value (e.g., `getName`), or null if direct access/array
 
 Example:
 
