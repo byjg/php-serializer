@@ -18,21 +18,21 @@ class SerializerOptimizationTest extends TestCase
         }
 
         // Add a few specific properties we want to ignore
-        $model->password = "secret";
-        $model->apiKey = "api-key-12345";
-        $model->token = "security-token";
+        $model->propertyToIgnore = "some-value";
+        $model->anotherProperty = "another-value";
+        $model->property = "value-to-the-property";
         
         // Create serializer with ignored properties
         $serializer = Serialize::from($model);
-        $serializer->withIgnoreProperties(['password', 'apiKey', 'token']);
+        $serializer->withIgnoreProperties(['propertyToIgnore', 'anotherProperty', 'property']);
         
         // Get the array representation
         $result = $serializer->toArray();
         
         // Check that properties were ignored
-        $this->assertArrayNotHasKey('password', $result);
-        $this->assertArrayNotHasKey('apiKey', $result);
-        $this->assertArrayNotHasKey('token', $result);
+        $this->assertArrayNotHasKey('propertyToIgnore', $result);
+        $this->assertArrayNotHasKey('anotherProperty', $result);
+        $this->assertArrayNotHasKey('property', $result);
         
         // Check that other properties are still there
         $this->assertArrayHasKey('property0', $result);
