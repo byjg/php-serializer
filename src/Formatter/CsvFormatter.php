@@ -54,7 +54,7 @@ class CsvFormatter implements FormatterInterface
     private function arrayToCsvLine(array $fields): string
     {
         $f = fopen('php://memory', 'r+');
-        fputcsv($f, $fields);
+        fputcsv($f, $fields, escape: "\\");
         rewind($f);
         $line = stream_get_contents($f);
         fclose($f);

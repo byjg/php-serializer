@@ -73,7 +73,7 @@ class Serialize
                 continue;
             }
 
-            $row = str_getcsv($line);
+            $row = str_getcsv($line, escape: "\\");
 
             // If this is the first row and we have headers
             if ($index === 0 && $hasHeader) {

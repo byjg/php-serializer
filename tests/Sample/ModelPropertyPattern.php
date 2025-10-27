@@ -18,7 +18,7 @@ class ModelPropertyPattern extends BaseModel
      * @param array|object|null $object Data to initialize with
      * @param PropertyHandlerInterface|null $propertyHandler Property handler
      */
-    public function __construct(mixed $object = null, PropertyHandlerInterface $propertyHandler = null)
+    public function __construct(mixed $object = null, ?PropertyHandlerInterface $propertyHandler = null)
     {
         parent::__construct($object, $propertyHandler);
     }
