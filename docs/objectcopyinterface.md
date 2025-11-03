@@ -1,12 +1,12 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # ObjectCopy Interface 
 
 `ObjectCopyInterface` is an interface that exposes the methods `copyFrom` and `copyTo`, which allow you to set property contents from or to another object.
 
-You can either implement this interface or extend the abstract class `ObjectCopy`.
+You can implement this interface directly, use the `ObjectCopyTrait`, or extend the `BaseModel` abstract class.
 
 ## Methods
 
@@ -20,10 +20,15 @@ public function copyTo(array|object $target, ?PropertyHandlerInterface $property
 
 ## Example Usage
 
+### Using BaseModel
+
+The easiest way to use this interface is by extending the `BaseModel` abstract class:
+
 ```php
 <?php
-// Create a class that extends ObjectCopy
-class MyClass extends ObjectCopy
+use ByJG\Serializer\BaseModel;
+
+class MyClass extends BaseModel
 {
     public $id;
     public $name;
@@ -57,9 +62,28 @@ $valueHandler = function ($propName, $targetName, $value) {
 $myclass->copyFrom($data, new SnakeToCamelCase($valueHandler));
 ```
 
-## Custom Implementation
+### Using ObjectCopyTrait
 
-If you prefer to implement the interface directly instead of extending the `ObjectCopy` class:
+If your class already extends another class, use the `ObjectCopyTrait`:
+
+```php
+<?php
+use ByJG\Serializer\ObjectCopyInterface;
+use ByJG\Serializer\ObjectCopyTrait;
+
+class MyClass implements ObjectCopyInterface
+{
+    use ObjectCopyTrait;
+
+    public $id;
+    public $name;
+    public $age;
+}
+```
+
+### Custom Implementation
+
+If you prefer to implement the interface directly:
 
 ```php
 <?php
