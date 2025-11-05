@@ -84,18 +84,7 @@ When `hasHeader` is set to `true` (default), the first row of the CSV is treated
 
 ### Formatting an array into JSON, YAML, XML, CSV, or Plain Text
 
-```php
-<?php
-$data = [ ... any array content ... ]
-
-echo (new JsonFormatter())->process($data);
-echo (new XmlFormatter())->process($data);
-echo (new YamlFormatter())->process($data);
-echo (new CsvFormatter())->process($data);
-echo (new PlainTextFormatter())->process($data);
-```
-
-Alternatively, you can call directly from the `Serialize` class:
+You can format data using formatter classes directly or through the `Serialize` class:
 
 ```php
 <?php
@@ -106,11 +95,11 @@ echo Serialize::from($data)->toXml();
 echo Serialize::from($data)->toYaml();
 echo Serialize::from($data)->toCsv();
 echo Serialize::from($data)->toPlainText();
-echo Serialize::from($data)->toPhpSerialize(); // Serialize to PHP's native serialization format
-$array = Serialize::from($data)->parseAttributes(fn($attribute, $value, $keyName, $propertyName, $getterName) => $value, $attributeClass);
+echo Serialize::from($data)->toPhpSerialize();
+$array = Serialize::from($data)->parseAttributes($callback, $attributeClass);
 ```
 
-Note: The one-liner above produces an array similarly to toArray(), but gives you a per-property hook via the callback. The callback receives ($attribute, $value, $keyName, $propertyName, $getterName) and must return the value to store for that property. Pass the fully qualified attribute class name as $attributeClass to receive an instance (or null) for properties that declare that PHP 8 attribute; for plain arrays/stdClass, `$attribute` will be null.
+For detailed formatter documentation including customization options, configuration methods, and examples, see the **[Formatters Guide](formatters.md)**.
 
 ### Customizing the Serialization
 
@@ -263,57 +252,79 @@ $result = \ByJG\Serializer\Serialize::from($myclass)
 
 #### parseAttributes
 
-You can parse the attributes of an object using the `parseAttributes` method.
-This method will search for a specific attribute in the object and will parse it using the `$attributeClass` parameter.
-For every property it will call the callback function with the instance attribute if it was found and the parsed value.
+The `parseAttributes` method allows you to process object properties with custom logic, optionally filtering by PHP 8 attributes. It's similar to `toArray()` but provides a per-property callback for transformation.
 
 ```php
-/**
- * @param Closure|null $attributeFunction A callback function to process attributes
- * @param string|null $attributeClass Optional class name of attribute to filter by
- * @return array The processed properties array
- */
 public function parseAttributes(?Closure $attributeFunction, ?string $attributeClass = null): array
 ```
 
-The callback function receives these parameters:
-- `$attribute`: Instance of `$attributeClass` if found on the property, otherwise null (will always be null if `$attributeClass` is null, or when parsing plain arrays)
-- `$value`: The parsed value of the property (after applying Serialize rules/modifiers)
-- `$keyName`: The declared class property name as seen by reflection (used to read attributes)
-- `$propertyName`: The key that will be written to the output array for this property
-- `$getterName`: The getter method used to read the value (e.g., `getName`), or null if direct access/array
-
-Example:
+**Basic Example:**
 
 ```php
-class Model
-{
-    public $Id = "";
+class Model {
+    public $Id = "123";
     #[SampleAttribute("Message")]
-    public $Name = "";
+    public $Name = "John";
 }
 
-$model = new Model();
-$model->Id = "123";
-$model->Name = "John";
-
-$result = Serialize::from($model)
-            ->parseAttributes(
-                function ($attribute, $value, $keyName, $propertyName, $getterName) {
-                    return "$value: " . $attribute?->getElementName();
-                },
-                SampleAttribute::class
-            );
-
-// Will return:
-// Array
-// (
-//     [Id] => "123: "
-//     [Name] => "John: Message"
-// )
+$result = Serialize::from($model)->parseAttributes(
+    function ($attribute, $value, $keyName, $propertyName, $getterName) {
+        return "$value: " . ($attribute?->getElementName() ?? '');
+    },
+    SampleAttribute::class
+);
+// Result: ['Id' => '123: ', 'Name' => 'John: Message']
 ```
 
+The callback receives five parameters: `$attribute` (attribute instance or null), `$value` (parsed property value), `$keyName` (reflected property name), `$propertyName` (output key name), and `$getterName` (getter method name or null).
+
 This method is particularly useful when working with PHP 8 attributes to customize serialization based on metadata annotations.
+
+## Advanced Features
+
+### PHP Serialization with toPhpSerialize()
+
+The `toPhpSerialize()` method provides two modes:
+
+```php
+// Direct mode - serializes object as-is, preserving class type
+$serialized = Serialize::from($model)->toPhpSerialize();
+
+// Parse mode - converts to array first, then serializes (applies modifiers)
+$serialized = Serialize::from($model)->toPhpSerialize(true);
+```
+
+Use direct mode to preserve object structure for deserialization. Use parse mode to apply transformations (like `withIgnoreProperties()`) before serializing.
+
+### Anonymous Class Support
+
+The Serialize class automatically handles anonymous classes, detecting them and including both getter methods and public properties. Getter methods take precedence over public properties when both exist.
+
+### Performance and Caching
+
+The Serialize class implements internal caching to improve performance when serializing multiple objects of the same type:
+
+**What is cached:**
+- Property metadata (getters, key names, attributes)
+- ReflectionClass instances
+- Method existence checks
+
+**Benefits:**
+- Significant performance improvement for bulk serialization
+- Reduced reflection overhead
+- Automatic cache management (no configuration needed)
+
+**Example:**
+```php
+// First serialization: cache is built
+$users = [];
+for ($i = 0; $i < 1000; $i++) {
+    $users[] = Serialize::from($user)->toArray();
+}
+// Subsequent serializations use cached metadata
+```
+
+**Note:** The cache is stored statically and persists for the lifetime of the PHP process. In long-running applications (e.g., CLI workers), this provides continuous performance benefits.
 
 ## Related Components
 

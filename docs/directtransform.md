@@ -59,11 +59,7 @@ ObjectCopy::copy($source, $target, new DirectTransform($valueHandler));
 // $target->age = 31;
 ```
 
-The `$valueHandler` closure receives these parameters:
-- `$propertyName`: The original property name from the source object
-- `$targetName`: The mapped property name for the target (in this case, it's the same as $propertyName)
-- `$value`: The value from the source object
-- `$instance`: The complete source object instance (optional)
+The `$valueHandler` closure receives four parameters for flexible value transformation. For complete documentation of value handler parameters and patterns, see the **[Property Handlers Guide](propertyhandlers.md#value-handler-parameter-details)**.
 
 ## Accessing the Source Object
 
@@ -107,4 +103,4 @@ For detailed examples of these specialized handlers, see the [ObjectCopy documen
 ## Related Components
 
 - [ObjectCopy](objectcopy.md) - Main utility class for property copying
-- [PropertyHandlerInterface](objectcopy.md#creating-custom-property-handler-classes) - Interface implemented by this class 
+- [PropertyHandlerInterface](objectcopy.md) - Interface implemented by this class 

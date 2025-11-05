@@ -51,15 +51,6 @@ $myclass->copyTo($otherObject);
 // You can also use property handlers with copyFrom and copyTo
 $myclass->copyFrom($data, new SnakeToCamelCase());
 $myclass->copyTo($otherObject, new CamelToSnakeCase());
-
-// With value transformation
-$valueHandler = function ($propName, $targetName, $value) {
-    if ($targetName === 'age') {
-        return $value + 1; // Add one year to age
-    }
-    return $value;
-};
-$myclass->copyFrom($data, new SnakeToCamelCase($valueHandler));
 ```
 
 ### Using ObjectCopyTrait
@@ -108,15 +99,9 @@ class MyCustomClass implements ObjectCopyInterface
 
 ## Using PropertyHandlerInterface
 
-The `PropertyHandlerInterface` defines two key methods that property handlers must implement:
+Both `copyFrom()` and `copyTo()` methods accept an optional `PropertyHandlerInterface` parameter for property name mapping and value transformation. The interface defines two methods: `mapName()` for property name transformation and `transformValue()` for value transformation.
 
-1. `mapName(string $property): string` - Maps a source property name to a target property name
-2. `transformValue(string $propertyName, string $targetName, mixed $value, mixed $instance = null): mixed` - Transforms the value during copying
-
-Various implementations of this interface are available for common transformation scenarios. For detailed examples and available property handlers, see:
-
-- [Property Handlers in ObjectCopy documentation](objectcopy.md#available-property-handler-classes)
-- [Creating Custom Property Handlers](objectcopy.md#creating-custom-property-handler-classes)
+For detailed documentation on property handlers including all built-in handlers, custom handler creation, and transformation patterns, see the **[Property Handlers Guide](propertyhandlers.md)**.
 
 ## Related Components
 

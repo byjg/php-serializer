@@ -51,7 +51,7 @@ $userData = new stdClass();
 $user->copyTo($userData);
 ```
 
-Property handlers can be used with these methods for property transformation. For detailed examples and available property handlers, see the [ObjectCopy documentation](objectcopy.md#available-property-handler-classes).
+Property handlers can be used with these methods for property transformation. For detailed documentation, see the **[Property Handlers Guide](propertyhandlers.md)**.
 
 ## Benefits of using the trait
 
