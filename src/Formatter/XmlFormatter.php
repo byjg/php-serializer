@@ -24,6 +24,15 @@ class XmlFormatter implements FormatterInterface
     public function process(object|array $serializable): string|bool
     {
         $array = $serializable;
+        if (is_array($array)) {
+            $key = array_key_first($array);
+            if (is_numeric($key) && count($array) === 1) {
+                return $array[$key] ?? '';
+            } elseif (empty($array)) {
+                return '';
+            }
+        }
+
         if (!is_array($serializable)) {
             $array = Serialize::from($serializable)->toArray();
         }
