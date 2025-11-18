@@ -26,5 +26,9 @@
   "suggest": {
     "ext-curl": "*"
   },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "psalm": "vendor/bin/psalm"
+  },
   "license": "MIT"
 }
