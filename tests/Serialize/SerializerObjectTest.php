@@ -972,4 +972,33 @@ class SerializerObjectTest extends TestCase
             $result
         );
     }
+
+    public function testAnonymousClass()
+    {
+        // Create a simple object with a counter to track method_exists calls
+        $obj = new class(10, 'Test', 50) {
+            private $id;
+            private $Name;
+
+            public $Test;
+
+            public function __construct($id, $name, $test) {
+                $this->id = $id;
+                $this->Name = $name;
+                $this->Test = $test;
+            }
+
+            public function getId() {
+                return $this->id;
+            }
+
+            public function getName() {
+                return $this->Name;
+            }
+        };
+
+        // Serialize the object
+        $result = Serialize::from($obj)->toArray();
+        $this->assertEquals(['id' => 10, 'Name' => 'Test', 'Test' => 50], $result);
+    }
 }

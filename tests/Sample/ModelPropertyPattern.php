@@ -3,6 +3,7 @@
 namespace Tests\Sample;
 
 use ByJG\Serializer\BaseModel;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 
 class ModelPropertyPattern extends BaseModel
 {
@@ -11,9 +12,15 @@ class ModelPropertyPattern extends BaseModel
     protected $_Client_Name = "";
     protected $birthdate = "";
 
-    function __construct($object = null, $propertyPattern = null)
+    /**
+     * Constructor
+     * 
+     * @param array|object|null $object Data to initialize with
+     * @param PropertyHandlerInterface|null $propertyHandler Property handler
+     */
+    public function __construct(mixed $object = null, ?PropertyHandlerInterface $propertyHandler = null)
     {
-        parent::__construct($object, $propertyPattern);
+        parent::__construct($object, $propertyHandler);
     }
 
     public function getIdModel()
