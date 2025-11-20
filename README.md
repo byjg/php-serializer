@@ -1,4 +1,4 @@
-# PHP Serializer
+# Serializer
 
 [![Build Status](https://github.com/byjg/php-serializer/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/php-serializer/actions/workflows/phpunit.yml)
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
@@ -6,7 +6,7 @@
 [![GitHub license](https://img.shields.io/github/license/byjg/php-serializer.svg)](https://opensource.byjg.com/opensource/licensing.html)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-serializer.svg)](https://github.com/byjg/php-serializer/releases/)
 
-A powerful PHP library for seamless object serialization, conversion, and property manipulation.
+A powerful multi-format serialization library that converts objects, arrays, and data between JSON, XML, YAML, CSV, PHP serialize, and plain text formats with intelligent property mapping and transformation.
 
 ## Features
 

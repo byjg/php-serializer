@@ -1,6 +1,6 @@
 {
   "name": "byjg/serializer",
-  "description": "Serialize any object into array and format it JSON or XML",
+  "description": "A powerful multi-format serialization library that converts objects, arrays, and data between JSON, XML, YAML, CSV, PHP serialize, and plain text formats with intelligent property mapping and transformation",
   "autoload": {
     "psr-4": {
       "ByJG\\Serializer\\": "src/"
@@ -14,7 +14,7 @@
   "prefer-stable": true,
   "minimum-stability": "dev",
   "require": {
-    "php": ">=8.1 <8.5",
+    "php": ">=8.1 <8.6",
     "ext-json": "*",
     "ext-simplexml": "*",
     "symfony/yaml": "> 4"
@@ -28,7 +28,7 @@
   },
   "scripts": {
     "test": "vendor/bin/phpunit",
-    "psalm": "vendor/bin/psalm"
+    "psalm": "vendor/bin/psalm --threads=1"
   },
   "license": "MIT"
 }
