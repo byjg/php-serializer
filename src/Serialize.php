@@ -562,11 +562,11 @@ class Serialize
     }
 
     /**
-     * @param $search
-     * @param $replace
+     * @param string $search
+     * @param string $replace
      * @return $this
      */
-    public function withMethodPattern($search, $replace): static
+    public function withMethodPattern(string $search, string $replace): static
     {
         $this->methodPattern = [$search, $replace];
         return $this;

@@ -33,7 +33,6 @@ class DirectTransform implements PropertyHandlerInterface
     }
 
     /**
-     * @param mixed|null $instance
      * @inheritDoc
      */
     #[\Override]

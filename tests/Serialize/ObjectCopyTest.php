@@ -215,7 +215,7 @@ class ObjectCopyTest extends TestCase
 
         $target = new stdClass();
 
-        $valueHandler = function ($propName, $targetName, $value) {
+        $valueHandler = function ($propName, $targetName, $value): string {
             return "$propName-$targetName-$value";
         };
 
