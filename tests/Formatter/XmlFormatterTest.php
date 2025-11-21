@@ -11,7 +11,7 @@ use Tests\Sample\ModelList3;
 
 class XmlFormatterTest extends TestCase
 {
-    public function testArrayFormatter()
+    public function testArrayFormatter(): void
     {
         $array = [
             "key1" => "value",
@@ -22,7 +22,7 @@ class XmlFormatterTest extends TestCase
         $this->assertEquals("<?xml version=\"1.0\"?>\n<root><key1>value</key1><key2>value2</key2></root>\n", $formatter->process($array));
     }
 
-    public function testObjectFormatter()
+    public function testObjectFormatter(): void
     {
         $object = new SampleModel();
         $object->Id = "10";
@@ -33,7 +33,7 @@ class XmlFormatterTest extends TestCase
         $this->assertEquals("<?xml version=\"1.0\"?>\n<test><Id>10</Id><Name>Joao</Name></test>\n", $formatter->withRootElement("test")->process($object));
     }
 
-    public function testObjectList()
+    public function testObjectList(): void
     {
         $object = new ModelList3();
         $object->addItem(new ModelGetter(10, "John"));

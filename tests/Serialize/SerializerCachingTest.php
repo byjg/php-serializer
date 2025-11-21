@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Group;
 
 class SerializerCachingTest extends TestCase
 {
-    public function testMethodExistsCache()
+    public function testMethodExistsCache(): void
     {
         // Create a simple object with a counter to track method_exists calls
         $counter = 0;
@@ -53,7 +53,7 @@ class SerializerCachingTest extends TestCase
         $this->assertEquals(['id' => 10, 'name' => 'Test'], $result1);
     }
     
-    public function testReflectionCaching()
+    public function testReflectionCaching(): void
     {
         // This test creates multiple similar objects to test reflection caching
         $objects = [];
@@ -88,7 +88,7 @@ class SerializerCachingTest extends TestCase
     }
     
     #[Group('performance')]
-    public function testPropertyCaching()
+    public function testPropertyCaching(): void
     {
         // Create a complex object with nested properties
         $model = new \stdClass();
@@ -125,7 +125,7 @@ class SerializerCachingTest extends TestCase
     }
     
     #[Group('performance')]
-    public function testCacheObjectMethod()
+    public function testCacheObjectMethod(): void
     {
         // Create a complex model object
         $model = new ModelGetter(10, 'Test');

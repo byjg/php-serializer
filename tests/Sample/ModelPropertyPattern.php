@@ -33,12 +33,12 @@ class ModelPropertyPattern extends BaseModel
         return $this->_Client_Name;
     }
 
-    public function setIdModel($Id)
+    public function setIdModel($Id): void
     {
         $this->_Id_Model = $Id;
     }
 
-    public function setClientName($Name)
+    public function setClientName($Name): void
     {
         $this->_Client_Name = $Name;
     }
@@ -48,7 +48,7 @@ class ModelPropertyPattern extends BaseModel
         return $this->birthdate;
     }
 
-    public function setBirthdate($birth_date)
+    public function setBirthdate($birth_date): void
     {
         $this->birthdate = $birth_date;
     }

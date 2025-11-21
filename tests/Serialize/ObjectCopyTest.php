@@ -16,14 +16,14 @@ use TypeError;
 
 class ObjectCopyTest extends TestCase
 {
-    public function testCopy_Constructor()
+    public function testCopy_Constructor(): void
     {
         $object1 = new SampleModel( ['Id' => 10, 'Name' => 'Joao']);
         $this->assertEquals(10, $object1->Id);
         $this->assertEquals('Joao', $object1->getName());
     }
 
-    public function testCopy_Array()
+    public function testCopy_Array(): void
     {
         $object1 = new SampleModel();
         $object1->copyFrom(['Id' => 10, 'Name' => 'Joao']);
@@ -31,7 +31,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals('Joao', $object1->getName());
     }
 
-    public function testCopy_StdClass()
+    public function testCopy_StdClass(): void
     {
         $stdClass = new stdClass();
         $stdClass->Id = 10;
@@ -43,7 +43,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals('Joao', $object1->getName());
     }
 
-    public function testCopyTo_Object()
+    public function testCopyTo_Object(): void
     {
         $object1 = new SampleModel();
         $object1->Id = 10;
@@ -56,7 +56,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals('Joao', $object2->getName());
     }
 
-    public function testCopyTo_stdClass()
+    public function testCopyTo_stdClass(): void
     {
         $object1 = new SampleModel();
         $object1->Id = 10;
@@ -69,7 +69,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals('Joao', $object2->Name);
     }
 
-    public function testToArray()
+    public function testToArray(): void
     {
         $object1 = new SampleModel();
         $object1->Id = 10;
@@ -81,7 +81,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals('Joao', $object2['Name']);
     }
 
-    public function testComplexCopy()
+    public function testComplexCopy(): void
     {
         $model = new ModelPublic(20, 'JG');
 
@@ -95,7 +95,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals($model, $object->getName());
     }
 
-    public function testCopyToArray()
+    public function testCopyToArray(): void
     {
         $this->expectException(TypeError::class);
         $object1 = new SampleModel();
@@ -107,7 +107,7 @@ class ObjectCopyTest extends TestCase
         ObjectCopy::copy($object1, $array);
     }
 
-    public function testToArrayFrom()
+    public function testToArrayFrom(): void
     {
         $object1 = new SampleModel();
         $object1->Id = 10;
@@ -124,7 +124,7 @@ class ObjectCopyTest extends TestCase
         );
     }
 
-    public function testToArrayFrom2()
+    public function testToArrayFrom2(): void
     {
         $object1 = new ModelPropertyPattern();
         $object1->setBirthdate('1974-01-26');
@@ -143,7 +143,7 @@ class ObjectCopyTest extends TestCase
         );
     }
 
-    public function testObjectCopy()
+    public function testObjectCopy(): void
     {
         $source = [
             "Id" => 1,
@@ -158,7 +158,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals('Joao', $target->Name);
     }
 
-    public function testPropertyPatterSnakeToCamel()
+    public function testPropertyPatterSnakeToCamel(): void
     {
         $source = new stdClass();
         $source->id_model = 1;
@@ -174,7 +174,7 @@ class ObjectCopyTest extends TestCase
     }
 
 
-    public function testPropertyPatterCamelToSnake()
+    public function testPropertyPatterCamelToSnake(): void
     {
         $source = new stdClass();
         $source->idModel = 1;
@@ -190,7 +190,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals(49, $target->age);
     }
 
-    public function testPropertyDifferentName()
+    public function testPropertyDifferentName(): void
     {
         $source = new stdClass();
         $source->idModel = 1;
@@ -206,7 +206,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals(49, $target->age);
     }
 
-    public function testPropertyHandlerWithValueTransformation()
+    public function testPropertyHandlerWithValueTransformation(): void
     {
         $source = new stdClass();
         $source->idModel = 1;
@@ -230,7 +230,7 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals("age-age-49", $target->age);
     }
 
-    public function testValueTransformationWithSnakeToCamel()
+    public function testValueTransformationWithSnakeToCamel(): void
     {
         $source = new stdClass();
         $source->id_model = 1;

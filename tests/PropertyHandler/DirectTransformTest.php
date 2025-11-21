@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class DirectTransformTest extends TestCase
 {
-    public function testMapName()
+    public function testMapName(): void
     {
         $directTransform = new DirectTransform();
         
@@ -18,7 +18,7 @@ class DirectTransformTest extends TestCase
         $this->assertEquals('123PropertyName', $directTransform->mapName('123PropertyName'));
     }
 
-    public function testTransformValueWithoutHandler()
+    public function testTransformValueWithoutHandler(): void
     {
         $directTransform = new DirectTransform();
         
@@ -29,7 +29,7 @@ class DirectTransformTest extends TestCase
         $this->assertSame(null, $directTransform->transformValue('prop', 'prop', null));
     }
     
-    public function testTransformValueWithHandler()
+    public function testTransformValueWithHandler(): void
     {
         // Test with a custom value handler
         $directTransform = new DirectTransform(
@@ -49,7 +49,7 @@ class DirectTransformTest extends TestCase
         $this->assertSame(['a' => 1], $directTransform->transformValue('prop', 'prop', ['a' => 1]));
     }
     
-    public function testTransformValueWithInstanceParameter()
+    public function testTransformValueWithInstanceParameter(): void
     {
         // Create a test object
         $testObject = new \stdClass();

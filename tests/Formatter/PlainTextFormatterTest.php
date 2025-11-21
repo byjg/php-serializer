@@ -12,7 +12,7 @@ use Tests\Sample\ModelList3;
 
 class PlainTextFormatterTest extends TestCase
 {
-    public function testArrayFormatter()
+    public function testArrayFormatter(): void
     {
         $array = [
             "key1" => "value",
@@ -23,7 +23,7 @@ class PlainTextFormatterTest extends TestCase
         $this->assertEquals("value\nvalue2\n", $formatter->process($array));
     }
 
-    public function testObjectFormatter()
+    public function testObjectFormatter(): void
     {
         $object = new SampleModel();
         $object->Id = "10";
@@ -34,7 +34,7 @@ class PlainTextFormatterTest extends TestCase
         $this->assertEquals("10\nJoao\n", $formatter->process($object));
     }
 
-    public function testObjectList()
+    public function testObjectList(): void
     {
         $object = new ModelList3();
         $object->addItem(new ModelGetter(10, "John"));

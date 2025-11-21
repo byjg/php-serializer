@@ -33,12 +33,12 @@ class ModelGetter
         return $this->_Name;
     }
 
-    public function setId($Id)
+    public function setId($Id): void
     {
         $this->_Id = $Id;
     }
 
-    public function setName($Name)
+    public function setName($Name): void
     {
         $this->_Name = $Name;
     }

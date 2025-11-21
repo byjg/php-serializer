@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 class CamelToSnakeCaseTest extends TestCase
 {
 
-    public function testChangeValue()
+    public function testChangeValue(): void
     {
         // Test with default handler (no transformation)
         $camelToSnakeCase = new CamelToSnakeCase();
@@ -22,7 +22,12 @@ class CamelToSnakeCaseTest extends TestCase
         $this->assertSame('TEST_VALUE', $customHandler->transformValue('propName', 'prop_name', 'test_value'));
     }
 
-    public static function mapProvider()
+    /**
+     * @return string[][]
+     *
+     * @psalm-return list{list{'test', 'test'}, list{'myTest', 'my_test'}, list{'MyTest', 'my_test'}, list{'MyTestMultiple', 'my_test_multiple'}, list{'myTestMultiple', 'my_test_multiple'}, list{'myTestMultiple1', 'my_test_multiple1'}, list{'myTestMultiple12', 'my_test_multiple12'}, list{'myTestMultiple123', 'my_test_multiple123'}, list{'myTestMultiple1234', 'my_test_multiple1234'}, list{'XMLHttpRequest', 'xml_http_request'}}
+     */
+    public static function mapProvider(): array
     {
         return [
             ['test', 'test'],
@@ -39,7 +44,7 @@ class CamelToSnakeCaseTest extends TestCase
     }
 
     #[DataProvider('mapProvider')]
-    public function testMapName($value, $expected)
+    public function testMapName($value, $expected): void
     {
         $camelToSnakeCase = new CamelToSnakeCase();
         $this->assertEquals($expected, $camelToSnakeCase->mapName($value));

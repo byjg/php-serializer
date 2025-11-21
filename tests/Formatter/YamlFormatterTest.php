@@ -12,7 +12,7 @@ use Tests\Sample\ModelList3;
 
 class YamlFormatterTest extends TestCase
 {
-    public function testArrayFormatter()
+    public function testArrayFormatter(): void
     {
         $array = [
             "key1" => "value",
@@ -26,7 +26,7 @@ class YamlFormatterTest extends TestCase
         );
     }
 
-    public function testObjectFormatter()
+    public function testObjectFormatter(): void
     {
         $object = new SampleModel();
         $object->Id = "10";
@@ -44,7 +44,7 @@ class YamlFormatterTest extends TestCase
         );
     }
 
-    public function testObjectList()
+    public function testObjectList(): void
     {
         $object = new ModelList3();
         $object->addItem(new ModelGetter(10, "John"));

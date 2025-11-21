@@ -11,7 +11,7 @@ use Tests\Sample\ModelList3;
 
 class CsvFormatterTest extends TestCase
 {
-    public function testArrayFormatter()
+    public function testArrayFormatter(): void
     {
         $array = [
             "key1" => "value",
@@ -23,7 +23,7 @@ class CsvFormatterTest extends TestCase
         $this->assertEquals($expected, $formatter->process($array));
     }
 
-    public function testArrayFormatterMultipleLines()
+    public function testArrayFormatterMultipleLines(): void
     {
         $array = [
             [
@@ -42,7 +42,7 @@ class CsvFormatterTest extends TestCase
         $this->assertEquals($expected, $formatter->process($array));
     }
 
-    public function testObjectFormatter()
+    public function testObjectFormatter(): void
     {
         $object = new SampleModel();
         $object->Id = "10";
@@ -54,7 +54,7 @@ class CsvFormatterTest extends TestCase
         $this->assertEquals($expected, $formatter->process($object));
     }
 
-    public function testObjectListCollection()
+    public function testObjectListCollection(): void
     {
         $object = new ModelList3();
         $object->addItem(new ModelGetter(10, "John"));
@@ -65,7 +65,7 @@ class CsvFormatterTest extends TestCase
         $this->assertEquals($expected, $formatter->process(Serialize::from($object->getCollection())->toArray()));
     }
 
-    public function testFromCsv()
+    public function testFromCsv(): void
     {
         $csvContent = "name,age,city\nJohn,30,New York\nJane,25,Los Angeles\n";
         $expected = [
@@ -77,7 +77,7 @@ class CsvFormatterTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function testFromCsvNoHeaders()
+    public function testFromCsvNoHeaders(): void
     {
         $csvContent = "John,30,New York\nJane,25,Los Angeles\n";
         $expected = [
@@ -89,7 +89,7 @@ class CsvFormatterTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function testRoundTrip()
+    public function testRoundTrip(): void
     {
         $data = [
             ["name" => "John", "age" => "30", "city" => "New York"],

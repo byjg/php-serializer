@@ -13,7 +13,7 @@ use Tests\Sample\SampleModel;
 
 class BaseModelTest extends TestCase
 {
-    public function testCopyFromObject()
+    public function testCopyFromObject(): void
     {
         $model = new ModelGetter(10, 'Testing');
 
@@ -23,7 +23,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals("Testing", $object->getName());
     }
 
-    public function testCopyFromStdClass()
+    public function testCopyFromStdClass(): void
     {
         // Matching exact property names
         $model = new stdClass();
@@ -46,7 +46,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals("Testing", $object->getName());
     }
 
-    public function testCopyFromArray()
+    public function testCopyFromArray(): void
     {
         $array = array(
             "Id" => 10,
@@ -59,7 +59,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals("Testing", $object->getName());
     }
 
-   public function testPropertyPatternCopy()
+   public function testPropertyPatternCopy(): void
    {
        $obj = new stdClass();
        $obj->Id_Model = 10;
@@ -86,7 +86,7 @@ class BaseModelTest extends TestCase
        $this->assertEquals("Testing", $object->getClientName());
    }
 
-   public function testPropertyPatternCopy_2()
+   public function testPropertyPatternCopy_2(): void
    {
        // Other Testing
        $obj = new stdClass();
@@ -102,7 +102,7 @@ class BaseModelTest extends TestCase
    /**
     * The current property pattern try do remove the underscore.
     */
-   public function testPropertyPatternCopy_3()
+   public function testPropertyPatternCopy_3(): void
    {
        // Other Testing
        $obj = [
@@ -121,7 +121,7 @@ class BaseModelTest extends TestCase
     * The current property pattern try do remove the underscore.
     * The setPropertyPattern is done on constructor
     */
-   public function testPropertyPatternCopy_4()
+   public function testPropertyPatternCopy_4(): void
    {
        // Other Testing
        $obj = [
@@ -137,7 +137,7 @@ class BaseModelTest extends TestCase
    /**
     * The current property pattern try do remove the underscore.
     */
-   public function testPropertyPatternCopy_5()
+   public function testPropertyPatternCopy_5(): void
    {
        // Other Testing
        $obj = [

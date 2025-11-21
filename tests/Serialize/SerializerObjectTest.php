@@ -20,7 +20,7 @@ use Tests\Sample\SampleAttribute;
 
 class SerializerObjectTest extends TestCase
 {
-    public function testCreateObjectFromModel_ObjectGetter_1elem()
+    public function testCreateObjectFromModel_ObjectGetter_1elem(): void
     {
         $model = new ModelGetter(10, 'Joao');
 
@@ -54,7 +54,7 @@ class SerializerObjectTest extends TestCase
 
     }
 
-    public function testCreateObjectFromModel_ObjectGetter_2elem()
+    public function testCreateObjectFromModel_ObjectGetter_2elem(): void
     {
         $model = array(
             new ModelGetter(10, 'Joao'),
@@ -94,7 +94,7 @@ class SerializerObjectTest extends TestCase
 
     }
 
-    public function testCreateObjectFromModel_ObjectPublic_1elem()
+    public function testCreateObjectFromModel_ObjectPublic_1elem(): void
     {
         $model = new ModelPublic(10, 'Joao');
 
@@ -107,7 +107,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_ObjectPublic_2elem()
+    public function testCreateObjectFromModel_ObjectPublic_2elem(): void
     {
         $model = array(
             new ModelPublic(10, 'Joao'),
@@ -126,7 +126,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_StdClass_1()
+    public function testCreateObjectFromModel_StdClass_1(): void
     {
         $model = new stdClass();
         $model->Id = 10;
@@ -141,7 +141,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_StdClass_Model()
+    public function testCreateObjectFromModel_StdClass_Model(): void
     {
         $model = new stdClass();
         $model->Id = 10;
@@ -157,7 +157,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_Array_1()
+    public function testCreateObjectFromModel_Array_1(): void
     {
         $model = [
             'Id' => 10,
@@ -173,7 +173,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_Array_2()
+    public function testCreateObjectFromModel_Array_2(): void
     {
         $model = [
             'Id' => 10,
@@ -202,7 +202,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_StdClass_Array()
+    public function testCreateObjectFromModel_StdClass_Array(): void
     {
         $model = new stdClass();
         $model->Obj = [
@@ -221,7 +221,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_Array_Scalar()
+    public function testCreateObjectFromModel_Array_Scalar(): void
     {
         $model = new stdClass();
         $model->Obj = [
@@ -238,7 +238,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_Array_Mixed()
+    public function testCreateObjectFromModel_Array_Mixed(): void
     {
         $model = new stdClass();
         $model->Obj = [
@@ -256,7 +256,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_Array_Array()
+    public function testCreateObjectFromModel_Array_Array(): void
     {
         $model = new stdClass();
         $model->Obj = [
@@ -294,7 +294,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_Array_Array_2()
+    public function testCreateObjectFromModel_Array_Array_2(): void
     {
         $model = new stdClass();
         $model->Obj = [
@@ -319,7 +319,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_Array_Array_3()
+    public function testCreateObjectFromModel_Array_Array_3(): void
     {
         $model = [
             [
@@ -351,7 +351,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_Array_Array_5()
+    public function testCreateObjectFromModel_Array_Array_5(): void
     {
         $model = new stdClass;
 
@@ -394,7 +394,7 @@ class SerializerObjectTest extends TestCase
     /**
      * @todo: Interpret Annotations
      */
-    public function testCreateObjectFromModel_Collection_DontCreateNode()
+    public function testCreateObjectFromModel_Collection_DontCreateNode(): void
     {
         $modellist = new ModelList();
         $modellist->addItem(new ModelGetter(10, 'Joao'));
@@ -418,7 +418,7 @@ class SerializerObjectTest extends TestCase
     /**
      * @todo: Interpret Annotations
      */
-    public function testCreateObjectFromModel_Collection_CreateNode()
+    public function testCreateObjectFromModel_Collection_CreateNode(): void
     {
         $modellist = new ModelList2();
         $modellist->addItem(new ModelGetter(10, 'Joao'));
@@ -442,7 +442,7 @@ class SerializerObjectTest extends TestCase
     /**
      * @todo: Interpret Annotations
      */
-    public function testCreateObjectFromModel_Collection_SkipParentAndRenameChild()
+    public function testCreateObjectFromModel_Collection_SkipParentAndRenameChild(): void
     {
         $modellist = new ModelList3();
         $modellist->addItem(new ModelGetter(10, 'Joao'));
@@ -474,7 +474,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testCreateObjectFromModel_OnlyScalarAtFirstLevel()
+    public function testCreateObjectFromModel_OnlyScalarAtFirstLevel(): void
     {
         $model = [
             10,
@@ -493,7 +493,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testEmptyValues()
+    public function testEmptyValues(): void
     {
         $model = new stdClass();
         $model->varFalse = false;
@@ -547,7 +547,7 @@ class SerializerObjectTest extends TestCase
 
     }
 
-    public function testEmptyValues_2()
+    public function testEmptyValues_2(): void
     {
         $model = new ModelPublic(null, 'Joao');
 
@@ -577,7 +577,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testEmptyValues_3()
+    public function testEmptyValues_3(): void
     {
         $model = new ModelGetter(null, 'Joao');
 
@@ -597,7 +597,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testEmptyValues_4()
+    public function testEmptyValues_4(): void
     {
         $model = new ModelList();
 
@@ -619,7 +619,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testEmptyValues_5()
+    public function testEmptyValues_5(): void
     {
         $model = new ModelList();
         $model->addItem(new ModelGetter(null, 'Joao'));
@@ -660,7 +660,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testFirstLevel()
+    public function testFirstLevel(): void
     {
         $model = new stdClass();
         $model->Id = 10;
@@ -678,7 +678,7 @@ class SerializerObjectTest extends TestCase
 
     }
 
-    public function testFirstLevel_2()
+    public function testFirstLevel_2(): void
     {
         $model = new stdClass();
         $model->Obj = [
@@ -697,7 +697,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testDoNotParseClass()
+    public function testDoNotParseClass(): void
     {
         $model = new stdClass();
         $model->Id = 10;
@@ -741,7 +741,7 @@ class SerializerObjectTest extends TestCase
         $this->assertEquals('{"Id":10,"Name":"Joao","Object1":{},"Object2":{"Id":10,"Name":"JG2"}}', $object2->toJson());
     }
 
-    public function testDoNotParseClass_2()
+    public function testDoNotParseClass_2(): void
     {
         $model = new stdClass();
         $model->Obj = [
@@ -778,7 +778,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testModelWithFakeProperty()
+    public function testModelWithFakeProperty(): void
     {
         $model = new ModelForceProperty();
 
@@ -793,12 +793,12 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testSerializeJson()
+    public function testSerializeJson(): void
     {
         $this->assertEquals(["a"=>1, "b"=>2], Serialize::fromJson('{"a": 1, "b": 2}')->toArray());
     }
 
-    public function testSerializeYaml()
+    public function testSerializeYaml(): void
     {
         $yaml = file_get_contents(__DIR__ . "/yamlserialize.yml");
 
@@ -813,12 +813,12 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testSerializePhp()
+    public function testSerializePhp(): void
     {
         $this->assertEquals(["a"=>1, "b"=>2], Serialize::fromPhpSerialize(serialize(["a" => 1, "b" => 2]))->toArray());
     }
 
-    public function testSerializePhpClass()
+    public function testSerializePhpClass(): void
     {
         $model = new ModelList();
         $model->addItem(new ModelGetter(10, 'Joao'));
@@ -840,7 +840,7 @@ class SerializerObjectTest extends TestCase
         $this->assertEquals($serialize, $returnSerialize);
     }
 
-    public function testToYaml()
+    public function testToYaml(): void
     {
         $model = new ModelList();
         $model->addItem(new ModelGetter(10, 'Joao'));
@@ -851,7 +851,7 @@ class SerializerObjectTest extends TestCase
         $this->assertEquals($expectedYaml, Serialize::from($model)->toYaml());
     }
 
-    public function testToJson()
+    public function testToJson(): void
     {
         $model = new ModelList();
         $model->addItem(new ModelGetter(10, 'Joao'));
@@ -862,7 +862,7 @@ class SerializerObjectTest extends TestCase
         $this->assertEquals($expectedJson, Serialize::from($model)->toJson());
     }
 
-    public function testToXml()
+    public function testToXml(): void
     {
         $model = new ModelList();
         $model->addItem(new ModelGetter(10, 'Joao'));
@@ -873,7 +873,7 @@ class SerializerObjectTest extends TestCase
         $this->assertEquals($expectedXml, Serialize::from($model)->toXml());
     }
 
-    public function testToPlainText()
+    public function testToPlainText(): void
     {
         $model = new ModelList();
         $model->addItem(new ModelGetter(10, 'Joao'));
@@ -884,7 +884,7 @@ class SerializerObjectTest extends TestCase
         $this->assertEquals($expectedText, Serialize::from($model)->toPlainText());
     }
 
-    public function testIgnoreProperties()
+    public function testIgnoreProperties(): void
     {
         $model = new stdClass();
         $model->Id = 10;
@@ -908,7 +908,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testParseAttributes()
+    public function testParseAttributes(): void
     {
         $model = new ModelGetter(10, 'Joao');
 
@@ -929,7 +929,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testParseAttributesStdClass()
+    public function testParseAttributesStdClass(): void
     {
         // This test is a safeguard to guarantee the function will be called
         // even if the object is an array or a stdClass
@@ -955,7 +955,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testSampleModelOfModel()
+    public function testSampleModelOfModel(): void
     {
         $model = new ModelOfModel();
         $model->IdModel = 40;
@@ -973,7 +973,7 @@ class SerializerObjectTest extends TestCase
         );
     }
 
-    public function testAnonymousClass()
+    public function testAnonymousClass(): void
     {
         // Create a simple object with a counter to track method_exists calls
         $obj = new class(10, 'Test', 50) {

@@ -14,7 +14,7 @@ class PropertyNameMapperTest extends TestCase
         'user_id' => 'userId'
     ];
 
-    public function testMapName()
+    public function testMapName(): void
     {
         $propertyMapper = new PropertyNameMapper($this->mapFields);
         
@@ -27,7 +27,7 @@ class PropertyNameMapperTest extends TestCase
         $this->assertEquals('originalField', $propertyMapper->mapName('originalField'));
     }
 
-    public function testTransformValueWithoutHandler()
+    public function testTransformValueWithoutHandler(): void
     {
         $propertyMapper = new PropertyNameMapper($this->mapFields);
         
@@ -36,7 +36,7 @@ class PropertyNameMapperTest extends TestCase
         $this->assertSame(['a' => 1], $propertyMapper->transformValue('last_name', 'lastName', ['a' => 1]));
     }
     
-    public function testTransformValueWithHandler()
+    public function testTransformValueWithHandler(): void
     {
         // Test with custom value handler
         $propertyMapper = new PropertyNameMapper(

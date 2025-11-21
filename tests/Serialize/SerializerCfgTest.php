@@ -11,7 +11,7 @@ use Tests\Sample\ModelPropertyPattern;
 
 class SerializerCfgTest extends TestCase
 {
-    public function testCustomMethodPattern()
+    public function testCustomMethodPattern(): void
     {
         // Create a model with properties using non-alphanumeric characters
         $model = new ModelPropertyPattern();
@@ -45,7 +45,7 @@ class SerializerCfgTest extends TestCase
         $this->assertArrayHasKey('birthdate', $result);
     }
 
-    public function testCustomGetterPrefix()
+    public function testCustomGetterPrefix(): void
     {
         // Create a custom model class with a different getter format
         $obj = new class() {
@@ -79,7 +79,7 @@ class SerializerCfgTest extends TestCase
         $this->assertEquals(["name" => "John", "age" => 30], $result);
     }
 
-    public function testCacheBehavior()
+    public function testCacheBehavior(): void
     {
         // Create a simple model
         $model = new ModelGetter(10, 'John');
@@ -118,7 +118,7 @@ class SerializerCfgTest extends TestCase
         // indirectly through optimization tests.
     }
 
-    public function testMethodExistsOptimization()
+    public function testMethodExistsOptimization(): void
     {
         // Create a model with 100 properties to test caching performance
         $model = new stdClass();
@@ -147,7 +147,7 @@ class SerializerCfgTest extends TestCase
             "Second serialization run wasn't significantly slower than first run, indicating caching works");
     }
     
-    public function testPerformanceWithReflectionCache()
+    public function testPerformanceWithReflectionCache(): void
     {
         // Create many objects to serialize
         $objects = [];
@@ -178,7 +178,7 @@ class SerializerCfgTest extends TestCase
             "Processing similar objects should benefit from reflection caching");
     }
     
-    public function testIgnoreProperties()
+    public function testIgnoreProperties(): void
     {
         $model = new stdClass();
         $model->id = 1;

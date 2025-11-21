@@ -20,7 +20,7 @@ class SampleModel extends BaseModel
         return $this->_Name;
     }
 
-    public function setName($Name)
+    public function setName($Name): void
     {
         $this->_Name = $Name;
     }

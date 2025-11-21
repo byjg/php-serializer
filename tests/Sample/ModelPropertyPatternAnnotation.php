@@ -20,7 +20,7 @@ class ModelPropertyPatternAnnotation extends BaseModel
         return $this->_birth_date;
     }
 
-    public function setBirth_date($birth_date)
+    public function setBirth_date($birth_date): void
     {
         $this->_birth_date = $birth_date;
     }

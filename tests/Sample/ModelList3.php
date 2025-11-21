@@ -11,8 +11,12 @@ class ModelList3
 
     /**
      * Add ModelGetter to a List
+     *
      * @param ModelGetter $obj Description
+     *
      * @throws Exception
+     *
+     * @return void
      */
     public function addItem($obj)
     {

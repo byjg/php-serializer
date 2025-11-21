@@ -9,7 +9,7 @@ use Tests\Sample\ModelGetter;
 
 class SerializerOptimizationTest extends TestCase
 {
-    public function testIgnorePropertiesWithMap()
+    public function testIgnorePropertiesWithMap(): void
     {
         // Create an object with many properties to test optimized property lookup
         $model = new stdClass();
@@ -48,7 +48,7 @@ class SerializerOptimizationTest extends TestCase
         $this->assertNotEmpty($result);
     }
 
-    public function testFastTypeDetection()
+    public function testFastTypeDetection(): void
     {
         // Create different types of data to test optimized type detection
         $data = [
@@ -80,7 +80,7 @@ class SerializerOptimizationTest extends TestCase
         $this->assertEquals($scalars, $serialized);
     }
 
-    public function testStringConversion()
+    public function testStringConversion(): void
     {
         // Test the onlyString feature with different types
         $model = new stdClass();
@@ -126,7 +126,7 @@ class SerializerOptimizationTest extends TestCase
         $this->assertSame(null, $resultBack['null']);
     }
     
-    public function testLargeObjectGraph()
+    public function testLargeObjectGraph(): void
     {
         // Create a large object graph to test serialization performance
         $root = new stdClass();

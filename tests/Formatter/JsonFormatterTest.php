@@ -12,7 +12,7 @@ use Tests\Sample\ModelList3;
 
 class JsonFormatterTest extends TestCase
 {
-    public function testArrayFormatter()
+    public function testArrayFormatter(): void
     {
         $array = [
             "key1" => "value",
@@ -23,7 +23,7 @@ class JsonFormatterTest extends TestCase
         $this->assertEquals('{"key1":"value","key2":"value2"}', $formatter->process($array));
     }
 
-    public function testObjectFormatter()
+    public function testObjectFormatter(): void
     {
         $object = new SampleModel();
         $object->Id = "10";
@@ -34,7 +34,7 @@ class JsonFormatterTest extends TestCase
         $this->assertEquals('{"Id":"10","Name":"Joao"}', $formatter->process($object));
     }
 
-    public function testObjectList()
+    public function testObjectList(): void
     {
         $object = new ModelList3();
         $object->addItem(new ModelGetter(10, "John"));

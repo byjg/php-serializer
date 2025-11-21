@@ -11,8 +11,12 @@ class ModelList
 
     /**
      * Add VistoriaAuditor to a List
+     *
      * @param mixed $obj
+     *
      * @throws Exception
+     *
+     * @return void
      */
     public function addItem($obj)
     {
