@@ -8,6 +8,7 @@ use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
 use ByJG\Serializer\Formatter\YamlFormatter;
 use Closure;
+use http\Exception\InvalidArgumentException;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
@@ -21,7 +22,10 @@ class Serialize
     private static array $_methodExistsCache = [];
 
     protected mixed $model = null;
-    protected array $methodPattern = ['/([^A-Za-z0-9])/', ''];
+    protected array $methodPattern = [
+        self::METHOD_PATTERN_SEARCH_KEY => '/([^A-Za-z0-9])/',
+        self::METHOD_PATTERN_REPLACE_KEY => ''
+    ];
     protected string $methodGetPrefix = 'get';
     protected bool $stopAtFirstLevel = false;
     protected bool $onlyString = false;
@@ -31,6 +35,9 @@ class Serialize
     protected array $ignoreProperties = [];
     protected array $ignorePropertiesMap = [];
 
+    private const string METHOD_PATTERN_SEARCH_KEY = "search";
+    private const string METHOD_PATTERN_REPLACE_KEY = "replace";
+
     protected function __construct(mixed $model)
     {
         $this->model = $model;
@@ -38,17 +45,17 @@ class Serialize
 
     public static function from(object|array $model): static
     {
-        return new Serialize($model);
+        return new static($model);
     }
 
     public static function fromYaml(string $content): static
     {
-        return new Serialize(Yaml::parse($content));
+        return new static(Yaml::parse($content));
     }
 
     public static function fromJson(string $content): static
     {
-        return new Serialize(json_decode($content, true));
+        return new static(json_decode($content, true));
     }
 
     /**
@@ -62,7 +69,7 @@ class Serialize
     {
         $lines = explode("\n", trim($content));
         if (empty($lines)) {
-            return new Serialize([]);
+            return new static([]);
         }
 
         $data = [];
@@ -96,12 +103,12 @@ class Serialize
             }
         }
 
-        return new Serialize($data);
+        return new static($data);
     }
 
     public static function fromPhpSerialize(string $content): static
     {
-        return new Serialize(unserialize($content));
+        return new static(unserialize($content));
     }
 
     /**
@@ -293,7 +300,7 @@ class Serialize
 
     protected function getCacheKey(string $objectName): string
     {
-        return $objectName . '|' . $this->methodPattern[0] . '|' . $this->methodPattern[1];
+        return $objectName . '|' . $this->methodPattern[self::METHOD_PATTERN_SEARCH_KEY] . '|' . $this->methodPattern[self::METHOD_PATTERN_REPLACE_KEY];
     }
 
     protected function cacheGet(string $objectName): array
@@ -360,45 +367,35 @@ class Serialize
         $reflection = self::$_reflectionCache[$className];
 
         // Parse the object properties and cache the attributes
-        foreach ((array)$object as $key => $value) {
-            $propertyName = $key;
+        foreach ($reflection->getProperties() as $property) {
+            $keyName = $property->getName();
             $getter = null;
-            $keyName = null;
 
-            // More efficient property name extraction using regex
-            if (str_starts_with($key, "\0")) {
-                if (preg_match('/^\0[^\\0]*\0(.+)$/', $key, $matches)) {
-                    $keyName = $matches[1];
+            // Check if there's a getter method for this property
+            $search = $this->getMethodSearchPattern();
+            $replace = $this->getMethodReplacePattern();
+            /** @var string $propertyNameForGetter */
+            $propertyNameForGetter = preg_replace($search, $replace, $keyName);
+            $getterMethod = $this->getMethodGetPrefix() . $propertyNameForGetter;
 
-                    // For anonymous classes, extract just the property name (remove path and class)
-                    if (str_contains($keyName, '$0')) {
-                        $keyName = substr($keyName, strrpos($keyName, '$0') + 2);
-                    }
-
-                    $propertyName = preg_replace($this->getMethodPattern(0), $this->getMethodPattern(1), $keyName);
-
-                    $getterMethod = $this->getMethodGetPrefix() . $propertyName;
-                    if (!$this->methodExists($object, $getterMethod)) {
-                        continue;
-                    }
-
-                    $getter = $getterMethod;
+            if ($this->methodExists($object, $getterMethod)) {
+                $getter = $getterMethod;
+                $propertyName = $propertyNameForGetter;
+            } else {
+                // Skip non-public properties without getters
+                if (!$property->isPublic()) {
+                    continue;
                 }
+                $propertyName = $keyName;
             }
-
-            $keyName = $keyName ?? $propertyName;
 
             $this->cacheSetGetter($className, $propertyName, getter: $getter, keyName: $keyName);
 
-            try {
-                $property = $reflection->getProperty($keyName);
-                $attributes = $property->getAttributes(null, ReflectionAttribute::IS_INSTANCEOF);
-                foreach ($attributes as $attribute) {
-                    $newAttribute = $attribute->newInstance();
-                    $this->cacheSetAttributes($className, $propertyName, attribute: $newAttribute);
-                }
-            } catch (ReflectionException) {
-                // Property doesn't exist in the reflection API, skip attributes
+            // Get property attributes
+            $attributes = $property->getAttributes(null, ReflectionAttribute::IS_INSTANCEOF);
+            foreach ($attributes as $attribute) {
+                $newAttribute = $attribute->newInstance();
+                $this->cacheSetAttributes($className, $propertyName, attribute: $newAttribute);
             }
 
             $this->setValue($result, $object, $propertyName, $this->cacheGetProperty($className, $propertyName), $attributeClass, $attributeFunction);
@@ -458,7 +455,6 @@ class Serialize
      * @param string|null $attributeClass
      * @param Closure|null $attributeFunction
      * @return array|object
-     * @throws ReflectionException
      */
     protected function parseObject(object $object, ?string $attributeClass = null, ?Closure $attributeFunction = null): array|object
     {
@@ -516,9 +512,10 @@ class Serialize
         $processedProperties = [];
 
         foreach ($methods as $method) {
-            // Check if method starts with the getter prefix
+            // Check if the method starts with the getter prefix
             if (str_starts_with($method, $prefix) && strlen($method) > $prefixLen) {
-                // Extract property name from getter (e.g., "getId" -> "id")
+                // Extract the property name from getter (e.g., "getId" -> "id")
+                /** @var non-empty-string $propertyKey */
                 $propertyKey = lcfirst(substr($method, $prefixLen));
 
                 // Use original property casing if available
@@ -530,7 +527,7 @@ class Serialize
                 // Parse the value
                 $parsedValue = $this->parseProperties($value);
 
-                // Add to result array
+                // Add to the result array
                 $result[$propertyName] = $parsedValue;
                 $processedProperties[strtolower($propertyName)] = true;
             }
@@ -544,7 +541,7 @@ class Serialize
                 // Parse the value
                 $parsedValue = $this->parseProperties($value);
 
-                // Add to result array
+                // Add to the result array
                 $result[$key] = $parsedValue;
             }
         }
@@ -553,12 +550,16 @@ class Serialize
     }
 
     /**
-     * @param int $key
-     * @return string
+     * @return non-empty-string
      */
-    public function getMethodPattern(int $key): string
+    public function getMethodSearchPattern(): string
     {
-        return $this->methodPattern[$key];
+        return $this->methodPattern[self::METHOD_PATTERN_SEARCH_KEY];
+    }
+
+    public function getMethodReplacePattern():string
+    {
+        return $this->methodPattern[self::METHOD_PATTERN_REPLACE_KEY];
     }
 
     /**
@@ -568,7 +569,18 @@ class Serialize
      */
     public function withMethodPattern(string $search, string $replace): static
     {
-        $this->methodPattern = [$search, $replace];
+        if (empty($search) && strlen($search) <= 2) {
+            throw new \InvalidArgumentException("Search pattern cannot be empty or less than 2 characters");
+        }
+
+        if ($search[0] !== $search[strlen($search) - 1]) {
+            throw new \InvalidArgumentException("Search pattern must be enclosed in matching delimiters");
+        }
+
+        $this->methodPattern = [
+            self::METHOD_PATTERN_SEARCH_KEY => $search,
+            self::METHOD_PATTERN_REPLACE_KEY => $replace
+        ];
         return $this;
     }
 

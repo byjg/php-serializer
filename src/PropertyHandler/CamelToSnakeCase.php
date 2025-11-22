@@ -27,9 +27,9 @@ class CamelToSnakeCase extends DirectTransform
             function ($matches) {
                 return $matches[1] . '_' . strtolower($matches[2]);
             },
-            $result
+            $result ?? ''
         );
         
-        return strtolower($result);
+        return strtolower($result ?? '');
     }
 } 

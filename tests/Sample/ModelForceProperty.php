@@ -10,9 +10,9 @@ namespace Tests\Sample;
 
 class ModelForceProperty
 {
-    protected $fakeProp = "10";
+    protected string $fakeProp = "10";
 
-    protected $nonExistante = "30";
+    protected string $nonExistante = "30";
 
     /**
      * @return int

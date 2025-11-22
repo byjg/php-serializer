@@ -7,7 +7,7 @@ use ByJG\Serializer\BaseModel;
 class SampleModel extends BaseModel
 {
 
-    public $Id = "";
+    public string $Id = "";
     protected $_Name = "";
 
     public function __construct($object = null)

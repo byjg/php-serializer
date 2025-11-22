@@ -31,23 +31,25 @@ class XmlFormatter implements FormatterInterface
             } elseif (empty($array)) {
                 return '';
             }
-        }
-
-        if (!is_array($serializable)) {
+        } else {
             $array = Serialize::from($serializable)->toArray();
         }
-        $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><$this->rootElement></$this->rootElement>");
-        $this->arrayToXml($array, $xml);
+        $xml = $this->arrayToXml($array);
 
         return $xml->asXML();
     }
 
     /**
      * @param array $array
-     * @param SimpleXMLElement $xml
+     * @param SimpleXMLElement|null $xml
+     * @return SimpleXMLElement
      */
-    protected function arrayToXml(array $array, SimpleXMLElement $xml): void
+    protected function arrayToXml(array $array, ?SimpleXMLElement $xml = null): SimpleXMLElement
     {
+        if ($xml === null) {
+            $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><$this->rootElement></$this->rootElement>");
+        }
+
         foreach ($array as $key => $value) {
             if (is_array($value)) {
                 if (!is_numeric($key)) {
@@ -60,6 +62,8 @@ class XmlFormatter implements FormatterInterface
                 $xml->addChild("$key", htmlspecialchars("$value"));
             }
         }
+
+        return $xml;
     }
     /**
      * @param mixed $rootElement

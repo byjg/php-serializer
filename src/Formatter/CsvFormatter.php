@@ -3,6 +3,7 @@
 namespace ByJG\Serializer\Formatter;
 
 use ByJG\Serializer\Serialize;
+use RuntimeException;
 
 class CsvFormatter implements FormatterInterface
 {
@@ -54,6 +55,9 @@ class CsvFormatter implements FormatterInterface
     private function arrayToCsvLine(array $fields): string
     {
         $f = fopen('php://memory', 'r+');
+        if ($f === false) {
+            throw new RuntimeException("Failed to open memory stream for CSV formatting");
+        }
         fputcsv($f, $fields, escape: "\\");
         rewind($f);
         $line = stream_get_contents($f);

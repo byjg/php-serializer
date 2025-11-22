@@ -49,8 +49,8 @@ class SerializerCfgTest extends TestCase
     {
         // Create a custom model class with a different getter format
         $obj = new class() {
-            private $name = 'John';
-            private $age = 30;
+            private string $name = 'John';
+            private int $age = 30;
             
             // Using "read" prefix instead of "get"
             public function readName() {

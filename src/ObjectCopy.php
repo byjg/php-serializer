@@ -18,14 +18,14 @@ final class ObjectCopy
      * @param PropertyHandlerInterface|null $propertyHandler The property handler
      * @return void
      */
-    public static function copy(object|array $source, object|array $target, ?PropertyHandlerInterface $propertyHandler = null): void
+    public static function copy(object|array $source, object|array &$target, ?PropertyHandlerInterface $propertyHandler = null): void
     {
         $propNameLower = [];
 
         $sourceArray = Serialize::from($source)
             ->withStopAtFirstLevel()
             ->parseAttributes(
-                function ($attribute, $value, $keyName, $propertyName) use ($propertyHandler, $target, &$propNameLower, $source) {
+                function ($attribute, $value, $keyName, $propertyName) use ($propertyHandler, &$target, &$propNameLower, $source) {
                     self::applyAttribute($attribute, $value, $keyName, $propertyName, $propertyHandler, $target, $propNameLower, $source);
                 }
             );
@@ -42,15 +42,20 @@ final class ObjectCopy
      * @param object|array $source
      * @return void
      */
-    private static function applyAttribute(mixed $attribute, mixed $value, mixed $keyName, string $propertyName, ?PropertyHandlerInterface $propertyHandler, object|array $target, array &$propNameLower, object|array $source): void
+    private static function applyAttribute(mixed $attribute, mixed $value, mixed $keyName, string $propertyName, ?PropertyHandlerInterface $propertyHandler, object|array &$target, array &$propNameLower, object|array $source): void
     {
         // ----------------------------------------------
         // Extract the target name
         $targetName = $propertyName;
         if (!is_null($propertyHandler)) {
             $targetName = $propertyHandler->mapName($propertyName);
-            // Pass the full source instance to allow property handler to access other properties
+            // Pass the full source instance to allow a property handler to access other properties
             $value = $propertyHandler->transformValue($propertyName, $targetName, $value, $source);
+        }
+
+        if (is_array($target)) {
+            $target[$targetName] = $value;
+            return;
         }
 
         // ----------------------------------------------

@@ -97,7 +97,6 @@ class ObjectCopyTest extends TestCase
 
     public function testCopyToArray(): void
     {
-        $this->expectException(TypeError::class);
         $object1 = new SampleModel();
         $object1->Id = 10;
         $object1->setName('Joao');
@@ -105,6 +104,9 @@ class ObjectCopyTest extends TestCase
         $array = [];
 
         ObjectCopy::copy($object1, $array);
+
+        $this->assertEquals(10, $array['Id']);
+        $this->assertEquals('Joao', $array['Name']);
     }
 
     public function testToArrayFrom(): void

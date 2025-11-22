@@ -15,8 +15,8 @@ class SerializerCachingTest extends TestCase
         $counter = 0;
         $obj = new class($counter) {
             private $counter;
-            private $id = 10;
-            private $name = 'Test';
+            private int $id = 10;
+            private string $name = 'Test';
             
             public function __construct(&$counter) {
                 $this->counter = &$counter;
