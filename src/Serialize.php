@@ -8,10 +8,8 @@ use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
 use ByJG\Serializer\Formatter\YamlFormatter;
 use Closure;
-use http\Exception\InvalidArgumentException;
 use ReflectionAttribute;
 use ReflectionClass;
-use ReflectionException;
 use stdClass;
 use Symfony\Component\Yaml\Yaml;
 
