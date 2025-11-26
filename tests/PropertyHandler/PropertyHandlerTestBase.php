@@ -3,6 +3,7 @@
 namespace Tests\PropertyHandler;
 
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 abstract class PropertyHandlerTestBase extends TestCase
@@ -34,5 +35,12 @@ abstract class PropertyHandlerTestBase extends TestCase
             return strtoupper($value);
         });
         $this->assertSame(strtoupper($value), $customHandler->transformValue($sourceName, $targetName, $value));
+    }
+
+    #[DataProvider('mapProvider')]
+    public function testMapName($value, $expected): void
+    {
+        $handler = $this->createHandler();
+        $this->assertEquals($expected, $handler->mapName($value));
     }
 }
