@@ -37,11 +37,4 @@ class SnakeToCamelCaseTest extends PropertyHandlerTestBase
             ['xml_http_request', 'xmlHttpRequest']
         ];
     }
-
-    #[DataProvider('mapProvider')]
-    public function testMapName($value, $expected): void
-    {
-        $snakeToCamelCase = new SnakeToCamelCase();
-        $this->assertEquals($expected, $snakeToCamelCase->mapName($value));
-    }
 } 
