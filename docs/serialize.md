@@ -101,6 +101,28 @@ $array = Serialize::from($data)->parseAttributes($callback, $attributeClass);
 
 For detailed formatter documentation including customization options, configuration methods, and examples, see the **[Formatters Guide](formatters.md)**.
 
+### Cross-format conversion
+
+You can chain any input method with any output method to convert between formats directly:
+
+```php
+<?php
+use ByJG\Serializer\Serialize;
+
+// From PHP's native serialize() to array
+$serialized = serialize(['a' => 1, 'b' => 2]);
+$array = Serialize::fromPhpSerialize($serialized)->toArray();
+// [ 'a' => 1, 'b' => 2 ]
+
+// From JSON to YAML
+$json = '{"foo": "bar"}';
+$yaml = Serialize::fromJson($json)->toYaml();
+
+// From YAML to JSON
+$yaml = "foo: bar\nanswer: 42\n";
+$json = Serialize::fromYaml($yaml)->toJson();
+```
+
 ### Customizing the Serialization
 
 These are the possible modifiers for parsing:
@@ -261,22 +283,33 @@ public function parseAttributes(?Closure $attributeFunction, ?string $attributeC
 **Basic Example:**
 
 ```php
-class Model {
-    public $Id = "123";
-    #[SampleAttribute("Message")]
-    public $Name = "John";
+#[Attribute]
+final class Label {
+    public function __construct(public string $text) {}
 }
 
-$result = Serialize::from($model)->parseAttributes(
-    function ($attribute, $value, $keyName, $propertyName, $getterName) {
-        return "$value: " . ($attribute?->getElementName() ?? '');
+final class Product {
+    #[Label('SKU')]
+    public string $id = 'A-123';
+
+    #[Label('Pretty name')]
+    public string $name = 'Fuzzy Panda';
+}
+
+$prod = new Product();
+
+$result = Serialize::from($prod)->parseAttributes(
+    // Callback receives ($attributeInstance, $value, $keyName, $propertyName, $getterName)
+    function ($attr, $value, $key, $prop, $getter) {
+        // If the attribute exists, append its label
+        return $attr ? "{$value} ({$attr->text})" : $value;
     },
-    SampleAttribute::class
+    Label::class // Only parse this attribute type
 );
-// Result: ['Id' => '123: ', 'Name' => 'John: Message']
+// Result: ['id' => 'A-123 (SKU)', 'name' => 'Fuzzy Panda (Pretty name)']
 ```
 
-The callback receives five parameters: `$attribute` (attribute instance or null), `$value` (parsed property value), `$keyName` (reflected property name), `$propertyName` (output key name), and `$getterName` (getter method name or null).
+The callback receives five parameters: `$attribute` (attribute instance or null), `$value` (parsed property value), `$keyName` (reflected property name), `$propertyName` (output key name), and `$getterName` (getter method name or null). When `$attribute` is `null`, the property has no matching attribute — check before accessing attribute members.
 
 This method is particularly useful when working with PHP 8 attributes to customize serialization based on metadata annotations.
 
