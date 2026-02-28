@@ -3,23 +3,20 @@
 namespace Tests\PropertyHandler;
 
 use ByJG\Serializer\PropertyHandler\CamelToSnakeCase;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 
-class CamelToSnakeCaseTest extends TestCase
+class CamelToSnakeCaseTest extends PropertyHandlerTestBase
 {
 
-    public function testChangeValue(): void
+    protected function createHandler(?callable $valueHandler = null): PropertyHandlerInterface
     {
-        // Test with default handler (no transformation)
-        $camelToSnakeCase = new CamelToSnakeCase();
-        $this->assertSame('test_value', $camelToSnakeCase->transformValue('propName', 'prop_name', 'test_value'));
-        
-        // Test with custom value handler
-        $customHandler = new CamelToSnakeCase(function ($propName, $targetName, $value) {
-            return strtoupper($value);
-        });
-        $this->assertSame('TEST_VALUE', $customHandler->transformValue('propName', 'prop_name', 'test_value'));
+        return new CamelToSnakeCase($valueHandler);
+    }
+
+    protected function getDefaultHandlerTestData(): array
+    {
+        return ['propName', 'prop_name', 'test_value'];
     }
 
     /**
@@ -41,12 +38,5 @@ class CamelToSnakeCaseTest extends TestCase
             ['myTestMultiple1234', 'my_test_multiple1234'],
             ['XMLHttpRequest', 'xml_http_request']
         ];
-    }
-
-    #[DataProvider('mapProvider')]
-    public function testMapName($value, $expected): void
-    {
-        $camelToSnakeCase = new CamelToSnakeCase();
-        $this->assertEquals($expected, $camelToSnakeCase->mapName($value));
     }
 }
