@@ -32,6 +32,8 @@ columns 1
         t6["withDoNotParseNullValues()"]
         t7["withIgnoreProperties()"]
         t8["withoutIgnoreProperties()"]
+        t9["withOnlyProperties()"]
+        t10["withoutOnlyProperties()"]
     end
 
     down2<["&nbsp;&nbsp;&nbsp;"]>(down)
@@ -127,16 +129,18 @@ $json = Serialize::fromYaml($yaml)->toJson();
 
 These are the possible modifiers for parsing:
 
-| Method                   | Description                                                  |
-|--------------------------|--------------------------------------------------------------|
-| withDoNotParseNullValues | Ignore null elements                                         |
-| withDoNotParse           | Ignore some classes and return them as is                    |
-| withOnlyString           | Return only string elements                                  |
-| withMethodPattern        | Use the pattern to convert method into property              |
-| withMethodGetPrefix      | Set the prefix for getter methods (default is 'get')         |
-| withStopAtFirstLevel     | Only parse the first level of nested objects                 |
-| withIgnoreProperties     | Specify properties to ignore during serialization            |
-| withoutIgnoreProperties  | Clear the list of properties to ignore during serialization  |
+| Method                   | Description                                                             |
+|--------------------------|-------------------------------------------------------------------------|
+| withDoNotParseNullValues | Ignore null elements                                                    |
+| withDoNotParse           | Ignore some classes and return them as is                               |
+| withOnlyString           | Return only string elements                                             |
+| withMethodPattern        | Use the pattern to convert method into property                         |
+| withMethodGetPrefix      | Set the prefix for getter methods (default is 'get')                    |
+| withStopAtFirstLevel     | Only parse the first level of nested objects                            |
+| withIgnoreProperties     | Specify properties to exclude during serialization (denylist)           |
+| withoutIgnoreProperties  | Clear the denylist                                                      |
+| withOnlyProperties       | Specify the only properties to include during serialization (allowlist) |
+| withoutOnlyProperties    | Clear the allowlist                                                     |
 
 #### Ignore null elements: `withDoNotParseNullValues()`
 
