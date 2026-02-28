@@ -178,6 +178,38 @@ class SerializerCfgTest extends TestCase
             "Processing similar objects should benefit from reflection caching");
     }
     
+    public function testOnlyProperties(): void
+    {
+        $model = new stdClass();
+        $model->id = 1;
+        $model->name = "Test";
+        $model->secret = "hidden";
+
+        $serializer = Serialize::from($model);
+        $serializer->withOnlyProperties(['id', 'name']);
+        $result = $serializer->toArray();
+
+        $this->assertEquals(['id' => 1, 'name' => "Test"], $result);
+        $this->assertArrayNotHasKey('secret', $result);
+
+        $serializer->withoutOnlyProperties();
+        $result = $serializer->toArray();
+
+        $this->assertEquals(['id' => 1, 'name' => "Test", 'secret' => "hidden"], $result);
+    }
+
+    public function testOnlyPropertiesWithObject(): void
+    {
+        $model = new ModelGetter(10, 'John');
+
+        $result = Serialize::from($model)
+            ->withOnlyProperties(['Name'])
+            ->toArray();
+
+        $this->assertEquals(['Name' => 'John'], $result);
+        $this->assertArrayNotHasKey('Id', $result);
+    }
+
     public function testIgnoreProperties(): void
     {
         $model = new stdClass();

@@ -32,6 +32,8 @@ class Serialize
     protected bool $serializeNull = true;
     protected array $ignoreProperties = [];
     protected array $ignorePropertiesMap = [];
+    protected array $onlyProperties = [];
+    protected array $onlyPropertiesMap = [];
 
     private const string METHOD_PATTERN_SEARCH_KEY = "search";
     private const string METHOD_PATTERN_REPLACE_KEY = "replace";
@@ -263,10 +265,14 @@ class Serialize
         $copyNulls = $this->isCopyingNullValues();
         $ignorePropertiesMap = $this->ignorePropertiesMap;
         $hasIgnoreProperties = !empty($ignorePropertiesMap);
+        $onlyPropertiesMap = $this->onlyPropertiesMap;
+        $hasOnlyProperties = !empty($onlyPropertiesMap);
 
         foreach ($array as $key => $value) {
-            // Fast check if property should be ignored - using isset is much faster than in_array
             if ($hasIgnoreProperties && isset($ignorePropertiesMap[$key])) {
+                continue;
+            }
+            if ($hasOnlyProperties && !isset($onlyPropertiesMap[$key])) {
                 continue;
             }
 
@@ -405,8 +411,10 @@ class Serialize
     // Once the properties are cached, we can get the array based on the cached properties
     protected function setValue(array &$result, object $object, string $propertyName, array $cachedProperty, ?string $attributeClass, ?Closure $attributeFunction): void
     {
-        // Fast check if property should be ignored - using isset is much faster than in_array
         if (isset($this->ignorePropertiesMap[$propertyName])) {
+            return;
+        }
+        if (!empty($this->onlyPropertiesMap) && !isset($this->onlyPropertiesMap[$propertyName])) {
             return;
         }
 
@@ -664,6 +672,20 @@ class Serialize
     {
         $this->ignoreProperties = [];
         $this->ignorePropertiesMap = [];
+        return $this;
+    }
+
+    public function withOnlyProperties(array $properties): static
+    {
+        $this->onlyProperties = $properties;
+        $this->onlyPropertiesMap = array_flip($properties);
+        return $this;
+    }
+
+    public function withoutOnlyProperties(): static
+    {
+        $this->onlyProperties = [];
+        $this->onlyPropertiesMap = [];
         return $this;
     }
 
