@@ -16,6 +16,7 @@ use Tests\Sample\ModelList2;
 use Tests\Sample\ModelList3;
 use Tests\Sample\ModelOfModel;
 use Tests\Sample\ModelPublic;
+use Tests\Sample\ModelUninitializedTypedProperty;
 use Tests\Sample\SampleAttribute;
 
 class SerializerObjectTest extends TestCase
@@ -1000,5 +1001,23 @@ class SerializerObjectTest extends TestCase
         // Serialize the object
         $result = Serialize::from($obj)->toArray();
         $this->assertEquals(['id' => 10, 'Name' => 'Test', 'Test' => 50], $result);
+    }
+
+    public function testSerializeUninitializedTypedPropertyIsSkipped(): void
+    {
+        // No property was assigned: both typed properties are uninitialized and must be omitted
+        // instead of raising "must not be accessed before initialization".
+        $model = new ModelUninitializedTypedProperty();
+
+        $this->assertEquals([], Serialize::from($model)->toArray());
+    }
+
+    public function testSerializePartiallyInitializedTypedPropertyKeepsOnlyInitialized(): void
+    {
+        // Only "id" is set; the uninitialized "name" must be skipped while "id" is serialized.
+        $model = new ModelUninitializedTypedProperty();
+        $model->id = 42;
+
+        $this->assertEquals(['id' => 42], Serialize::from($model)->toArray());
     }
 }
