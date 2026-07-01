@@ -16,9 +16,9 @@ class YamlFormatter implements FormatterInterface
     public function process(object|array $serializable): string|bool
     {
         if (is_array($serializable)) {
-            return Yaml::dump($serializable, 2, 2);
+            return Yaml::dump($serializable, 2, 2, Yaml::DUMP_COMPACT_NESTED_MAPPING);
         }
 
-        return Yaml::dump(Serialize::from($serializable)->toArray(), 2, 2);
+        return Yaml::dump(Serialize::from($serializable)->toArray(), 2, 2, Yaml::DUMP_COMPACT_NESTED_MAPPING);
     }
 }
