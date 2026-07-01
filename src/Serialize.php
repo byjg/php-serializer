@@ -10,6 +10,7 @@ use ByJG\Serializer\Formatter\YamlFormatter;
 use Closure;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionProperty;
 use stdClass;
 use Symfony\Component\Yaml\Yaml;
 
@@ -326,7 +327,8 @@ class Serialize
             self::$_cache[$key][$propertyName] = [
                 "getter" => null,
                 "keyName" => null,
-                "attributes" => []
+                "attributes" => [],
+                "reflection" => null
             ];
         }
 
@@ -339,6 +341,13 @@ class Serialize
 
         self::$_cache[$key][$propertyName]["getter"] = $getter;
         self::$_cache[$key][$propertyName]["keyName"] = $keyName;
+    }
+
+    protected function cacheSetReflection(string $objectName, string $propertyName, ReflectionProperty $property): void
+    {
+        $key = $this->getCacheKey($objectName);
+
+        self::$_cache[$key][$propertyName]["reflection"] = $property;
     }
 
     protected function cacheSetAttributes(string $objectName, string $propertyName, object $attribute): void
@@ -395,6 +404,12 @@ class Serialize
 
             $this->cacheSetGetter($className, $propertyName, getter: $getter, keyName: $keyName);
 
+            // For direct (public, no getter) access we keep the ReflectionProperty so we can
+            // check whether a typed property was initialized before reading it.
+            if ($getter === null) {
+                $this->cacheSetReflection($className, $propertyName, $property);
+            }
+
             // Get property attributes
             $attributes = $property->getAttributes(null, ReflectionAttribute::IS_INSTANCEOF);
             foreach ($attributes as $attribute) {
@@ -423,7 +438,18 @@ class Serialize
         $objectClass = get_class($object);
 
         // Get property value using getter or direct access
-        $value = !empty($getter) ? $object->$getter() : $object->$propertyName;
+        if (!empty($getter)) {
+            $value = $object->$getter();
+        } else {
+            // A typed property that was never initialized has no value to read. Accessing it
+            // directly would raise "must not be accessed before initialization", so we treat it
+            // as absent and skip it (as if the property did not exist on the object).
+            $reflection = $cachedProperty["reflection"] ?? null;
+            if ($reflection instanceof ReflectionProperty && !$reflection->isInitialized($object)) {
+                return;
+            }
+            $value = $object->$propertyName;
+        }
 
         // Parse the value
         $parsedValue = $this->parseProperties($value);
