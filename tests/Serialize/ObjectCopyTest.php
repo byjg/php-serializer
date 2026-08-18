@@ -4,9 +4,11 @@ namespace Tests\Serialize;
 
 use ByJG\Serializer\ObjectCopy;
 use ByJG\Serializer\PropertyHandler\CamelToSnakeCase;
+use ByJG\Serializer\PropertyHandler\DirectTransform;
 use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
 use ByJG\Serializer\PropertyHandler\SnakeToCamelCase;
 use ByJG\Serializer\Serialize;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Tests\Sample\ModelPropertyPattern;
@@ -253,5 +255,68 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals(1, $target->idModel);
         $this->assertEquals('JOAO', $target->clientName);
         $this->assertEquals(49, $target->age);
+    }
+
+    public static function fastPathProvider(): array
+    {
+        return [
+            'setter and public property' => [
+                ['Id' => '10', 'Name' => 'Joao'],
+                fn () => new SampleModel(),
+            ],
+            'stdClass target' => [
+                ['Id' => 10, 'Name' => 'Joao'],
+                fn () => new stdClass(),
+            ],
+            'array target' => [
+                ['Id' => 10, 'Name' => 'Joao'],
+                fn () => [],
+            ],
+            'case insensitive property match' => [
+                ['id' => 10, 'name' => 'Joao'],
+                fn () => new ModelPublic(null, null),
+            ],
+            'null values' => [
+                ['Id' => null, 'Name' => null],
+                fn () => new ModelPublic(1, 'Joao'),
+            ],
+            'unknown property is ignored' => [
+                ['Id' => 10, 'doesNotExist' => 'x'],
+                fn () => new ModelPublic(null, null),
+            ],
+        ];
+    }
+
+    /**
+     * When the source is an array and no property handler is given, ObjectCopy::copy()
+     * takes a fast path that bypasses the Serialize pipeline. It must produce exactly
+     * the same result as the pipeline, which is forced here by passing an identity handler.
+     */
+    #[DataProvider('fastPathProvider')]
+    public function testFastPathMatchesPipeline(array $source, callable $makeTarget): void
+    {
+        $fastPath = $makeTarget();
+        ObjectCopy::copy($source, $fastPath);
+
+        $pipeline = $makeTarget();
+        ObjectCopy::copy($source, $pipeline, new DirectTransform());
+
+        $this->assertEquals($pipeline, $fastPath);
+    }
+
+    public function testCopyIntoDifferentClassesWithSameShape(): void
+    {
+        // ObjectCopy caches property resolution statically, keyed by class name, so that
+        // cache must not leak between classes that share a property name. Both classes below
+        // accept 'Name', but reach it differently: SampleModel only through setName() (the
+        // backing property is protected), ModelPublic only as a public property. Copying the
+        // same key into both in one process fails if either resolution is reused for the other.
+        $withSetter = new SampleModel();
+        ObjectCopy::copy(['Name' => 'Joao'], $withSetter);
+        $this->assertEquals('Joao', $withSetter->getName());
+
+        $withoutSetter = new ModelPublic(null, null);
+        ObjectCopy::copy(['Name' => 'Joao'], $withoutSetter);
+        $this->assertEquals('Joao', $withoutSetter->Name);
     }
 }
