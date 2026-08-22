@@ -16,7 +16,7 @@ final class ObjectCopy
      *
      * @var array<string, array<string, string>>
      */
-    private static array $_propNameLowerCache = [];
+    private static array $propNameLowerCache = [];
 
     /**
      * Copy the properties from a source object to the properties matching to a target object
@@ -132,14 +132,14 @@ final class ObjectCopy
      */
     private static function propNameLower(string $className): array
     {
-        if (!isset(self::$_propNameLowerCache[$className])) {
-            self::$_propNameLowerCache[$className] = [];
+        if (!isset(self::$propNameLowerCache[$className])) {
+            self::$propNameLowerCache[$className] = [];
 
             foreach (get_class_vars($className) as $varKey => $varValue) {
-                self::$_propNameLowerCache[$className][strtolower($varKey)] = $varKey;
+                self::$propNameLowerCache[$className][strtolower($varKey)] = $varKey;
             }
         }
 
-        return self::$_propNameLowerCache[$className];
+        return self::$propNameLowerCache[$className];
     }
 }
