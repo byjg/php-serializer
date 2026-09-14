@@ -11,7 +11,7 @@ A powerful multi-format serialization library that converts objects, arrays, and
 [![Build Status](https://github.com/byjg/php-serializer/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/php-serializer/actions/workflows/phpunit.yml)
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
 [![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/php-serializer/)
-[![GitHub license](https://img.shields.io/github/license/byjg/php-serializer.svg)](https://opensource.byjg.com/opensource/licensing.html)
+[![GitHub license](https://img.shields.io/github/license/byjg/php-serializer.svg)](https://opensource.byjg.com/license/)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-serializer.svg)](https://github.com/byjg/php-serializer/releases/)
 
 ## Features
@@ -88,15 +88,6 @@ composer require "byjg/serializer"
 
 ```bash
 ./vendor/bin/phpunit
-```
-
-## Dependencies
-
-```mermaid
-flowchart TD
-    byjg/serializer --> ext-json
-    byjg/serializer --> symfony/yaml
-    byjg/serializer --> ext-simplexml
 ```
 
 ----
