@@ -2,8 +2,6 @@
 
 namespace ByJG\Serializer\PropertyHandler;
 
-use Closure;
-
 class SnakeToCamelCase extends DirectTransform
 {
     /**
@@ -14,12 +12,10 @@ class SnakeToCamelCase extends DirectTransform
     {
         $result = preg_replace_callback(
             '/_([a-z])/i',
-            function ($matches) {
-                return strtoupper($matches[1]);
-            },
+            static fn ($matches) => strtoupper($matches[1]),
             strtolower($property)
         );
-        
-        return $result !== null ? $result : $property;
+
+        return $result ?? $property;
     }
 }
