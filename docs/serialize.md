@@ -192,6 +192,28 @@ $result = \ByJG\Serializer\Serialize::from($myclass)
             ->toArray();
 ```
 
+#### Backed enums are written as their value
+
+A backed enum is serialized to its `->value`, the same as `json_encode()` writes it, at every
+level (also with `withStopAtFirstLevel()`). A pure enum has no value and is serialized like any
+other object.
+
+```php
+<?php
+enum Status: string
+{
+    case Paid = 'PAID';
+}
+
+class Payment
+{
+    public ?Status $status = Status::Paid;
+}
+
+$result = \ByJG\Serializer\Serialize::from(new Payment())->toArray();
+// ['status' => 'PAID']
+```
+
 #### Return only string elements: `withOnlyString()`
 
 To serialize an object and return only string elements:

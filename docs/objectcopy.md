@@ -186,6 +186,34 @@ ObjectCopy::copy($source, $target, new PropertyNameMapper([
 ], $valueHandler));
 ```
 
+### Backed enum properties
+
+When the target property, or the parameter of its setter, is typed with a backed enum (`Status`
+or `?Status`), an `int` or `string` value is converted with `Status::from()`. This is how a
+database row (`'status' => 'PAID'`) becomes `Status::Paid`. A value the enum does not have throws
+a `ValueError`. Nothing is converted when the value is already the enum or `null`, or when the
+type also accepts a scalar (`string|Status`).
+
+```php
+<?php
+enum Status: string
+{
+    case Paid = 'PAID';
+}
+
+class Payment
+{
+    public ?Status $status = null;
+}
+
+$payment = new Payment();
+ObjectCopy::copy(['status' => 'PAID'], $payment);
+// $payment->status === Status::Paid
+```
+
+The way back goes through `Serialize`, which writes a backed enum as its value: copying an object
+with an enum property into an array or a `stdClass` gives the value, not the enum.
+
 ## Available Property Handler Classes
 
 The library provides several built-in property handler classes for common transformations:

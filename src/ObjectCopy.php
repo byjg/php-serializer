@@ -2,7 +2,13 @@
 
 namespace ByJG\Serializer;
 
+use BackedEnum;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
+use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionProperty;
+use ReflectionType;
+use ReflectionUnionType;
 use stdClass;
 
 /**
@@ -17,6 +23,14 @@ final class ObjectCopy
      * @var array<string, array<string, string>>
      */
     private static array $propNameLowerCache = [];
+
+    /**
+     * Static cache of the backed enum a member takes ("Class::setName" for a setter's parameter,
+     * "Class::$name" for a property), or null when it does not take one.
+     *
+     * @var array<string, class-string<BackedEnum>|null>
+     */
+    private static array $backedEnumCache = [];
 
     /**
      * Copy the properties from a source object to the properties matching to a target object
@@ -106,12 +120,17 @@ final class ObjectCopy
     private static function applyToTarget(string $targetName, mixed $value, object $target): void
     {
         if (method_exists($target, 'set' . $targetName)) {
-            $target->{'set' . $targetName}($value);
+            $target->{'set' . $targetName}(self::toBackedEnum($target, 'set' . $targetName, true, $value));
             return;
         }
 
-        if (isset($target->{$targetName}) || $target instanceof stdClass) {
+        if ($target instanceof stdClass) {
             $target->{$targetName} = $value;
+            return;
+        }
+
+        if (isset($target->{$targetName})) {
+            $target->{$targetName} = self::toBackedEnum($target, $targetName, false, $value);
             return;
         }
 
@@ -120,8 +139,69 @@ final class ObjectCopy
 
         $propLower = strtolower($targetName);
         if (isset($propNameLower[$propLower])) {
-            $target->{$propNameLower[$propLower]} = $value;
+            $target->{$propNameLower[$propLower]} = self::toBackedEnum($target, $propNameLower[$propLower], false, $value);
         }
+    }
+
+    /**
+     * The value as the backed enum the member takes, when it takes one and the value is the
+     * enum's int or string: a database row holds "PAID", the property is typed ?PaymentState.
+     * An unknown value is a ValueError from BackedEnum::from(). Anything else is returned as it is.
+     *
+     * @param string $member A setter name, or a property name
+     */
+    private static function toBackedEnum(object $target, string $member, bool $isSetter, mixed $value): mixed
+    {
+        if (!is_int($value) && !is_string($value)) {
+            return $value;
+        }
+
+        $key = get_class($target) . ($isSetter ? '::' : '::$') . $member;
+        if (!array_key_exists($key, self::$backedEnumCache)) {
+            $type = null;
+            if ($isSetter) {
+                $type = ((new ReflectionMethod($target, $member))->getParameters()[0] ?? null)?->getType();
+            } elseif (property_exists($target, $member)) {
+                $type = (new ReflectionProperty($target, $member))->getType();
+            }
+            self::$backedEnumCache[$key] = self::backedEnumOf($type);
+        }
+
+        $enum = self::$backedEnumCache[$key];
+        return $enum === null ? $value : $enum::from($value);
+    }
+
+    /**
+     * The backed enum of a type (S, ?S), or null when the type has none, or also accepts a
+     * scalar (string|S, mixed) and so can take the value as it is.
+     *
+     * @return class-string<BackedEnum>|null
+     */
+    private static function backedEnumOf(?ReflectionType $type): ?string
+    {
+        $types = match (true) {
+            $type instanceof ReflectionNamedType => [$type],
+            $type instanceof ReflectionUnionType => $type->getTypes(),
+            default => [],
+        };
+
+        $enum = null;
+        foreach ($types as $namedType) {
+            if (!$namedType instanceof ReflectionNamedType) {
+                return null;
+            }
+            $name = $namedType->getName();
+            if ($namedType->isBuiltin()) {
+                if ($name !== 'null') {
+                    return null;
+                }
+                continue;
+            }
+            if (is_subclass_of($name, BackedEnum::class)) {
+                $enum = $name;
+            }
+        }
+        return $enum;
     }
 
     /**

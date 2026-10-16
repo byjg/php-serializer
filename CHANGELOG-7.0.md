@@ -6,8 +6,24 @@
 ## Overview
 
 Version 7.0 starts as a performance-focused release. `ObjectCopy` gains a direct copy path
-for its most common usage, and the property handlers were simplified. There are no breaking
-changes so far. The PHP requirement is now `>=8.3 <8.7` (see Requirements below).
+for its most common usage, and the property handlers were simplified. Backed enums are now supported,
+and are serialized as their value (the one breaking change). The PHP requirement is now `>=8.3 <8.7` (see Requirements below).
+
+## New Features
+
+### Backed enums
+
+A property typed with a backed enum (`public ?Status $status`) works in both directions:
+
+- `Serialize` writes a backed enum as its `->value`, as `json_encode()` does, at every level, so
+  also with `withStopAtFirstLevel()`. It used to become `{"name": ..., "value": ...}`, or stay an
+  enum object at the first level (which byjg/micro-orm passes to the database).
+- `ObjectCopy` builds the enum from an `int` or `string` with `from()` when the target property,
+  or its setter's parameter, is typed with the enum (`Status` or `?Status`). Writing `'PAID'` into
+  that property used to be a `TypeError`. An unknown value throws a `ValueError`; a type that also
+  accepts a scalar (`string|Status`) receives the value as it is.
+
+A pure enum is unchanged. See `docs/serialize.md` and `docs/objectcopy.md`.
 
 ## Performance
 
@@ -55,11 +71,17 @@ These are all `private`/internal to `final class ObjectCopy`, so they are not pa
 
 ## Breaking Changes
 
-None so far.
+### A backed enum is serialized as its value
+
+`Serialize::from($model)->toArray()` (and `toJson()`, `toYaml()`, ...) gave a backed enum as
+`['name' => 'Paid', 'value' => 'PAID']`; it now gives `'PAID'`. With `withStopAtFirstLevel()`
+it gave the enum object; it now gives `'PAID'`. Code that read `['value']` from the output
+reads the value directly.
 
 ## Path to Upgrade from 6.x to 7.x
 
-No action required at this point. Existing code using `ObjectCopy`, `ObjectCopyTrait`,
+If you read a backed enum from `Serialize` output as `['value']` (or as the enum object at the
+first level), read the value directly. Otherwise no action is required. Existing code using `ObjectCopy`, `ObjectCopyTrait`,
 `BaseModel`, `Serialize`, and the property handlers continues to work unchanged.
 
 For the 6.x migration guide, see [CHANGELOG-6.0.md](CHANGELOG-6.0.md).
