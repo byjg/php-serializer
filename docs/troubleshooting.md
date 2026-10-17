@@ -138,18 +138,21 @@ class User {
 }
 
 $result = Serialize::from(new User())->toArray();
-// Result: ['userName' => 'John']  // CamelCase in output
+// Result: ['username' => 'John']  // underscore removed
 ```
 
-**Explanation:** By default, the getter method name determines the output key. `getUserName()` becomes `userName`.
+**Explanation:** When a property has a getter, the output key is the property name after the
+method pattern (default `/([^A-Za-z0-9])/`, replaced by `''`) removes its non-alphanumeric
+characters: `user_name` becomes `username`, and `get` + `username` finds `getUserName()`
+(PHP method names are case-insensitive). A pattern that keeps the underscore would look for
+`getuser_name()`, find nothing, and skip the private property.
 
-**Solution:** Use `withMethodPattern()` to customize the transformation:
+**Solution:** Rename the keys afterwards, e.g. with `ObjectCopy` and a `PropertyNameMapper`:
 
 ```php
-// Keep underscores in property names
-$result = Serialize::from(new User())
-    ->withMethodPattern('/^get/', '')  // Remove 'get' prefix only
-    ->toArray();
+$result = [];
+ObjectCopy::copy(new User(), $result, new PropertyNameMapper(['username' => 'user_name']));
+// Result: ['user_name' => 'John']
 ```
 
 ### ObjectCopy Issues
@@ -252,18 +255,13 @@ ObjectCopy::copy($source, $target, $handler);
 
 **Possible Causes:**
 
-**1. Property doesn't exist in target**
+**1. The source is an anonymous class**
 
-If the target doesn't have a matching property, the handler is never called.
+The handler is called for every property of the source, whether or not the target has a matching
+property. An anonymous class source, however, is not passed through the property handler, so
+nothing is copied from it.
 
-**Solution:** Verify target has the property:
-
-```php
-class Target {
-    public $firstName;  // Make sure this exists
-    public $lastName;
-}
-```
+**Solution:** Use a named class (or an array) as the source.
 
 **2. Source property is null**
 
@@ -588,7 +586,7 @@ unset($user, $company);
 #### Problem: DateTime Objects Not Formatted Correctly
 
 **Symptoms:**
-- DateTime objects serialized as arrays
+- DateTime objects serialized as empty arrays
 - Date format not as expected
 
 **Example:**
@@ -602,21 +600,24 @@ $event = new Event();
 $event->date = new DateTime('2024-01-01');
 
 $result = Serialize::from($event)->toArray();
-// Result: ['date' => ['date' => '2024-01-01 00:00:00', 'timezone' => ...]]
+// Result: ['date' => []]  // DateTime has no declared properties
 ```
 
-**Solution:** Use `parseAttributes()` to format:
+**Solution:** Keep `DateTime` as an object with `withDoNotParse()`, then format it in
+`parseAttributes()` (the callback receives the value already parsed):
 
 ```php
-$result = Serialize::from($event)->parseAttributes(
-    function ($attr, $value, $key, $prop, $getter) {
-        if ($value instanceof DateTime) {
-            return $value->format('Y-m-d');
-        }
-        return $value;
-    },
-    null
-);
+$result = Serialize::from($event)
+    ->withDoNotParse([DateTime::class])
+    ->parseAttributes(
+        function ($attr, $value, $key, $prop, $getter) {
+            if ($value instanceof DateTime) {
+                return $value->format('Y-m-d');
+            }
+            return $value;
+        },
+        null
+    );
 // Result: ['date' => '2024-01-01']
 ```
 

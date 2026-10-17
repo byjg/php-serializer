@@ -12,7 +12,7 @@ that allow you to match the source and target.
 ```php
 ObjectCopy::copy(
     object|array $source, 
-    object|array $target, 
+    object|array &$target, 
     ?PropertyHandlerInterface $propertyHandler = null
 ): void
 ```

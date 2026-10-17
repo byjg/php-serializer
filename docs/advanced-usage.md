@@ -205,10 +205,11 @@ if (json_last_error() === JSON_ERROR_NONE) {
 
 ### Preventing Information Disclosure
 
-Use value handlers to sanitize data:
+Use a `parseAttributes()` callback to sanitize data:
 
 ```php
-$sanitizeHandler = function ($prop, $target, $value, $instance) {
+// Receives ($attribute, $value, $keyName, $propertyName, $getterName)
+$sanitizeHandler = function ($attr, $value, $keyName, $target) {
     // Remove internal IDs
     if (str_starts_with($target, 'internal')) {
         return null;
@@ -392,20 +393,23 @@ $event = new Event();
 $event->startDate = new DateTime('2024-01-01');
 $event->endDate = new DateTime('2024-01-31');
 
-// DateTime objects are serialized as arrays by default
+// DateTime objects are serialized as empty arrays by default (they have no declared properties)
 $result = Serialize::from($event)->toArray();
-// Result includes DateTime internal structure (not ideal)
+// Result: ['startDate' => [], 'endDate' => []]
 
-// Better: use parseAttributes to format dates
-$result = Serialize::from($event)->parseAttributes(
-    function ($attr, $value, $keyName, $propName, $getterName) {
-        if ($value instanceof DateTime) {
-            return $value->format('Y-m-d H:i:s');
-        }
-        return $value;
-    },
-    null
-);
+// Better: keep DateTime as an object, then format it in parseAttributes
+// (the callback receives the value already parsed)
+$result = Serialize::from($event)
+    ->withDoNotParse([DateTime::class])
+    ->parseAttributes(
+        function ($attr, $value, $keyName, $propName, $getterName) {
+            if ($value instanceof DateTime) {
+                return $value->format('Y-m-d H:i:s');
+            }
+            return $value;
+        },
+        null
+    );
 ```
 
 ## Error Handling

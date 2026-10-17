@@ -132,12 +132,13 @@ ObjectCopy::copy($source, $target, new CamelToSnakeCase());
 The handler intelligently handles acronyms:
 
 ```php
-$source = new class {
+class Request {
     public $XMLHttpRequest = 'data';
     public $apiURL = 'https://example.com';
     public $userId = 123;
-};
+}
 
+$source = new Request();
 $target = new stdClass();
 
 ObjectCopy::copy($source, $target, new CamelToSnakeCase());

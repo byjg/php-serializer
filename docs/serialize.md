@@ -228,7 +228,7 @@ $model->varZeroStr = '0';
 $model->varNull = null;
 $model->varEmptyString = '';
 
-$result = \ByJG\Serializer\Serialize::from($myclass)
+$result = \ByJG\Serializer\Serialize::from($model)
             ->withOnlyString()
             ->toArray();
 

@@ -245,6 +245,7 @@ The `toArray()` method uses the Serialize class internally, which:
 ```php
 use ByJG\Serializer\BaseModel;
 use ByJG\Serializer\PropertyHandler\SnakeToCamelCase;
+use ByJG\Serializer\Serialize;
 
 class UserDTO extends BaseModel {
     public int $userId;
@@ -268,7 +269,8 @@ class UserDTO extends BaseModel {
     }
 
     public function toApiResponse(): array {
-        $data = $this->toArray();
+        // Keep DateTime as an object; toArray() would turn it into an empty array
+        $data = Serialize::from($this)->withDoNotParse([DateTime::class])->toArray();
 
         // Format DateTime for API
         if (isset($data['createdAt']) && $data['createdAt'] instanceof DateTime) {
