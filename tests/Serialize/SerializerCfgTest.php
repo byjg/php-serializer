@@ -3,6 +3,8 @@
 namespace Tests\Serialize;
 
 use ByJG\Serializer\Serialize;
+use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Tests\Sample\ModelGetter;
@@ -43,6 +45,30 @@ class SerializerCfgTest extends TestCase
 
         // Check that birthdate property exists (other properties may be filtered by the pattern)
         $this->assertArrayHasKey('birthdate', $result);
+    }
+
+    public static function shortMethodPatternProvider(): array
+    {
+        return [
+            'empty' => [''],
+            'zero' => ['0'],
+            'one delimiter' => ['/'],
+            'one character' => ['a'],
+        ];
+    }
+
+    #[DataProvider('shortMethodPatternProvider')]
+    public function testMethodPatternShorterThanTwoCharactersIsRejected(string $search): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Search pattern cannot be empty or less than 2 characters');
+        Serialize::from(new stdClass())->withMethodPattern($search, '');
+    }
+
+    public function testMethodPatternWithTwoCharactersIsAccepted(): void
+    {
+        $serializer = Serialize::from(new stdClass())->withMethodPattern('//', '');
+        $this->assertSame('//', $serializer->getMethodSearchPattern());
     }
 
     public function testCustomGetterPrefix(): void

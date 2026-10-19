@@ -3,6 +3,9 @@
 namespace Tests\Serialize;
 
 use ByJG\Serializer\ObjectCopy;
+use ByJG\Serializer\PropertyHandler\DirectTransform;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use ByJG\Serializer\Serialize;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -113,6 +116,44 @@ class BackedEnumTest extends TestCase
         ObjectCopy::copy(['loose' => 'PAID'], $model);
 
         $this->assertSame('PAID', $model->loose);
+    }
+
+    public static function copySourceProvider(): array
+    {
+        $enums = ['status' => SampleStatus::Paid, 'previous' => SampleStatus::Failed, 'loose' => SampleStatus::Paid];
+        $values = ['status' => 'PAID', 'previous' => 'FAILED', 'loose' => 'PAID'];
+
+        $cases = [];
+        foreach (['no handler' => null, 'handler' => new DirectTransform()] as $handlerName => $handler) {
+            $cases["array of enums, $handlerName"] = [$enums, $handler];
+            $cases["array of values, $handlerName"] = [$values, $handler];
+            $cases["object of enums, $handlerName"] = [(object)$enums, $handler];
+            $cases["object of values, $handlerName"] = [(object)$values, $handler];
+        }
+        return $cases;
+    }
+
+    /**
+     * Every copy path gives the same result: the enum for a member typed with it (property or
+     * setter), the value for anything that also takes a scalar (string|Enum, stdClass, array).
+     */
+    #[DataProvider('copySourceProvider')]
+    public function testCopyGivesTheSameResultOnEveryPath(array|object $source, ?PropertyHandlerInterface $handler): void
+    {
+        $model = new ModelEnum();
+        ObjectCopy::copy($source, $model, $handler);
+        $this->assertSame(SampleStatus::Paid, $model->status);
+        $this->assertSame(SampleStatus::Failed, $model->getPrevious());
+        $this->assertSame('PAID', $model->loose);
+
+        $object = new stdClass();
+        ObjectCopy::copy($source, $object, $handler);
+        $this->assertSame('PAID', $object->status);
+        $this->assertSame('FAILED', $object->previous);
+
+        $array = [];
+        ObjectCopy::copy($source, $array, $handler);
+        $this->assertSame(['status' => 'PAID', 'previous' => 'FAILED', 'loose' => 'PAID'], $array);
     }
 
     public function testCopyRejectsAValueTheEnumDoesNotHave(): void

@@ -69,6 +69,20 @@ the pipeline, since a property handler may map or transform every name and value
 
 These are all `private`/internal to `final class ObjectCopy`, so they are not part of the public API.
 
+## Bug Fixes
+
+- `Serialize::withMethodPattern()` now rejects a search pattern shorter than 2 characters, as its
+  message ("cannot be empty or less than 2 characters") already said. The check used `&&`
+  (`empty($search) && strlen($search) <= 2`), so only `''` and `'0'` were rejected and a
+  one-character pattern such as `'/'` was stored, failing later in `preg_replace()` with
+  "No ending delimiter". A 2-character pattern (`'//'`) is still accepted.
+- `ObjectCopy::copy()` now copies a backed enum the same way on every path. An array source
+  without a property handler (the fast path) copied the enum object as it was, while every other
+  path (an object source, or any source with a handler) goes through `Serialize` and copied its
+  `->value`. A target typed with the enum got the same result either way, but a `string|Enum`
+  property, a `stdClass` or an array target got the enum object from one path and its value
+  from the other. The fast path now copies the value too.
+
 ## Breaking Changes
 
 ### A backed enum is serialized as its value
@@ -78,10 +92,20 @@ These are all `private`/internal to `final class ObjectCopy`, so they are not pa
 it gave the enum object; it now gives `'PAID'`. Code that read `['value']` from the output
 reads the value directly.
 
+### `ObjectCopy` copies a backed enum from an array as its value
+
+`ObjectCopy::copy(['status' => Status::Paid], $target)` (array source, no property handler)
+put the enum object into a `stdClass` or array target, or into a property that also takes a
+scalar (`string|Status`); it now puts `'PAID'`, as an object source or a property handler
+already did. A property or setter typed with the enum (`Status`, `?Status`) still gets
+`Status::Paid`.
+
 ## Path to Upgrade from 6.x to 7.x
 
 If you read a backed enum from `Serialize` output as `['value']` (or as the enum object at the
-first level), read the value directly. Otherwise no action is required. Existing code using `ObjectCopy`, `ObjectCopyTrait`,
+first level), read the value directly. If you copy an array holding a backed enum into a
+`stdClass`, an array or a `string|Enum` property and expect the enum object, call
+`Status::from()` on the copied value. Otherwise no action is required. Existing code using `ObjectCopy`, `ObjectCopyTrait`,
 `BaseModel`, `Serialize`, and the property handlers continues to work unchanged.
 
 For the 6.x migration guide, see [CHANGELOG-6.0.md](CHANGELOG-6.0.md).

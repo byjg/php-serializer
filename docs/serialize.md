@@ -252,6 +252,8 @@ The default configuration is to remove everything in the `property`
 that doesn't match with the `$pattern = '/([^A-Za-z0-9])/'`
 
 If you need something different you can use the `withMethodPattern` to define your own pattern.
+The pattern must be at least 2 characters long and enclosed in matching delimiters (e.g. `/[_]/`);
+otherwise an `InvalidArgumentException` is thrown.
 
 #### Set the prefix for getter methods: `withMethodGetPrefix($prefix)`
 

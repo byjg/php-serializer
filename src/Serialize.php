@@ -609,7 +609,7 @@ class Serialize
      */
     public function withMethodPattern(string $search, string $replace): static
     {
-        if (empty($search) && strlen($search) <= 2) {
+        if (strlen($search) < 2) {
             throw new \InvalidArgumentException("Search pattern cannot be empty or less than 2 characters");
         }
 

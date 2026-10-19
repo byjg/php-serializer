@@ -59,7 +59,9 @@ final class ObjectCopy
     /**
      * Fast copy path for the common case: an array source and no property handler.
      * Uses direct iteration instead of the full Serialize pipeline, which for an array
-     * source with withStopAtFirstLevel() produces exactly the same assignments.
+     * source with withStopAtFirstLevel() produces exactly the same assignments: a backed
+     * enum is copied as its value, as the pipeline does, and applyToTarget() builds the
+     * enum again for a member typed with it.
      *
      * @param array $source The source array
      * @param object|array $target The target object
@@ -68,6 +70,10 @@ final class ObjectCopy
     private static function copyDirect(array $source, object|array &$target): void
     {
         foreach ($source as $propertyName => $value) {
+            if ($value instanceof BackedEnum) {
+                $value = $value->value;
+            }
+
             if (is_array($target)) {
                 $target[$propertyName] = $value;
                 continue;
