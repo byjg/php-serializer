@@ -192,6 +192,28 @@ $result = \ByJG\Serializer\Serialize::from($myclass)
             ->toArray();
 ```
 
+#### Backed enums are written as their value
+
+A backed enum is serialized to its `->value`, the same as `json_encode()` writes it, at every
+level (also with `withStopAtFirstLevel()`). A pure enum has no value and is serialized like any
+other object.
+
+```php
+<?php
+enum Status: string
+{
+    case Paid = 'PAID';
+}
+
+class Payment
+{
+    public ?Status $status = Status::Paid;
+}
+
+$result = \ByJG\Serializer\Serialize::from(new Payment())->toArray();
+// ['status' => 'PAID']
+```
+
 #### Return only string elements: `withOnlyString()`
 
 To serialize an object and return only string elements:
@@ -206,7 +228,7 @@ $model->varZeroStr = '0';
 $model->varNull = null;
 $model->varEmptyString = '';
 
-$result = \ByJG\Serializer\Serialize::from($myclass)
+$result = \ByJG\Serializer\Serialize::from($model)
             ->withOnlyString()
             ->toArray();
 
@@ -230,6 +252,8 @@ The default configuration is to remove everything in the `property`
 that doesn't match with the `$pattern = '/([^A-Za-z0-9])/'`
 
 If you need something different you can use the `withMethodPattern` to define your own pattern.
+The pattern must be at least 2 characters long and enclosed in matching delimiters (e.g. `/[_]/`);
+otherwise an `InvalidArgumentException` is thrown.
 
 #### Set the prefix for getter methods: `withMethodGetPrefix($prefix)`
 

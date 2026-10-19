@@ -12,7 +12,7 @@ that allow you to match the source and target.
 ```php
 ObjectCopy::copy(
     object|array $source, 
-    object|array $target, 
+    object|array &$target, 
     ?PropertyHandlerInterface $propertyHandler = null
 ): void
 ```
@@ -185,6 +185,36 @@ ObjectCopy::copy($source, $target, new PropertyNameMapper([
     "firstName" => "fullName"
 ], $valueHandler));
 ```
+
+### Backed enum properties
+
+When the target property, or the parameter of its setter, is typed with a backed enum (`Status`
+or `?Status`), an `int` or `string` value is converted with `Status::from()`. This is how a
+database row (`'status' => 'PAID'`) becomes `Status::Paid`. A value the enum does not have throws
+a `ValueError`. `null` is copied as it is, and a type that also accepts a scalar
+(`string|Status`) receives the value without conversion.
+
+```php
+<?php
+enum Status: string
+{
+    case Paid = 'PAID';
+}
+
+class Payment
+{
+    public ?Status $status = null;
+}
+
+$payment = new Payment();
+ObjectCopy::copy(['status' => 'PAID'], $payment);
+// $payment->status === Status::Paid
+```
+
+A backed enum in the source is copied as its value, the way `Serialize` writes it, and is then
+built again for a target typed with the enum. So every source (array or object, with or without
+a property handler) gives the same result: `Status::Paid` in a `Status`/`?Status` property or
+setter, and `'PAID'` in a `string|Status` property, a `stdClass` or an array.
 
 ## Available Property Handler Classes
 

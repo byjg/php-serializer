@@ -7,6 +7,7 @@ use ByJG\Serializer\Formatter\JsonFormatter;
 use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
 use ByJG\Serializer\Formatter\YamlFormatter;
+use BackedEnum;
 use Closure;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -207,6 +208,13 @@ class Serialize
     {
         if (!empty($startLevel)) {
             $this->currentLevel = $startLevel;
+        }
+
+        // A backed enum is its value, as json_encode() writes it. Before the first-level check:
+        // a model's enum property must reach the database (micro-orm saves at the first level) as
+        // its value, not as the enum object.
+        if ($property instanceof BackedEnum) {
+            $property = $property->value;
         }
 
         // If Stop at First Level is active and the current level is greater than 1 return the
@@ -601,7 +609,7 @@ class Serialize
      */
     public function withMethodPattern(string $search, string $replace): static
     {
-        if (empty($search) && strlen($search) <= 2) {
+        if (strlen($search) < 2) {
             throw new \InvalidArgumentException("Search pattern cannot be empty or less than 2 characters");
         }
 
