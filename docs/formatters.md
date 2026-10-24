@@ -170,6 +170,41 @@ $xml = (new XmlFormatter())
 // </users>
 ```
 
+#### Attributes and text
+
+An `@attributes` key becomes the attributes of its element, and an `@value` key its text:
+
+```php
+$data = [
+    '@attributes' => ['version' => '2'],
+    'user' => ['@attributes' => ['id' => '5'], '@value' => 'John'],
+];
+
+echo (new XmlFormatter())->process($data);
+
+// Output:
+// <?xml version="1.0"?>
+// <root version="2"><user id="5">John</user></root>
+```
+
+A list of scalars is written with the list element too: `['tags' => ['a', 'b']]` gives
+`<tags><item>a</item><item>b</item></tags>`.
+
+#### Reading XML
+
+`parse()` is the reverse of `process()`, with the same configuration. It is what
+`Serialize::fromXml()` uses; see [Serialize](serialize.md#xml-conversion).
+
+```php
+$array = (new XmlFormatter())
+    ->withListElement("user")
+    ->parse('<users><user><name>John</name></user></users>');
+
+// [['name' => 'John']]
+```
+
+`parse($content, withRoot: true)` keeps the root element as the single key of the result.
+
 #### Complete Example
 
 ```php

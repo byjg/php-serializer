@@ -9,9 +9,11 @@ use ByJG\Serializer\Formatter\XmlFormatter;
 use ByJG\Serializer\Formatter\YamlFormatter;
 use BackedEnum;
 use Closure;
+use DOMNode;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionProperty;
+use SimpleXMLElement;
 use stdClass;
 use Symfony\Component\Yaml\Yaml;
 
@@ -108,6 +110,29 @@ class Serialize
         return new static($data);
     }
 
+    /**
+     * Create a Serialize instance from XML. The root element is not part of the data; an
+     * element's attributes are under `@attributes`, and its text under `@value` when it also
+     * has attributes or children. Every value is a string.
+     *
+     * @param string|SimpleXMLElement|DOMNode $content XML string, SimpleXMLElement or DOM node
+     * @param string|null $listElement Elements with this name are list entries, as toXml() writes
+     *                                 them; null reads only repeated siblings as a list
+     * @param bool $listElementSuffix The list entries are numbered (item0, item1, ...)
+     * @return static
+     * @throws Exception\InvalidArgumentException When the string is not valid XML
+     */
+    public static function fromXml(
+        string|SimpleXMLElement|DOMNode $content,
+        ?string $listElement = 'item',
+        bool $listElementSuffix = false
+    ): static {
+        return new static((new XmlFormatter())
+            ->withListElement($listElement)
+            ->withListElementSuffix($listElementSuffix)
+            ->parse($content));
+    }
+
     public static function fromPhpSerialize(string $content): static
     {
         return new static(unserialize($content));
@@ -169,13 +194,20 @@ class Serialize
     }
 
     /**
-     * Convert the model to XML format
+     * Convert the model to XML format. `@attributes` keys become attributes and `@value`
+     * keys become the element's text.
      *
+     * @param string $rootElement The element that wraps the content
+     * @param string $listElement The element of each list entry
+     * @param bool $listElementSuffix Number the list entries (item0, item1, ...)
      * @return string|bool XML representation of the model
      */
-    public function toXml(): string|bool
+    public function toXml(string $rootElement = 'root', string $listElement = 'item', bool $listElementSuffix = false): string|bool
     {
-        return $this->_processWithFormatter(new XmlFormatter());
+        return $this->_processWithFormatter((new XmlFormatter())
+            ->withRootElement($rootElement)
+            ->withListElement($listElement)
+            ->withListElementSuffix($listElementSuffix));
     }
 
     /**

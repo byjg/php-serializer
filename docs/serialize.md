@@ -19,6 +19,7 @@ columns 1
         f3["fromJson()"]
         f4["fromYaml()"]
         f5["fromCsv()"]
+        f6["fromXml()"]
     end
 
     down<["&nbsp;&nbsp;&nbsp;"]>(down)
@@ -65,9 +66,40 @@ $result2 = \ByJG\Serializer\Serialize::fromPhpSerialize($anyPhpSerializedString)
 $result3 = \ByJG\Serializer\Serialize::fromJson($anyJsonString)->toArray();
 $result4 = \ByJG\Serializer\Serialize::fromYaml($anyYamlString)->toArray();
 $result5 = \ByJG\Serializer\Serialize::fromCsv($anyCsvString)->toArray();
+$result6 = \ByJG\Serializer\Serialize::fromXml($anyXmlString)->toArray();
 ```
 
-In the examples above, `$result`, `$result2`, `$result3`, `$result4`, and `$result5` will be associative arrays.
+In the examples above, `$result` to `$result6` will be associative arrays.
+
+#### XML Conversion
+
+`fromXml()` accepts an XML string, a `SimpleXMLElement` or a DOM node, and reads it with
+the same conventions `toXml()` writes, so `toXml()` then `fromXml()` returns the same
+array:
+
+```php
+<?php
+$xml = '<root version="2"><user id="5">John</user><tags><item>a</item><item>b</item></tags></root>';
+
+\ByJG\Serializer\Serialize::fromXml($xml)->toArray();
+// [
+//     '@attributes' => ['version' => '2'],
+//     'user' => ['@attributes' => ['id' => '5'], '@value' => 'John'],
+//     'tags' => ['a', 'b'],
+// ]
+```
+
+- The root element is not part of the array.
+- `@attributes` holds an element's attributes; `@value` holds its text when it also has
+  attributes or children.
+- Elements named like the list element (`item` by default) are list entries, even when
+  there is only one. Pass `listElement: 'user'` (and `listElementSuffix: true` for
+  `user0`, `user1`, ...) to match how the XML was written, or `listElement: null` to read
+  only repeated siblings as a list.
+- Every value is a string: XML has no types.
+- CDATA is read as text. Entities are never expanded and nothing is fetched from the
+  network, so an external entity (XXE) is not resolved.
+- Invalid XML throws `ByJG\Serializer\Exception\InvalidArgumentException`.
 
 #### CSV Conversion with Headers
 
@@ -94,6 +126,7 @@ $data = [ ... any array content or model object ... ]
 
 echo Serialize::from($data)->toJson();
 echo Serialize::from($data)->toXml();
+echo Serialize::from($data)->toXml(rootElement: 'users', listElement: 'user');
 echo Serialize::from($data)->toYaml();
 echo Serialize::from($data)->toCsv();
 echo Serialize::from($data)->toPlainText();

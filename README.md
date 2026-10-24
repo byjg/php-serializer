@@ -5,7 +5,7 @@ tags: [php, text-manipulation]
 
 # Multi-Format Serializer
 
-A powerful multi-format serialization library that converts objects, arrays, and data between JSON, XML, YAML, CSV, PHP serialize, and plain text formats with intelligent property mapping and transformation.
+One entry point to convert data from any supported format to any other: load it once, ask for the format you need.
 
 [![Sponsor](https://img.shields.io/badge/Sponsor-%23ea4aaa?logo=githubsponsors&logoColor=white&labelColor=0d1117)](https://github.com/sponsors/byjg)
 [![Build Status](https://github.com/byjg/php-serializer/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/php-serializer/actions/workflows/phpunit.yml)
@@ -15,9 +15,44 @@ A powerful multi-format serialization library that converts objects, arrays, and
 [![GitHub license](https://img.shields.io/github/license/byjg/php-serializer.svg)](https://opensource.byjg.com/license/)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-serializer.svg)](https://github.com/byjg/php-serializer/releases/)
 
+## Why
+
+Every format has its own PHP function and its own edge cases: `json_encode()`, a YAML
+library, SimpleXML, `fputcsv()`, `serialize()`. Code that turns a model into JSON today
+and into YAML or CSV tomorrow ends up with one branch per format, each with its own way
+to skip a property or drop a null.
+
+Serializer puts all of them behind one interface. Load the data with `Serialize::from…()`,
+then ask for the output with `to…()`:
+
+```php
+Serialize::from($user)->toJson();                 // object → JSON
+Serialize::fromJson($payload)->toYaml();          // JSON   → YAML
+Serialize::fromCsv($file)->toArray();             // CSV    → array
+Serialize::fromXml($soapBody)->toJson();          // XML    → JSON
+Serialize::from($rows)
+    ->withIgnoreProperties(['password'])
+    ->toXml();                                    // array  → XML, without a field
+```
+
+Any source works with any output:
+
+| Source                                  | Output                                              |
+|-----------------------------------------|-----------------------------------------------------|
+| `from()` — object or array              | `toArray()`                                         |
+| `fromJson()`                            | `toJson()`                                          |
+| `fromYaml()`                            | `toYaml()`                                          |
+| `fromCsv()`                             | `toCsv()`                                           |
+| `fromXml()`                             | `toXml()`                                           |
+| `fromPhpSerialize()`                    | `toPhpSerialize()`                                  |
+|                                         | `toPlainText()` (output only)                       |
+
+The property rules (`withIgnoreProperties()`, `withOnlyProperties()`,
+`withDoNotParseNullValues()`, attributes, ...) are set once and apply whatever the output.
+
 ## Features
 
-- **Format Conversion**: Transform objects to JSON, XML, YAML, or Arrays, and back again
+- **Format Conversion**: Read objects, arrays, JSON, YAML, XML, CSV or PHP-serialized data, and write any of them, plus plain text
 - **Property Control**: Filter, transform, and manipulate object properties during conversion
 - **Object Mapping**: Copy properties between different object structures with intelligent mapping
 - **Property Pattern Matching**: Customize how properties are matched and transformed
@@ -71,7 +106,7 @@ class User implements \ByJG\Serializer\ObjectCopyInterface
 
 ### Guides
 
-- **[Formatters](docs/formatters.md)** - JSON, XML, YAML, CSV, and Plain Text output formatting
+- **[Formatters](docs/formatters.md)** - JSON, XML, YAML, CSV, and Plain Text output formatting, and reading XML
 - **[Property Handlers](docs/propertyhandlers.md)** - Transform property names and values during copying
 - **[Advanced Usage](docs/advanced-usage.md)** - Performance optimization, security, and complex patterns
 - **[Integration Examples](docs/integration-examples.md)** - Framework integration (Symfony, Laravel, Doctrine, etc.)
