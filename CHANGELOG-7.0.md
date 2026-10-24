@@ -25,6 +25,30 @@ A property typed with a backed enum (`public ?Status $status`) works in both dir
 
 A pure enum is unchanged. See `docs/serialize.md` and `docs/objectcopy.md`.
 
+### Reading XML: `Serialize::fromXml()`
+
+XML was output-only; it is now a source like JSON, YAML and CSV:
+
+```php
+Serialize::fromXml($xml)->toArray();
+Serialize::fromXml($xml, listElement: 'user', listElementSuffix: true)->toJson();
+```
+
+It accepts an XML string, a `SimpleXMLElement` or a DOM node, and reads with the conventions
+`toXml()` writes, so `toXml()` then `fromXml()` returns the same array: the root element is
+dropped, `@attributes` holds the attributes, `@value` the text of an element that also has
+attributes or children, and elements named like the list element (`item`) are list entries.
+Every value is a string. CDATA is read as text; entities are not expanded and nothing is
+fetched from the network (no XXE). Invalid XML throws `InvalidArgumentException`.
+`XmlFormatter::parse()` does the work, with the formatter's configuration.
+
+### `toXml()` options, attributes and text
+
+- `toXml(rootElement: 'users', listElement: 'user', listElementSuffix: true)` sets what was
+  only available on `XmlFormatter` directly.
+- An `@attributes` key is written as the attributes of its element, and an `@value` key as
+  its text.
+
 ## Performance
 
 ### `ObjectCopy` direct copy path
@@ -83,7 +107,17 @@ These are all `private`/internal to `final class ObjectCopy`, so they are not pa
   property, a `stdClass` or an array target got the enum object from one path and its value
   from the other. The fast path now copies the value too.
 
+- `toXml()` wrote a list of scalars with the index as the element name
+  (`['tags' => ['a', 'b']]` gave `<tags><0>a</0><1>b</1></tags>`), which is not valid XML.
+  It now uses the list element, as it already did for a list of arrays:
+  `<tags><item>a</item><item>b</item></tags>`.
+
 ## Breaking Changes
+
+### `@attributes` and `@value` are reserved in `toXml()`
+
+An array key named `@attributes` or `@value` is now written as the element's attributes or
+text, instead of as a child element (whose name was not valid XML).
 
 ### A backed enum is serialized as its value
 
