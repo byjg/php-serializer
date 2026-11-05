@@ -23,13 +23,13 @@ use SimpleXMLElement;
  */
 class XmlFormatter implements FormatterInterface
 {
-    public const ATTRIBUTES = '@attributes';
+    public const string ATTRIBUTES = '@attributes';
 
-    public const VALUE = '@value';
+    public const string VALUE = '@value';
 
-    private const XMLNS = 'http://www.w3.org/2000/xmlns/';
+    private const string XMLNS = 'http://www.w3.org/2000/xmlns/';
 
-    private const XML = 'http://www.w3.org/XML/1998/namespace';
+    private const string XML = 'http://www.w3.org/XML/1998/namespace';
 
     protected string $rootElement = "root";
 
