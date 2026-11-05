@@ -131,11 +131,7 @@ final class ObjectCopy
             return;
         }
 
-        $className = get_class($target);
-        if (!isset(self::$writerCache[$className][$targetName])) {
-            self::$writerCache[$className][$targetName] = self::writerOf($className, $targetName);
-        }
-        $writer = self::$writerCache[$className][$targetName];
+        $writer = self::writerFor(get_class($target), $targetName);
 
         if ($writer === false) {
             if (isset($target->{$targetName})) {
@@ -155,6 +151,26 @@ final class ObjectCopy
             return;
         }
         $target->{$member} = $value;
+    }
+
+    /**
+     * How copy() writes a value with this name into an object of this class, resolved once per class and name:
+     * [member, is setter, backed enum or null] for its setter (in any case), else its public property (exact case,
+     * else any case); false when it has neither (copy() then writes it only to a property the instance has: dynamic,
+     * or magic __isset()/__set()).
+     *
+     * For code that writes many values into objects of the same class with the same rules as copy(), such as an
+     * entity hydrator: a backed enum member takes BackedEnum::from() of an int or string value.
+     *
+     * @param class-string $className
+     * @return array{0: string, 1: bool, 2: class-string<BackedEnum>|null}|false
+     */
+    public static function writerFor(string $className, string $targetName): array|false
+    {
+        if (!isset(self::$writerCache[$className][$targetName])) {
+            self::$writerCache[$className][$targetName] = self::writerOf($className, $targetName);
+        }
+        return self::$writerCache[$className][$targetName];
     }
 
     /**

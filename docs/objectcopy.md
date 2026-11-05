@@ -216,6 +216,19 @@ built again for a target typed with the enum. So every source (array or object, 
 a property handler) gives the same result: `Status::Paid` in a `Status`/`?Status` property or
 setter, and `'PAID'` in a `string|Status` property, a `stdClass` or an array.
 
+### Writing many values into objects of the same class
+
+`ObjectCopy::writerFor(string $className, string $name)` gives how `copy()` writes a value with that name into an
+object of that class, resolved once per class and name:
+
+- `[member, isSetter, enumClass]`: the setter (in any case), else the public property (exact case, else any case),
+  and the backed enum it takes (`null` if none; an int or string value then takes `enumClass::from()`)
+- `false`: the class has neither; `copy()` then writes the value only to a property the instance has (dynamic, or
+  magic `__isset()`/`__set()`)
+
+It is for code that fills many objects of the same class with the same rules as `copy()`, such as an entity
+hydrator (byjg/micro-orm).
+
 ## Available Property Handler Classes
 
 The library provides several built-in property handler classes for common transformations:

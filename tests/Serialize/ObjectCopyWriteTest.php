@@ -75,6 +75,25 @@ class ObjectCopyWriteTest extends TestCase
         $this->assertFalse(property_exists($without, 'extra'));
     }
 
+    public function testWriterForGivesHowCopyWritesEachName(): void
+    {
+        $this->assertSame(['setboth', true, null], self::lower(ObjectCopy::writerFor(ModelWriteTargets::class, 'both')));
+        $this->assertSame(['setViaSetter', true, null], ObjectCopy::writerFor(ModelWriteTargets::class, 'ViaSetter'));
+        $this->assertSame(['setlevel', true, SampleLevel::class], self::lower(ObjectCopy::writerFor(ModelWriteTargets::class, 'level')));
+        $this->assertSame(['Exact', false, null], ObjectCopy::writerFor(ModelWriteTargets::class, 'exact'));
+        $this->assertSame(['status', false, SampleStatus::class], ObjectCopy::writerFor(ModelWriteTargets::class, 'STATUS'));
+        $this->assertFalse(ObjectCopy::writerFor(ModelWriteTargets::class, 'hidden'));
+        $this->assertFalse(ObjectCopy::writerFor(ModelDynamicTarget::class, 'extra'));
+    }
+
+    /**
+     * The setter name as written in the name given (method names are case-insensitive)
+     */
+    private static function lower(array|false $writer): array|false
+    {
+        return $writer === false ? false : [strtolower($writer[0]), $writer[1], $writer[2]];
+    }
+
     public function testMagicProperty(): void
     {
         $target = new ModelMagicTarget();
