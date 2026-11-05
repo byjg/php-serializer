@@ -20,6 +20,7 @@ columns 1
         f4["fromYaml()"]
         f5["fromCsv()"]
         f6["fromXml()"]
+        f7["fromFile()"]
     end
 
     down<["&nbsp;&nbsp;&nbsp;"]>(down)
@@ -48,6 +49,8 @@ columns 1
         o6["toPhpSerialize()"]
         o7["toArray()"]
         o8["parseAttributes()"]
+        o9["toIterator()"]
+        o10["getValue()"]
     end
 ```
 
@@ -70,6 +73,10 @@ $result6 = \ByJG\Serializer\Serialize::fromXml($anyXmlString)->toArray();
 ```
 
 In the examples above, `$result` to `$result6` will be associative arrays.
+
+`from()` takes an array or an object, and `fromJson()` and `fromYaml()` hold the same: content that is a
+scalar (`"text"`, `42`) throws `TypeError` right away, since none of the `to*()` methods could convert it.
+Invalid content throws too: `JsonException` for JSON, Symfony's `ParseException` for YAML.
 
 #### XML Conversion
 
@@ -97,6 +104,17 @@ $xml = '<root version="2"><user id="5">John</user><tags><item>a</item><item>b</i
   `user0`, `user1`, ...) to match how the XML was written, or `listElement: null` to read
   only repeated siblings as a list.
 - Every value is a string: XML has no types.
+- An element or attribute in a namespace keeps its prefix (`x:isbn`, `xsi:type`, `xml:lang`),
+  and a namespace declaration is an attribute, as in XML: `xmlns:x`, or `xmlns` for a default
+  namespace. A DOM node of a bigger document also gets the declarations of its parents, so
+  the array is complete on its own. `toXml()` writes the namespaces back:
+
+  ```php
+  <?php
+  $serialize = \ByJG\Serializer\Serialize::fromXml('<book xmlns:x="urn:x"><title>T</title><x:isbn>111</x:isbn></book>');
+  $serialize->toArray();   // ['@attributes' => ['xmlns:x' => 'urn:x'], 'title' => 'T', 'x:isbn' => '111']
+  $serialize->toXml();     // <root xmlns:x="urn:x"><title>T</title><x:isbn>111</x:isbn></root>
+  ```
 - CDATA is read as text. Entities are never expanded and nothing is fetched from the
   network, so an external entity (XXE) is not resolved.
 - Invalid XML throws `ByJG\Serializer\Exception\InvalidArgumentException`.
@@ -115,6 +133,103 @@ $result = \ByJG\Serializer\Serialize::fromCsv($csvWithoutHeaders, false)->toArra
 ```
 
 When `hasHeader` is set to `true` (default), the first row of the CSV is treated as column names, and each subsequent row is converted to an associative array using these column names as keys. When `hasHeader` is set to `false`, each row is treated as a simple indexed array.
+
+The content is read as RFC 4180 records: a quoted value may contain commas, doubled quotes (`""`) and
+line breaks, and the lines may end in LF or CRLF. Empty lines are skipped. With a header row, every record
+must have as many fields as the header; otherwise `ByJG\Serializer\Exception\InvalidArgumentException` is thrown.
+
+An unclosed quote is not detected: PHP's CSV parser (`fgetcsv()`) reads it to the end of the content without an
+error, so the rest of the content becomes part of that value (`John,"unclosed\nJane,x` gives `John` and
+`unclosed\nJane,x`). A quote inside an unquoted value (`5" screen`) is kept as it is.
+
+#### Reading a file block by block: `fromFile()` and `toIterator()`
+
+`fromFile()` reads a file by its extension: `.csv`, `.xml`, `.json`, `.yaml` or `.yml`.
+
+A CSV or XML file is not loaded into memory. It is read one block at a time, and again each
+time it is used. `toIterator()` returns the blocks one by one, each a `Serialize` with the same
+options, so a file with millions of records keeps the memory flat:
+
+```php
+<?php
+use ByJG\Serializer\Serialize;
+
+$serialize = Serialize::fromFile('/data/people.csv')->withOnlyProperties(['name', 'email']);
+
+foreach ($serialize->toIterator() as $index => $block) {
+    $block->toArray();   // ['name' => 'John', 'email' => 'john@example.com']
+    $block->toJson();    // {"name":"John","email":"john@example.com"}
+}
+```
+
+The other methods (`toArray()`, `toJson()`, `toXml()`, `toYaml()`, `toCsv()`...) work over all
+the blocks and return them as a list. They build the whole result, so on a big file loop with
+`toIterator()` instead.
+
+What a block is:
+
+| File | Block |
+|------|-------|
+| CSV | A record, keyed by the header row, read as `fromCsv()` reads it |
+| XML | Each child of the root element, or with `blockElement` the elements with that name at any depth |
+| JSON, YAML | Each item of a top-level list; anything else is a single block |
+
+```php
+<?php
+// <export><header>...</header><data><row>...</row><row>...</row></data></export>
+Serialize::fromFile('/data/export.xml', blockElement: 'row')->toArray();
+```
+
+An element with the block's name inside a block is part of that block, not a new one.
+
+A block keeps the value it was read as, and converts it only when a `to*()` method is called:
+
+| Block | `getValue()` |
+|-------|--------------|
+| XML | The original element, a `DOMElement` (for XPath, `saveXML()`...) |
+| CSV | The record, keyed by the header row |
+| JSON, YAML | The item |
+
+`getValue()` of the `Serialize` of a CSV or XML file returns the values of all the blocks, all in
+memory; of any other `Serialize`, the model given to `from*()`.
+
+An XML block converted by `toArray()`, `toJson()`, `toYaml()`... is read as `fromXml()` reads a
+document: its own name is dropped, its attributes are under `@attributes`, and `item` elements are
+list entries.
+
+`toXml()` of an XML block writes its original element, without a conversion: the conversion to an
+array loses the order of the siblings, namespaced elements and text mixed with elements. For the
+whole file, the blocks are inside a `root` element:
+
+```php
+<?php
+// <bookstore><book category="WEB"><title>Learning XML</title><author>A</author><author>B</author></book>...</bookstore>
+foreach (Serialize::fromFile('/data/books.xml', blockElement: 'book')->toIterator() as $block) {
+    $block->getValue();   // DOMElement <book>
+    $block->toXml();      // <?xml version="1.0"?>\n<book category="WEB">...</book>, as it is in the file
+    $block->toJson();     // {"@attributes":{"category":"WEB"},"title":"Learning XML","author":["A","B"]}
+}
+```
+
+With an option (`withOnlyProperties()`, `withIgnoreProperties()`...) or a `toXml()` parameter, the
+element is converted to an array first, so they apply.
+
+Notes:
+
+- PHP has no streaming parser for JSON or YAML: `fromFile()` reads the whole file, as `fromJson()`
+  and `fromYaml()` do, and throws on invalid content.
+- A missing file, an unknown extension, or `blockElement` for a file that is not XML throws
+  `ByJG\Serializer\Exception\InvalidArgumentException` when `fromFile()` is called.
+- An invalid CSV record or invalid XML throws the same exception when the reading reaches it, so
+  the blocks before it may already have been processed. libxml reads ahead, so for XML that can
+  happen before the blocks that come just before the error.
+- `toIterator()` works on any `Serialize`: the blocks are the items of a list of arrays or objects,
+  and any other value is a single block.
+- `fromFile()` creates a `ByJG\Serializer\Reader\CsvReader` or `XmlBlockReader`. Both implement
+  `ByJG\Serializer\Reader\FileBlocks`, and `from()` reads any `FileBlocks` the same way:
+  `Serialize::from(new XmlBlockReader('/data/books.xml', 'book'))` is
+  `Serialize::fromFile('/data/books.xml', blockElement: 'book')`. Another object that can be iterated
+  (a collection) is not `FileBlocks`, so `from()` converts it as any object.
 
 ### Formatting an array into JSON, YAML, XML, CSV, or Plain Text
 
@@ -170,9 +285,9 @@ These are the possible modifiers for parsing:
 | withMethodPattern        | Use the pattern to convert method into property                         |
 | withMethodGetPrefix      | Set the prefix for getter methods (default is 'get')                    |
 | withStopAtFirstLevel     | Only parse the first level of nested objects                            |
-| withIgnoreProperties     | Specify properties to exclude during serialization (denylist)           |
+| withIgnoreProperties     | Specify properties to exclude at every level (denylist)                 |
 | withoutIgnoreProperties  | Clear the denylist                                                      |
-| withOnlyProperties       | Specify the only properties to include during serialization (allowlist) |
+| withOnlyProperties       | Specify the only properties of the model to include (allowlist)         |
 | withoutOnlyProperties    | Clear the allowlist                                                     |
 
 #### Ignore null elements: `withDoNotParseNullValues()`
@@ -312,7 +427,8 @@ $result = \ByJG\Serializer\Serialize::from($myclass)
 
 #### Ignore specific properties: `withIgnoreProperties([$prop1, $prop2])`
 
-To ignore specific properties during serialization:
+To ignore specific properties during serialization. A property is ignored at every level, also in
+the nested objects and arrays, so a `password` is hidden wherever it is:
 
 ```php
 <?php
@@ -332,6 +448,29 @@ $result = \ByJG\Serializer\Serialize::from($myclass)
             ->withoutIgnoreProperties() // Clear the ignore list
             ->toArray();
 ```
+
+#### Keep only some properties: `withOnlyProperties([$prop1, $prop2])`
+
+To keep only some properties of the model. A property kept is kept whole: the properties of its value
+are not filtered. For a list of arrays or objects, the properties are the ones of each item, as each
+block of `toIterator()`:
+
+```php
+<?php
+$data = ['name' => 'John', 'age' => 30, 'address' => ['street' => 'Main St', 'city' => 'Rio']];
+
+\ByJG\Serializer\Serialize::from($data)
+    ->withOnlyProperties(['name', 'address'])
+    ->toArray();
+// ['name' => 'John', 'address' => ['street' => 'Main St', 'city' => 'Rio']]
+
+\ByJG\Serializer\Serialize::from([['name' => 'John', 'age' => 30], ['name' => 'Jane', 'age' => 25]])
+    ->withOnlyProperties(['name'])
+    ->toArray();
+// [['name' => 'John'], ['name' => 'Jane']]
+```
+
+`withoutOnlyProperties()` clears the list.
 
 #### parseAttributes
 
@@ -392,7 +531,7 @@ Use direct mode to preserve object structure for deserialization. Use parse mode
 
 ### Anonymous Class Support
 
-The Serialize class automatically handles anonymous classes, detecting them and including both getter methods and public properties. Getter methods take precedence over public properties when both exist.
+The Serialize class automatically handles anonymous classes, detecting them and including both getter methods and public properties. Getter methods take precedence over public properties when both exist. The options and `parseAttributes()` apply to them as to any class.
 
 ### Performance and Caching
 

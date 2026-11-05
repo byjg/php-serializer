@@ -7,9 +7,14 @@ use ByJG\Serializer\Formatter\JsonFormatter;
 use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
 use ByJG\Serializer\Formatter\YamlFormatter;
+use ByJG\Serializer\Reader\CsvReader;
+use ByJG\Serializer\Reader\FileBlocks;
+use ByJG\Serializer\Reader\XmlBlockReader;
 use BackedEnum;
 use Closure;
+use DOMDocument;
 use DOMNode;
+use Generator;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionProperty;
@@ -23,7 +28,7 @@ class Serialize
     private static array $_reflectionCache = [];
     private static array $_methodExistsCache = [];
 
-    protected mixed $model = null;
+    protected mixed $value = null;
     protected array $methodPattern = [
         self::METHOD_PATTERN_SEARCH_KEY => '/([^A-Za-z0-9])/',
         self::METHOD_PATTERN_REPLACE_KEY => ''
@@ -38,76 +43,184 @@ class Serialize
     protected array $ignorePropertiesMap = [];
     protected array $onlyProperties = [];
     protected array $onlyPropertiesMap = [];
+    /** The level of the properties withOnlyProperties() filters: the model's, or each item's for a list */
+    private int $onlyPropertiesLevel = 2;
 
     private const string METHOD_PATTERN_SEARCH_KEY = "search";
     private const string METHOD_PATTERN_REPLACE_KEY = "replace";
 
-    protected function __construct(mixed $model)
+    protected function __construct(mixed $value)
     {
-        $this->model = $model;
+        $this->value = $value;
     }
 
-    public static function from(object|array $model): static
+    public static function from(object|array $value): static
     {
-        return new static($model);
-    }
-
-    public static function fromYaml(string $content): static
-    {
-        return new static(Yaml::parse($content));
-    }
-
-    public static function fromJson(string $content): static
-    {
-        return new static(json_decode($content, true));
+        return new static($value);
     }
 
     /**
-     * Create a Serialize instance from CSV content
+     * @throws \TypeError when the YAML is a scalar (a string, a number...): there is nothing to serialize
+     * @throws \Symfony\Component\Yaml\Exception\ParseException when the content is not valid YAML
+     */
+    public static function fromYaml(string $content): static
+    {
+        return static::from(Yaml::parse($content));
+    }
+
+    /**
+     * @throws \TypeError when the JSON is a scalar (a string, a number...): there is nothing to serialize
+     * @throws \JsonException when the content is not valid JSON
+     */
+    public static function fromJson(string $content): static
+    {
+        return static::from(json_decode($content, true, flags: JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * Create a Serialize instance from CSV content. A quoted value may contain line breaks (RFC 4180),
+     * and the lines may end in LF or CRLF. An unclosed quote is not detected: fgetcsv() reads it to the end
+     * of the content, which becomes part of that value.
      *
      * @param string $content CSV content
      * @param bool $hasHeader Whether the CSV has a header row (default: true)
      * @return static
+     * @throws Exception\InvalidArgumentException when a record does not have as many fields as the header
      */
     public static function fromCsv(string $content, bool $hasHeader = true): static
     {
-        $lines = explode("\n", trim($content));
-        if (empty($lines)) {
-            return new static([]);
+        $stream = fopen('php://memory', 'r+');
+        if ($stream === false) {
+            throw new \RuntimeException("Cannot open a memory stream to read the CSV");
+        }
+        fwrite($stream, trim($content));
+        rewind($stream);
+
+        try {
+            return new static(iterator_to_array(CsvReader::records($stream, $hasHeader), false));
+        } finally {
+            fclose($stream);
+        }
+    }
+
+    /**
+     * Create a Serialize instance from a file, by its extension: .csv, .xml, .json, .yaml or .yml.
+     *
+     * A CSV or XML file is read block by block, each time it is used, so its content is never all in memory:
+     * toIterator() returns one block at a time, and every to*() method works over all the blocks (as a list).
+     * A block is a CSV record, keyed by the header row, or an XML element (see $blockElement). A block keeps
+     * the value read (getValue()) and converts it only when a to*() method is called; toXml() of an XML
+     * block writes the original element (see toXml()).
+     *
+     * PHP has no streaming parser for JSON or YAML: the file is read here, as fromJson() and fromYaml() do,
+     * and its blocks are the items of a top-level list (see toIterator()).
+     *
+     * @param string $filename
+     * @param string|null $blockElement XML only: the name of the elements that are the blocks, at any depth;
+     *                                  null makes each child of the root element a block
+     * @return static
+     * @throws Exception\InvalidArgumentException when the file cannot be read, its extension is not one of
+     *         those, or $blockElement is given for a file that is not XML
+     */
+    public static function fromFile(string $filename, ?string $blockElement = null): static
+    {
+        if (!is_file($filename) || !is_readable($filename)) {
+            throw new Exception\InvalidArgumentException("Cannot read the file '$filename'");
         }
 
-        $data = [];
-        $headers = [];
-
-        foreach ($lines as $index => $line) {
-            if (empty(trim($line))) {
-                continue;
-            }
-
-            $row = str_getcsv($line, escape: "\\");
-
-            // If this is the first row and we have headers
-            if ($index === 0 && $hasHeader) {
-                $headers = $row;
-                continue;
-            }
-
-            // If we have headers, create an associative array
-            if ($hasHeader && !empty($headers)) {
-                $assocRow = [];
-                foreach ($row as $i => $value) {
-                    if (isset($headers[$i])) {
-                        $assocRow[$headers[$i]] = $value;
-                    }
-                }
-                $data[] = $assocRow;
-            } else {
-                // No headers, just add the row as is
-                $data[] = $row;
-            }
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if ($blockElement !== null && $extension !== 'xml') {
+            throw new Exception\InvalidArgumentException("The block element is for an XML file, not '$filename'");
         }
 
-        return new static($data);
+        return match ($extension) {
+            'csv' => new static(new CsvReader($filename)),
+            'xml' => new static(new XmlBlockReader($filename, $blockElement)),
+            'json' => static::fromJson(self::readFile($filename)),
+            'yaml', 'yml' => static::fromYaml(self::readFile($filename)),
+            default => throw new Exception\InvalidArgumentException(
+                "Cannot detect the format of '$filename': the extension must be csv, xml, json, yaml or yml"
+            ),
+        };
+    }
+
+    private static function readFile(string $filename): string
+    {
+        $content = file_get_contents($filename);
+        if ($content === false) {
+            throw new Exception\InvalidArgumentException("Cannot read the file '$filename'");
+        }
+        return $content;
+    }
+
+    /**
+     * The blocks, one at a time, each a Serialize with the same options (withOnlyProperties()...).
+     *
+     * For fromFile() of a CSV or XML file, the blocks are read from the file. Otherwise they are the items of
+     * the value when it is a list of arrays or objects, or else the value itself as a single block.
+     *
+     * @return Generator<int, static>
+     */
+    public function toIterator(): Generator
+    {
+        $blocks = $this->value instanceof FileBlocks ? $this->value : self::blocksOf($this->value);
+        foreach ($blocks as $index => $value) {
+            $block = clone $this;
+            $block->value = $value;
+            yield $index => $block;
+        }
+    }
+
+    private static function blocksOf(mixed $value): array
+    {
+        return self::isListOfBlocks($value) ? $value : [$value];
+    }
+
+    /**
+     * A list whose items are all arrays or objects: each item is a block
+     */
+    private static function isListOfBlocks(mixed $value): bool
+    {
+        if (!is_array($value) || !array_is_list($value)) {
+            return false;
+        }
+        foreach ($value as $item) {
+            if (!is_array($item) && !is_object($item)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The original value, not converted: for a block of fromFile(), what the file gave (the DOMElement of an
+     * XML block, the record of a CSV block); for the Serialize of a CSV or XML file, the list of the values of
+     * all the blocks (all in memory); otherwise the value given to from*().
+     */
+    public function getValue(): mixed
+    {
+        if ($this->value instanceof FileBlocks) {
+            return iterator_to_array($this->value, false);
+        }
+        return $this->value;
+    }
+
+    /**
+     * The value parsed as an array; for the blocks of a file, the list of each block parsed. An XML element is
+     * read as fromXml() reads it.
+     */
+    private function parseValue(?string $attributeClass = null, ?Closure $attributeFunction = null): mixed
+    {
+        if (!$this->value instanceof FileBlocks) {
+            $value = $this->value instanceof DOMNode ? (new XmlFormatter())->parse($this->value) : $this->value;
+            $this->onlyPropertiesLevel = self::isListOfBlocks($value) ? 3 : 2;
+            return $this->parseProperties($value, 1, $attributeClass, $attributeFunction);
+        }
+        $result = [];
+        foreach ($this->toIterator() as $block) {
+            $result[] = $block->parseValue($attributeClass, $attributeFunction);
+        }
+        return $result;
     }
 
     /**
@@ -145,7 +258,7 @@ class Serialize
      */
     public function toArray(): array
     {
-        return $this->parseProperties($this->model, 1);
+        return $this->parseValue();
     }
 
     /**
@@ -156,10 +269,11 @@ class Serialize
      */
     public function toPhpSerialize(bool $parse = false): string
     {
-        if ($parse) {
-            return serialize($this->parseProperties($this->model, 1));
+        // A DOM element cannot be serialized: an XML block is serialized parsed
+        if ($parse || $this->value instanceof DOMNode || $this->value instanceof XmlBlockReader) {
+            return serialize($this->parseValue());
         }
-        return serialize($this->model);
+        return serialize($this->getValue());
     }
 
     /**
@@ -170,7 +284,7 @@ class Serialize
      */
     private function _processWithFormatter(object $formatter): string|bool
     {
-        return $formatter->process($this->parseProperties($this->model, 1));
+        return $formatter->process($this->parseValue());
     }
 
     /**
@@ -197,6 +311,11 @@ class Serialize
      * Convert the model to XML format. `@attributes` keys become attributes and `@value`
      * keys become the element's text.
      *
+     * An XML block of fromFile() is written as its original element, without a conversion, which would lose
+     * the order of the siblings, namespaced elements and mixed text: a block is that element, and an XML file
+     * is its blocks inside a `root` element. With an option (withOnlyProperties()...) or a parameter, the
+     * element is converted to an array first, so they apply.
+     *
      * @param string $rootElement The element that wraps the content
      * @param string $listElement The element of each list entry
      * @param bool $listElementSuffix Number the list entries (item0, item1, ...)
@@ -204,10 +323,49 @@ class Serialize
      */
     public function toXml(string $rootElement = 'root', string $listElement = 'item', bool $listElementSuffix = false): string|bool
     {
+        if ($rootElement === 'root' && $listElement === 'item' && !$listElementSuffix && $this->hasDefaultOptions()) {
+            if ($this->value instanceof DOMNode) {
+                return self::originalXml([$this->value], null);
+            }
+            if ($this->value instanceof XmlBlockReader) {
+                return self::originalXml($this->value, $rootElement);
+            }
+        }
+
         return $this->_processWithFormatter((new XmlFormatter())
             ->withRootElement($rootElement)
             ->withListElement($listElement)
             ->withListElementSuffix($listElementSuffix));
+    }
+
+    /**
+     * @param iterable<DOMNode> $nodes
+     * @param string|null $rootElement The element around the nodes; null for a single node
+     */
+    private static function originalXml(iterable $nodes, ?string $rootElement): string|bool
+    {
+        $document = new DOMDocument('1.0');
+        $parent = $rootElement === null ? $document : $document->appendChild($document->createElement($rootElement));
+        foreach ($nodes as $node) {
+            $parent->appendChild($document->importNode($node, true));
+        }
+        return $document->saveXML();
+    }
+
+    /**
+     * No option changes the output
+     */
+    private function hasDefaultOptions(): bool
+    {
+        $default = new self(null);
+        return $this->methodPattern === $default->methodPattern
+            && $this->methodGetPrefix === $default->methodGetPrefix
+            && $this->stopAtFirstLevel === $default->stopAtFirstLevel
+            && $this->onlyString === $default->onlyString
+            && $this->doNotParse === $default->doNotParse
+            && $this->serializeNull === $default->serializeNull
+            && $this->ignoreProperties === $default->ignoreProperties
+            && $this->onlyProperties === $default->onlyProperties;
     }
 
     /**
@@ -232,7 +390,7 @@ class Serialize
 
     public function parseAttributes(?Closure $attributeFunction, ?string $attributeClass = null): array
     {
-        return $this->parseProperties($this->model, 1, $attributeClass, $attributeFunction);
+        return $this->parseValue($attributeClass, $attributeFunction);
     }
 
 
@@ -307,7 +465,7 @@ class Serialize
         $ignorePropertiesMap = $this->ignorePropertiesMap;
         $hasIgnoreProperties = !empty($ignorePropertiesMap);
         $onlyPropertiesMap = $this->onlyPropertiesMap;
-        $hasOnlyProperties = !empty($onlyPropertiesMap);
+        $hasOnlyProperties = $this->isFilteringOnlyProperties();
 
         foreach ($array as $key => $value) {
             if ($hasIgnoreProperties && isset($ignorePropertiesMap[$key])) {
@@ -331,6 +489,7 @@ class Serialize
             $result[$key] = $parsedValue;
         }
 
+        $this->currentLevel--;
         return $result;
     }
 
@@ -466,10 +625,7 @@ class Serialize
     // Once the properties are cached, we can get the array based on the cached properties
     protected function setValue(array &$result, object $object, string $propertyName, array $cachedProperty, ?string $attributeClass, ?Closure $attributeFunction): void
     {
-        if (isset($this->ignorePropertiesMap[$propertyName])) {
-            return;
-        }
-        if (!empty($this->onlyPropertiesMap) && !isset($this->onlyPropertiesMap[$propertyName])) {
+        if ($this->isSkippingProperty($propertyName)) {
             return;
         }
 
@@ -491,32 +647,44 @@ class Serialize
             $value = $object->$propertyName;
         }
 
-        // Parse the value
+        // Only look up attributes if there is a function and an attribute class
+        $attribute = $attributeFunction !== null && $attributeClass !== null
+            ? $this->cacheGetAttributes($objectClass, $propertyName, $attributeClass)
+            : null;
+
+        $this->addProperty($result, $propertyName, $value, $attributeFunction, $attribute, $keyName, $getter);
+    }
+
+    /**
+     * A property of an object or a key of an array ignored, or not kept by withOnlyProperties()
+     */
+    private function isSkippingProperty(string $name): bool
+    {
+        return isset($this->ignorePropertiesMap[$name])
+            || ($this->isFilteringOnlyProperties() && !isset($this->onlyPropertiesMap[$name]));
+    }
+
+    /**
+     * Adds a property of an object to the result: parsed, through the function of parseAttributes(), and left
+     * out when it is null and the null values are not kept
+     */
+    private function addProperty(
+        array &$result,
+        string $propertyName,
+        mixed $value,
+        ?Closure $attributeFunction,
+        ?object $attribute,
+        ?string $keyName,
+        ?string $getter
+    ): void {
         $parsedValue = $this->parseProperties($value);
 
-        // Process with attribute function if provided
-        if (!is_null($attributeFunction)) {
-            // Only look up attributes if we have an attribute class
-            $attributes = $attributeClass ? 
-                $this->cacheGetAttributes($objectClass, $propertyName, $attributeClass) : 
-                null;
-
-            $parsedValue = $attributeFunction($attributes, $parsedValue, $keyName, $propertyName, $getter);
+        if ($attributeFunction !== null) {
+            $parsedValue = $attributeFunction($attribute, $parsedValue, $keyName, $propertyName, $getter);
         }
 
-        // Skip null values if not copying them
         if ($parsedValue === null && !$this->isCopyingNullValues()) {
             return;
-        }
-
-        // For anonymous classes, use the simple property name instead of the internal representation
-        if (str_starts_with($objectClass, "class@anonymous")) {
-            // Extract the simple property name if it's a getter
-            if (!empty($getter)) {
-                $simplePropertyName = lcfirst(substr($getter, strlen($this->methodGetPrefix)));
-                $result[$simplePropertyName] = $parsedValue;
-                return;
-            }
         }
 
         $result[$propertyName] = $parsedValue;
@@ -557,68 +725,92 @@ class Serialize
             }
         }
 
+        $this->currentLevel--;
         return $result;
     }
 
     /**
-     * Parse an anonymous class using its getter methods
+     * withOnlyProperties() filters the properties of the model (of each item for a list), not the ones of
+     * their values: a property kept is kept whole
+     */
+    private function isFilteringOnlyProperties(): bool
+    {
+        return !empty($this->onlyPropertiesMap) && $this->currentLevel === $this->onlyPropertiesLevel;
+    }
+
+    /**
+     * Parse an anonymous class using its getter methods, then its public properties
      */
     protected function parseAnonymousClass(object $object, ?string $attributeClass = null, ?Closure $attributeFunction = null): array
     {
         $result = [];
         $this->currentLevel++;
 
-        // Use reflection to get property names with original casing
         $reflectionClass = new ReflectionClass($object);
-        $propertyMap = [];
+        $attributeOf = fn(string $name): ?object => $attributeFunction === null
+            ? null
+            : self::propertyAttribute($reflectionClass, $name, $attributeClass);
 
-        // Map all property names to their original casing
+        // Getters take precedence over a public property with the same name
+        $processedProperties = [];
+        foreach ($this->anonymousGetters($object, $reflectionClass) as $propertyName => [$method, $keyName]) {
+            $processedProperties[strtolower($propertyName)] = true;
+            if (!$this->isSkippingProperty($propertyName)) {
+                $this->addProperty($result, $propertyName, $object->$method(), $attributeFunction, $attributeOf($propertyName), $keyName, $method);
+            }
+        }
+
+        foreach (get_object_vars($object) as $key => $value) {
+            if (!isset($processedProperties[strtolower($key)]) && !$this->isSkippingProperty($key)) {
+                $this->addProperty($result, $key, $value, $attributeFunction, $attributeOf($key), $key, null);
+            }
+        }
+
+        $this->currentLevel--;
+        return $result;
+    }
+
+    /**
+     * The getters of an anonymous class by the name of their property, with the casing of the property when it
+     * exists ("getId" is "id" for a property "id")
+     *
+     * @return array<string, array{0: string, 1: string|null}> The getter and the property, null when it has none
+     */
+    private function anonymousGetters(object $object, ReflectionClass $reflectionClass): array
+    {
+        $propertyMap = [];
         foreach ($reflectionClass->getProperties() as $property) {
             $propertyMap[strtolower($property->getName())] = $property->getName();
         }
 
-        // Process getters
-        $methods = get_class_methods($object);
         $prefix = $this->getMethodGetPrefix();
-        $prefixLen = strlen($prefix);
-        $processedProperties = [];
+        $getters = [];
+        foreach (get_class_methods($object) as $method) {
+            if (!str_starts_with($method, $prefix) || strlen($method) <= strlen($prefix)) {
+                continue;
+            }
+            /** @var non-empty-string $propertyKey longer than the prefix */
+            $propertyKey = lcfirst(substr($method, strlen($prefix)));
+            $keyName = $propertyMap[strtolower($propertyKey)] ?? null;
+            $getters[$keyName ?? $propertyKey] = [$method, $keyName];
+        }
+        return $getters;
+    }
 
-        foreach ($methods as $method) {
-            // Check if the method starts with the getter prefix
-            if (str_starts_with($method, $prefix) && strlen($method) > $prefixLen) {
-                // Extract the property name from getter (e.g., "getId" -> "id")
-                /** @var non-empty-string $propertyKey */
-                $propertyKey = lcfirst(substr($method, $prefixLen));
-
-                // Use original property casing if available
-                $propertyName = $propertyMap[strtolower($propertyKey)] ?? $propertyKey;
-
-                // Get the value using the getter
-                $value = $object->$method();
-
-                // Parse the value
-                $parsedValue = $this->parseProperties($value);
-
-                // Add to the result array
-                $result[$propertyName] = $parsedValue;
-                $processedProperties[strtolower($propertyName)] = true;
+    /**
+     * The attribute of a property by its class name, as cacheGetAttributes() finds it for a class
+     */
+    private static function propertyAttribute(ReflectionClass $reflectionClass, string $name, ?string $attributeClass): ?object
+    {
+        if ($attributeClass === null || !$reflectionClass->hasProperty($name)) {
+            return null;
+        }
+        foreach ($reflectionClass->getProperty($name)->getAttributes() as $attribute) {
+            if ($attribute->getName() === $attributeClass) {
+                return $attribute->newInstance();
             }
         }
-
-        // Then process public properties
-        $objVars = get_object_vars($object);
-        foreach ($objVars as $key => $value) {
-            // Only add public properties that weren't already processed via getters
-            if (!isset($processedProperties[strtolower($key)])) {
-                // Parse the value
-                $parsedValue = $this->parseProperties($value);
-
-                // Add to the result array
-                $result[$key] = $parsedValue;
-            }
-        }
-
-        return $result;
+        return null;
     }
 
     /**

@@ -19,6 +19,23 @@ class SerializeXmlTest extends TestCase
         );
     }
 
+    /**
+     * A list with one item is written as a list, like a list with more items; only a single scalar is
+     * written as its text
+     */
+    public function testListWithASingleItem(): void
+    {
+        $this->assertSame(
+            "<?xml version=\"1.0\"?>\n<root><item><name>John</name></item></root>\n",
+            Serialize::from([['name' => 'John']])->toXml()
+        );
+        $this->assertSame(
+            "<?xml version=\"1.0\"?>\n<users><user0><id>1</id></user0></users>\n",
+            Serialize::from([['id' => 1]])->toXml(rootElement: 'users', listElement: 'user', listElementSuffix: true)
+        );
+        $this->assertSame('text', Serialize::from(['text'])->toXml());
+    }
+
     public function testToXmlOptions(): void
     {
         $this->assertSame(
@@ -140,5 +157,71 @@ class SerializeXmlTest extends TestCase
         } finally {
             unlink($file);
         }
+    }
+
+    public static function namespaceProvider(): array
+    {
+        return [
+            'prefixed element' => [
+                '<book xmlns:x="urn:x"><title>T</title><x:isbn>111</x:isbn></book>',
+                ['@attributes' => ['xmlns:x' => 'urn:x'], 'title' => 'T', 'x:isbn' => '111'],
+                '<root xmlns:x="urn:x"><title>T</title><x:isbn>111</x:isbn></root>',
+            ],
+            'default namespace' => [
+                '<book xmlns="urn:b"><title>T</title></book>',
+                ['@attributes' => ['xmlns' => 'urn:b'], 'title' => 'T'],
+                '<root xmlns="urn:b"><title>T</title></root>',
+            ],
+            'namespaced attributes' => [
+                '<book xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="novel" id="1"><title xml:lang="en">T</title></book>',
+                [
+                    '@attributes' => ['xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xsi:type' => 'novel', 'id' => '1'],
+                    'title' => ['@attributes' => ['xml:lang' => 'en'], '@value' => 'T'],
+                ],
+                '<root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="novel" id="1"><title xml:lang="en">T</title></root>',
+            ],
+            'same name in two namespaces' => [
+                '<book xmlns:x="urn:x" xmlns:y="urn:y"><x:id>1</x:id><y:id>2</y:id></book>',
+                ['@attributes' => ['xmlns:x' => 'urn:x', 'xmlns:y' => 'urn:y'], 'x:id' => '1', 'y:id' => '2'],
+                '<root xmlns:x="urn:x" xmlns:y="urn:y"><x:id>1</x:id><y:id>2</y:id></root>',
+            ],
+            'declared on a child' => [
+                '<book><title>T</title><meta xmlns:m="urn:m"><m:k>v</m:k></meta></book>',
+                ['title' => 'T', 'meta' => ['@attributes' => ['xmlns:m' => 'urn:m'], 'm:k' => 'v']],
+                '<root><title>T</title><meta xmlns:m="urn:m"><m:k>v</m:k></meta></root>',
+            ],
+        ];
+    }
+
+    /**
+     * An element or attribute in a namespace keeps its prefix, the declaration is an attribute as in XML,
+     * and toXml() writes the namespaces back
+     */
+    #[DataProvider('namespaceProvider')]
+    public function testNamespacesAreReadAndWrittenBack(string $xml, array $expected, string $written): void
+    {
+        $serialize = Serialize::fromXml($xml);
+
+        $this->assertSame($expected, $serialize->toArray());
+        $this->assertSame("<?xml version=\"1.0\"?>\n$written\n", $serialize->toXml());
+        $this->assertSame($expected, Serialize::fromXml((string)$serialize->toXml())->toArray());
+    }
+
+    public function testElementOfADocumentHasTheNamespacesDeclaredOnItsParents(): void
+    {
+        $document = new DOMDocument();
+        $document->loadXML('<bookstore xmlns:x="urn:x"><book><x:isbn>1</x:isbn></book></bookstore>');
+
+        $this->assertSame(
+            ['@attributes' => ['xmlns:x' => 'urn:x'], 'x:isbn' => '1'],
+            Serialize::fromXml($document->documentElement->firstChild)->toArray()
+        );
+    }
+
+    public function testPrefixWithoutADeclarationThrows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("The prefix 'dc' of 'dc:title' has no namespace declaration (xmlns:dc)");
+        Serialize::from(['dc:title' => 'T'])->toXml();
     }
 }

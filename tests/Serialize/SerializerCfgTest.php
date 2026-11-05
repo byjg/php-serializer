@@ -236,6 +236,58 @@ class SerializerCfgTest extends TestCase
         $this->assertArrayNotHasKey('Id', $result);
     }
 
+    /**
+     * withOnlyProperties() picks the properties of the model: a property kept is kept whole, its value is
+     * not filtered
+     */
+    public function testOnlyPropertiesKeepsTheWholeValueOfAProperty(): void
+    {
+        $contact = new class {
+            public string $email = 'john@example.com';
+            public string $phone = '1';
+        };
+        $data = ['name' => 'John', 'address' => ['street' => 'A', 'city' => 'B'], 'contact' => $contact, 'secret' => 'x'];
+        $this->assertSame(
+            ['name' => 'John', 'address' => ['street' => 'A', 'city' => 'B'], 'contact' => ['email' => 'john@example.com', 'phone' => '1']],
+            Serialize::from($data)->withOnlyProperties(['name', 'address', 'contact'])->toArray()
+        );
+
+        $model = new ModelOfModel();
+        $model->IdModel = 1;
+        $model->Model = new ModelGetter(10, 'John');
+        $this->assertSame(
+            ['Model' => ['Id' => 10, 'Name' => 'John']],
+            Serialize::from($model)->withOnlyProperties(['Model'])->toArray()
+        );
+    }
+
+    /**
+     * For a list of arrays or objects, the properties are the ones of each item: the indexes are not filtered,
+     * as with toIterator(), which gives each item
+     */
+    public function testOnlyPropertiesOfAListArePropertiesOfEachItem(): void
+    {
+        $contact = new class {
+            public string $email = 'john@example.com';
+        };
+        $item = new stdClass();
+        $item->name = 'Jane';
+        $item->age = 25;
+        $serialize = Serialize::from([
+            new ModelGetter(10, 'Jim'),
+            ['name' => 'John', 'contact' => $contact, 'tags' => ['name' => 'n'], 'age' => 30],
+            $item,
+        ])->withOnlyProperties(['Name', 'name', 'contact', 'tags']);
+
+        $expected = [
+            ['Name' => 'Jim'],
+            ['name' => 'John', 'contact' => ['email' => 'john@example.com'], 'tags' => ['name' => 'n']],
+            ['name' => 'Jane'],
+        ];
+        $this->assertSame($expected, $serialize->toArray());
+        $this->assertSame($expected, array_map(fn(Serialize $block) => $block->toArray(), iterator_to_array($serialize->toIterator())));
+    }
+
     public function testIgnoreProperties(): void
     {
         $model = new stdClass();
