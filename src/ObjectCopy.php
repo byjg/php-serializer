@@ -26,12 +26,13 @@ final class ObjectCopy
     private static array $propNameLowerCache = [];
 
     /**
-     * Static cache of the backed enum a member takes ("Class::setName" for a setter's parameter,
-     * "Class::$name" for a property), or null when it does not take one.
+     * Static cache of how a value is written into a class, by target name: the member (a setter or a public
+     * property), whether it is a setter, and the backed enum it takes (or null); false when the class has
+     * neither, and only the instance can have it (a dynamic or magic property).
      *
-     * @var array<string, class-string<BackedEnum>|null>
+     * @var array<string, array<string, array{0: string, 1: bool, 2: class-string<BackedEnum>|null}|false>>
      */
-    private static array $backedEnumCache = [];
+    private static array $writerCache = [];
 
     /**
      * Copy the properties from a source object to the properties matching to a target object
@@ -112,8 +113,11 @@ final class ObjectCopy
     }
 
     /**
-     * Assign a single value to an object target, using the setter when available and
-     * falling back to a case-insensitive property match.
+     * Assign a single value to an object target: with the setter when there is one (in any case), else the
+     * public property (exact case, else any case), else a property the instance has (dynamic, or magic
+     * __isset()/__set()). A value for a member typed with a backed enum is made that enum.
+     *
+     * How the class takes each name is resolved once (see writerOf()); only the last case depends on the instance.
      *
      * @param string $targetName
      * @param mixed $value
@@ -122,56 +126,60 @@ final class ObjectCopy
      */
     private static function applyToTarget(string $targetName, mixed $value, object $target): void
     {
-        if (method_exists($target, 'set' . $targetName)) {
-            $target->{'set' . $targetName}(self::toBackedEnum($target, 'set' . $targetName, true, $value));
-            return;
-        }
-
         if ($target instanceof stdClass) {
             $target->{$targetName} = $value;
             return;
         }
 
-        if (isset($target->{$targetName})) {
-            $target->{$targetName} = self::toBackedEnum($target, $targetName, false, $value);
+        $className = get_class($target);
+        if (!isset(self::$writerCache[$className][$targetName])) {
+            self::$writerCache[$className][$targetName] = self::writerOf($className, $targetName);
+        }
+        $writer = self::$writerCache[$className][$targetName];
+
+        if ($writer === false) {
+            if (isset($target->{$targetName})) {
+                $target->{$targetName} = $value;
+            }
             return;
         }
 
-        // Check if source property have property case name different from target
-        $propNameLower = self::propNameLower(get_class($target));
-
-        $propLower = strtolower($targetName);
-        if (isset($propNameLower[$propLower])) {
-            $target->{$propNameLower[$propLower]} = self::toBackedEnum($target, $propNameLower[$propLower], false, $value);
+        [$member, $isSetter, $enum] = $writer;
+        // A database row holds "PAID", the member is typed ?PaymentState. An unknown value is a ValueError
+        if ($enum !== null && (is_int($value) || is_string($value))) {
+            $value = $enum::from($value);
         }
+
+        if ($isSetter) {
+            $target->{$member}($value);
+            return;
+        }
+        $target->{$member} = $value;
     }
 
     /**
-     * The value as the backed enum the member takes, when it takes one and the value is the
-     * enum's int or string: a database row holds "PAID", the property is typed ?PaymentState.
-     * An unknown value is a ValueError from BackedEnum::from(). Anything else is returned as it is.
+     * How a class takes a value by a name: [member, is setter, backed enum or null], or false when it has
+     * neither a setter nor a public property with that name
      *
-     * @param string $member A setter name, or a property name
+     * @param class-string $className
+     * @return array{0: string, 1: bool, 2: class-string<BackedEnum>|null}|false
      */
-    private static function toBackedEnum(object $target, string $member, bool $isSetter, mixed $value): mixed
+    private static function writerOf(string $className, string $targetName): array|false
     {
-        if (!is_int($value) && !is_string($value)) {
-            return $value;
+        $setter = 'set' . $targetName;
+        if (method_exists($className, $setter)) {
+            $type = ((new ReflectionMethod($className, $setter))->getParameters()[0] ?? null)?->getType();
+            return [$setter, true, self::backedEnumOf($type)];
         }
 
-        $key = get_class($target) . ($isSetter ? '::' : '::$') . $member;
-        if (!array_key_exists($key, self::$backedEnumCache)) {
-            $type = null;
-            if ($isSetter) {
-                $type = ((new ReflectionMethod($target, $member))->getParameters()[0] ?? null)?->getType();
-            } elseif (property_exists($target, $member)) {
-                $type = (new ReflectionProperty($target, $member))->getType();
-            }
-            self::$backedEnumCache[$key] = self::backedEnumOf($type);
+        $properties = self::propNameLower($className);
+        $property = in_array($targetName, $properties, true)
+            ? $targetName
+            : ($properties[strtolower($targetName)] ?? null);
+        if ($property === null) {
+            return false;
         }
-
-        $enum = self::$backedEnumCache[$key];
-        return $enum === null ? $value : $enum::from($value);
+        return [$property, false, self::backedEnumOf((new ReflectionProperty($className, $property))->getType())];
     }
 
     /**
