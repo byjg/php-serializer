@@ -21,10 +21,16 @@ class XmlBlockReader implements FileBlocks
     /**
      * @param string $filename
      * @param string|null $blockElement The name of the elements to read, at any depth; null reads each child
-     *                                  of the root element
+     *                                  of the root element. With a prefix of $namespaces (`atom:entry`), the
+     *                                  elements of that namespace with that local name, whatever prefix the file
+     *                                  uses; otherwise the name as written in the file
+     * @param array<string, string> $namespaces The namespace URI of each prefix used in $blockElement
      */
-    public function __construct(private string $filename, private ?string $blockElement = null)
-    {
+    public function __construct(
+        private string $filename,
+        private ?string $blockElement = null,
+        private array $namespaces = []
+    ) {
     }
 
     /**
@@ -35,6 +41,7 @@ class XmlBlockReader implements FileBlocks
     public function getIterator(): Generator
     {
         $blockElement = $this->blockElement;
+        [$namespaceUri, $localName] = $this->namespacedName();
         $reader = new XMLReader();
         if (!self::call(fn() => $reader->open($this->filename, null, LIBXML_NONET))) {
             throw new InvalidArgumentException("Cannot open the file '$this->filename'");
@@ -44,7 +51,11 @@ class XmlBlockReader implements FileBlocks
             $moved = self::call(fn() => $reader->read());
             while ($moved) {
                 $isBlock = $reader->nodeType === XMLReader::ELEMENT
-                    && ($blockElement === null ? $reader->depth === 1 : $reader->name === $blockElement);
+                    && match (true) {
+                        $blockElement === null => $reader->depth === 1,
+                        $namespaceUri === null => $reader->name === $blockElement,
+                        default => $reader->localName === $localName && $reader->namespaceURI === $namespaceUri,
+                    };
                 if (!$isBlock) {
                     $moved = self::call(fn() => $reader->read());
                     continue;
@@ -62,6 +73,22 @@ class XmlBlockReader implements FileBlocks
         } finally {
             $reader->close();
         }
+    }
+
+    /**
+     * The namespace URI and the local name of $blockElement when its prefix is one of $namespaces; [null, null]
+     * when the name is compared as written
+     *
+     * @return array{0: string|null, 1: string|null}
+     */
+    private function namespacedName(): array
+    {
+        if (preg_match('/^([^:]+):(.+)$/', $this->blockElement ?? '', $match) !== 1
+            || !isset($this->namespaces[$match[1]])
+        ) {
+            return [null, null];
+        }
+        return [$this->namespaces[$match[1]], $match[2]];
     }
 
     /**

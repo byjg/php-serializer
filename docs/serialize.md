@@ -230,6 +230,9 @@ Notes:
   `Serialize::from(new XmlBlockReader('/data/books.xml', 'book'))` is
   `Serialize::fromFile('/data/books.xml', blockElement: 'book')`. Another object that can be iterated
   (a collection) is not `FileBlocks`, so `from()` converts it as any object.
+- `new XmlBlockReader($filename, 'a:entry', ['a' => 'http://www.w3.org/2005/Atom'])` reads the `entry` elements
+  of that namespace, whatever prefix the file uses (none, for a default namespace). Without `$namespaces`, or
+  with a prefix that is not in it, the name is compared as written in the file.
 - `CsvReader::records($handle, $hasHeader, $separator, $enclosure)` reads the records of an open stream, one
   at a time, with another separator (`;`, `|`, a tab...) or enclosure (`'`) than the default `,` and `"`:
   `CsvReader::records(fopen('/data/users.csv', 'r'), separator: ';')`.
