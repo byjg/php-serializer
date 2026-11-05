@@ -580,6 +580,11 @@ class Serialize
 
         // Parse the object properties and cache the attributes
         foreach ($reflection->getProperties() as $property) {
+            // A static property is class state, not data of the object
+            if ($property->isStatic()) {
+                continue;
+            }
+
             $keyName = $property->getName();
             $getter = null;
 

@@ -4,6 +4,7 @@ namespace ByJG\Serializer;
 
 use BackedEnum;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
+use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionProperty;
@@ -207,9 +208,9 @@ final class ObjectCopy
     }
 
     /**
-     * Map of lowercase property name => declared property name for a class.
+     * Map of lowercase property name => declared property name for a class (its public instance properties).
      *
-     * @param string $className
+     * @param class-string $className
      * @return array<string, string>
      */
     private static function propNameLower(string $className): array
@@ -217,8 +218,11 @@ final class ObjectCopy
         if (!isset(self::$propNameLowerCache[$className])) {
             self::$propNameLowerCache[$className] = [];
 
-            foreach (get_class_vars($className) as $varKey => $varValue) {
-                self::$propNameLowerCache[$className][strtolower($varKey)] = $varKey;
+            // The public instance properties: a static property is class state, not data of the object
+            foreach ((new ReflectionClass($className))->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+                if (!$property->isStatic()) {
+                    self::$propNameLowerCache[$className][strtolower($property->getName())] = $property->getName();
+                }
             }
         }
 
