@@ -89,6 +89,40 @@ class CsvFormatterTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    /**
+     * RFC 4180: a quoted value may contain line breaks and quotes, and the lines may end in CRLF
+     */
+    public function testFromCsvQuotedLineBreaksAndCrlf(): void
+    {
+        $csvContent = "name,note\r\nJohn,\"line1\nline2\"\r\nJane,\"say \"\"hi\"\"\"\r\n";
+        $expected = [
+            ["name" => "John", "note" => "line1\nline2"],
+            ["name" => "Jane", "note" => 'say "hi"'],
+        ];
+
+        $result = Serialize::fromCsv($csvContent)->toArray();
+        $this->assertEquals($expected, $result);
+    }
+
+    public static function unevenRecordProvider(): array
+    {
+        return [
+            'fewer fields' => ["name,age\nJohn,30\nJane\n", "Invalid CSV: record 2 has 1 fields, the header has 2"],
+            'more fields' => ["name,age\nJohn,30,extra\n", "Invalid CSV: record 1 has 3 fields, the header has 2"],
+        ];
+    }
+
+    /**
+     * RFC 4180: every record has as many fields as the header; a missing or extra value is an error, not dropped
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('unevenRecordProvider')]
+    public function testFromCsvRecordWithADifferentNumberOfFields(string $csvContent, string $message): void
+    {
+        $this->expectException(\ByJG\Serializer\Exception\InvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+        Serialize::fromCsv($csvContent);
+    }
+
     public function testRoundTrip(): void
     {
         $data = [

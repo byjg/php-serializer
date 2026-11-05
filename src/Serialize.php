@@ -52,48 +52,70 @@ class Serialize
         return new static($model);
     }
 
+    /**
+     * @throws \TypeError when the YAML is a scalar (a string, a number...): there is nothing to serialize
+     * @throws \Symfony\Component\Yaml\Exception\ParseException when the content is not valid YAML
+     */
     public static function fromYaml(string $content): static
     {
-        return new static(Yaml::parse($content));
-    }
-
-    public static function fromJson(string $content): static
-    {
-        return new static(json_decode($content, true));
+        return static::from(Yaml::parse($content));
     }
 
     /**
-     * Create a Serialize instance from CSV content
+     * @throws \TypeError when the JSON is a scalar (a string, a number...): there is nothing to serialize
+     * @throws \JsonException when the content is not valid JSON
+     */
+    public static function fromJson(string $content): static
+    {
+        return static::from(json_decode($content, true, flags: JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * Create a Serialize instance from CSV content. A quoted value may contain line breaks (RFC 4180),
+     * and the lines may end in LF or CRLF. An unclosed quote is not detected: fgetcsv() reads it to the end
+     * of the content, which becomes part of that value.
      *
      * @param string $content CSV content
      * @param bool $hasHeader Whether the CSV has a header row (default: true)
      * @return static
+     * @throws Exception\InvalidArgumentException when a record does not have as many fields as the header
      */
     public static function fromCsv(string $content, bool $hasHeader = true): static
     {
-        $lines = explode("\n", trim($content));
-        if (empty($lines)) {
-            return new static([]);
+        // fgetcsv() reads a record, not a line: the line breaks inside quotes stay in the value
+        $stream = fopen('php://memory', 'r+');
+        if ($stream === false) {
+            throw new \RuntimeException("Cannot open a memory stream to read the CSV");
         }
+        fwrite($stream, trim($content));
+        rewind($stream);
 
         $data = [];
         $headers = [];
+        $index = 0;
 
-        foreach ($lines as $index => $line) {
-            if (empty(trim($line))) {
+        while (is_array($row = fgetcsv($stream, escape: "\\"))) {
+            if (count($row) === 1 && trim((string)$row[0]) === '') {
                 continue;
             }
 
-            $row = str_getcsv($line, escape: "\\");
-
             // If this is the first row and we have headers
-            if ($index === 0 && $hasHeader) {
+            if ($index++ === 0 && $hasHeader) {
                 $headers = $row;
                 continue;
             }
 
             // If we have headers, create an associative array
             if ($hasHeader && !empty($headers)) {
+                // RFC 4180: every record has the same number of fields; a value would be lost or invented
+                if (count($row) !== count($headers)) {
+                    throw new Exception\InvalidArgumentException(sprintf(
+                        "Invalid CSV: record %d has %d fields, the header has %d",
+                        $index - 1,
+                        count($row),
+                        count($headers)
+                    ));
+                }
                 $assocRow = [];
                 foreach ($row as $i => $value) {
                     if (isset($headers[$i])) {
@@ -106,6 +128,7 @@ class Serialize
                 $data[] = $row;
             }
         }
+        fclose($stream);
 
         return new static($data);
     }

@@ -814,6 +814,39 @@ class SerializerObjectTest extends TestCase
         );
     }
 
+    public static function scalarContentProvider(): array
+    {
+        return [
+            'YAML string' => ['fromYaml', 'abc'],
+            'YAML number' => ['fromYaml', '42'],
+            'JSON string' => ['fromJson', '"text"'],
+            'JSON number' => ['fromJson', '42'],
+        ];
+    }
+
+    /**
+     * A scalar has nothing to serialize (no to*() method works with it): it is refused where it comes in,
+     * as from() refuses it
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('scalarContentProvider')]
+    public function testFromScalarContentThrows(string $method, string $content): void
+    {
+        $this->expectException(\TypeError::class);
+        Serialize::$method($content);
+    }
+
+    public function testFromJsonInvalidThrows(): void
+    {
+        $this->expectException(\JsonException::class);
+        Serialize::fromJson('{"a": ');
+    }
+
+    public function testFromYamlInvalidThrows(): void
+    {
+        $this->expectException(\Symfony\Component\Yaml\Exception\ParseException::class);
+        Serialize::fromYaml("key: [a, b");
+    }
+
     public function testSerializePhp(): void
     {
         $this->assertEquals(["a"=>1, "b"=>2], Serialize::fromPhpSerialize(serialize(["a" => 1, "b" => 2]))->toArray());

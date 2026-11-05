@@ -111,6 +111,14 @@ These are all `private`/internal to `final class ObjectCopy`, so they are not pa
   (`['tags' => ['a', 'b']]` gave `<tags><0>a</0><1>b</1></tags>`), which is not valid XML.
   It now uses the list element, as it already did for a list of arrays:
   `<tags><item>a</item><item>b</item></tags>`.
+- `Serialize::fromCsv()` split the content into lines before reading it, so a quoted value with a
+  line break (allowed by RFC 4180) became two broken rows: `Joao,"line1\nline2"` gave a `note` of
+  `line1` and a next row starting with `line2"`. It now reads records with `fgetcsv()`, which keeps
+  the line break in the value. Lines ending in CRLF still work.
+- `Serialize::fromCsv()` with a header row dropped a value silently when a record had more fields than
+  the header, and left a key out when it had fewer (`"name,age\nJane"` gave `['name' => 'Jane']`). A
+  record must have as many fields as the header (RFC 4180): otherwise it throws
+  `ByJG\Serializer\Exception\InvalidArgumentException` ("Invalid CSV: record 2 has 1 fields, the header has 2").
 
 ## Breaking Changes
 
@@ -125,6 +133,14 @@ text, instead of as a child element (whose name was not valid XML).
 `['name' => 'Paid', 'value' => 'PAID']`; it now gives `'PAID'`. With `withStopAtFirstLevel()`
 it gave the enum object; it now gives `'PAID'`. Code that read `['value']` from the output
 reads the value directly.
+
+### `fromJson()` and `fromYaml()` refuse a scalar and invalid content
+
+`fromJson()` and `fromYaml()` accepted content that is a scalar (`"text"`, `42`), and `fromJson()` invalid
+JSON (held as `null`); the error came later, as a `TypeError` from whichever `to*()` method was called. They
+now go through `from()`, which takes only an array or an object, so a scalar throws `TypeError` from
+`fromJson()`/`fromYaml()` itself, and invalid JSON throws `JsonException` (invalid YAML already threw
+`ParseException`).
 
 ### `ObjectCopy` copies a backed enum from an array as its value
 

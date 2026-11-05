@@ -71,6 +71,10 @@ $result6 = \ByJG\Serializer\Serialize::fromXml($anyXmlString)->toArray();
 
 In the examples above, `$result` to `$result6` will be associative arrays.
 
+`from()` takes an array or an object, and `fromJson()` and `fromYaml()` hold the same: content that is a
+scalar (`"text"`, `42`) throws `TypeError` right away, since none of the `to*()` methods could convert it.
+Invalid content throws too: `JsonException` for JSON, Symfony's `ParseException` for YAML.
+
 #### XML Conversion
 
 `fromXml()` accepts an XML string, a `SimpleXMLElement` or a DOM node, and reads it with
@@ -115,6 +119,14 @@ $result = \ByJG\Serializer\Serialize::fromCsv($csvWithoutHeaders, false)->toArra
 ```
 
 When `hasHeader` is set to `true` (default), the first row of the CSV is treated as column names, and each subsequent row is converted to an associative array using these column names as keys. When `hasHeader` is set to `false`, each row is treated as a simple indexed array.
+
+The content is read as RFC 4180 records: a quoted value may contain commas, doubled quotes (`""`) and
+line breaks, and the lines may end in LF or CRLF. Empty lines are skipped. With a header row, every record
+must have as many fields as the header; otherwise `ByJG\Serializer\Exception\InvalidArgumentException` is thrown.
+
+An unclosed quote is not detected: PHP's CSV parser (`fgetcsv()`) reads it to the end of the content without an
+error, so the rest of the content becomes part of that value (`John,"unclosed\nJane,x` gives `John` and
+`unclosed\nJane,x`). A quote inside an unquoted value (`5" screen`) is kept as it is.
 
 ### Formatting an array into JSON, YAML, XML, CSV, or Plain Text
 
