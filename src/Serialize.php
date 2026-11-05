@@ -8,13 +8,13 @@ use ByJG\Serializer\Formatter\PlainTextFormatter;
 use ByJG\Serializer\Formatter\XmlFormatter;
 use ByJG\Serializer\Formatter\YamlFormatter;
 use ByJG\Serializer\Reader\CsvReader;
+use ByJG\Serializer\Reader\FileBlocks;
 use ByJG\Serializer\Reader\XmlBlockReader;
 use BackedEnum;
 use Closure;
 use DOMDocument;
 use DOMNode;
 use Generator;
-use IteratorAggregate;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionProperty;
@@ -29,8 +29,6 @@ class Serialize
     private static array $_methodExistsCache = [];
 
     protected mixed $value = null;
-    /** The blocks of a file (fromFile()), read again on each use */
-    protected ?IteratorAggregate $blockReader = null;
     protected array $methodPattern = [
         self::METHOD_PATTERN_SEARCH_KEY => '/([^A-Za-z0-9])/',
         self::METHOD_PATTERN_REPLACE_KEY => ''
@@ -136,21 +134,14 @@ class Serialize
         }
 
         return match ($extension) {
-            'csv' => static::fromBlocks(new CsvReader($filename)),
-            'xml' => static::fromBlocks(new XmlBlockReader($filename, $blockElement)),
+            'csv' => new static(new CsvReader($filename)),
+            'xml' => new static(new XmlBlockReader($filename, $blockElement)),
             'json' => static::fromJson(self::readFile($filename)),
             'yaml', 'yml' => static::fromYaml(self::readFile($filename)),
             default => throw new Exception\InvalidArgumentException(
                 "Cannot detect the format of '$filename': the extension must be csv, xml, json, yaml or yml"
             ),
         };
-    }
-
-    private static function fromBlocks(IteratorAggregate $blockReader): static
-    {
-        $serialize = new static(null);
-        $serialize->blockReader = $blockReader;
-        return $serialize;
     }
 
     private static function readFile(string $filename): string
@@ -172,9 +163,9 @@ class Serialize
      */
     public function toIterator(): Generator
     {
-        foreach ($this->blockReader ?? self::blocksOf($this->value) as $index => $value) {
+        $blocks = $this->value instanceof FileBlocks ? $this->value : self::blocksOf($this->value);
+        foreach ($blocks as $index => $value) {
             $block = clone $this;
-            $block->blockReader = null;
             $block->value = $value;
             yield $index => $block;
         }
@@ -208,8 +199,8 @@ class Serialize
      */
     public function getValue(): mixed
     {
-        if ($this->blockReader !== null) {
-            return iterator_to_array($this->blockReader, false);
+        if ($this->value instanceof FileBlocks) {
+            return iterator_to_array($this->value, false);
         }
         return $this->value;
     }
@@ -220,7 +211,7 @@ class Serialize
      */
     private function parseValue(?string $attributeClass = null, ?Closure $attributeFunction = null): mixed
     {
-        if ($this->blockReader === null) {
+        if (!$this->value instanceof FileBlocks) {
             $value = $this->value instanceof DOMNode ? (new XmlFormatter())->parse($this->value) : $this->value;
             $this->onlyPropertiesLevel = self::isListOfBlocks($value) ? 3 : 2;
             return $this->parseProperties($value, 1, $attributeClass, $attributeFunction);
@@ -279,7 +270,7 @@ class Serialize
     public function toPhpSerialize(bool $parse = false): string
     {
         // A DOM element cannot be serialized: an XML block is serialized parsed
-        if ($parse || $this->value instanceof DOMNode || $this->blockReader instanceof XmlBlockReader) {
+        if ($parse || $this->value instanceof DOMNode || $this->value instanceof XmlBlockReader) {
             return serialize($this->parseValue());
         }
         return serialize($this->getValue());
@@ -336,8 +327,8 @@ class Serialize
             if ($this->value instanceof DOMNode) {
                 return self::originalXml([$this->value], null);
             }
-            if ($this->blockReader instanceof XmlBlockReader) {
-                return self::originalXml($this->blockReader, $rootElement);
+            if ($this->value instanceof XmlBlockReader) {
+                return self::originalXml($this->value, $rootElement);
             }
         }
 

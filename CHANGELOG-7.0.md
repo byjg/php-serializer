@@ -80,6 +80,10 @@ Serialize::fromFile('export.xml', blockElement: 'row')->toJson();   // all the b
   `fromJson()` and `fromYaml()` do.
 - `toIterator()` also works on any `Serialize`: the blocks are the items of a list of arrays or
   objects, and anything else is a single block.
+- The readers, `Reader\CsvReader` and `Reader\XmlBlockReader`, implement the new `Reader\FileBlocks`
+  interface, and `from()` reads a `FileBlocks` as `fromFile()` does:
+  `Serialize::from(new CsvReader('big.csv'))`. Another object that can be iterated (a collection) is
+  converted as before.
 
 ## Performance
 

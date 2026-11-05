@@ -7,7 +7,6 @@ use Closure;
 use DOMDocument;
 use DOMElement;
 use Generator;
-use IteratorAggregate;
 use XMLReader;
 
 /**
@@ -16,10 +15,8 @@ use XMLReader;
  * Serialize work on it.
  *
  * Entities are never expanded and nothing is fetched from the network. Each iteration reads the file again.
- *
- * @implements IteratorAggregate<int, DOMElement>
  */
-class XmlBlockReader implements IteratorAggregate
+class XmlBlockReader implements FileBlocks
 {
     /**
      * @param string $filename

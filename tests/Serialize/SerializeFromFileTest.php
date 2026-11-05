@@ -3,6 +3,8 @@
 namespace Tests\Serialize;
 
 use ByJG\Serializer\Exception\InvalidArgumentException;
+use ByJG\Serializer\Reader\CsvReader;
+use ByJG\Serializer\Reader\XmlBlockReader;
 use ByJG\Serializer\Serialize;
 use JsonException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -267,6 +269,46 @@ class SerializeFromFileTest extends TestCase
         $model = new ModelGetter(10, 'John');
 
         $this->assertSame($model, Serialize::from($model)->getValue());
+    }
+
+    /**
+     * A reader given to from() is the blocks of its file, as fromFile() reads them
+     */
+    public function testReaderGivenToFromIsReadAsFromFile(): void
+    {
+        $csv = $this->file('people.csv', "name,age\nJohn,30\nJane,25\n");
+        $this->assertSame(
+            $this->blocks(Serialize::fromFile($csv)),
+            $this->blocks(Serialize::from(new CsvReader($csv)))
+        );
+        $this->assertSame(Serialize::fromFile($csv)->toJson(), Serialize::from(new CsvReader($csv))->toJson());
+
+        $books = $this->books();
+        $this->assertSame(
+            Serialize::fromFile($books, blockElement: 'book')->toXml(),
+            Serialize::from(new XmlBlockReader($books, 'book'))->toXml()
+        );
+    }
+
+    /**
+     * Only a FileBlocks (a reader) is read as blocks: an object given to from() is a value, also when it can
+     * be iterated (a collection)
+     */
+    public function testIterableObjectGivenToFromIsAValueNotBlocks(): void
+    {
+        $collection = new class implements \IteratorAggregate {
+            public string $name = 'team';
+
+            public function getIterator(): \ArrayIterator
+            {
+                return new \ArrayIterator([['name' => 'John'], ['name' => 'Jane']]);
+            }
+        };
+        $serialize = Serialize::from($collection);
+
+        $this->assertSame(['name' => 'team'], $serialize->toArray());
+        $this->assertSame($collection, $serialize->getValue());
+        $this->assertSame([['name' => 'team']], $this->blocks($serialize));
     }
 
     public function testInvalidXmlThrows(): void

@@ -4,7 +4,6 @@ namespace ByJG\Serializer\Reader;
 
 use ByJG\Serializer\Exception\InvalidArgumentException;
 use Generator;
-use IteratorAggregate;
 
 /**
  * Reads CSV one record at a time (RFC 4180): a quoted value may contain line breaks, and the lines may end
@@ -13,10 +12,8 @@ use IteratorAggregate;
  *
  * Iterating it reads the records of a CSV file, keyed by the header row. The file is opened when the
  * iteration starts and closed when it ends, so each iteration reads it again.
- *
- * @implements IteratorAggregate<int, array>
  */
-class CsvReader implements IteratorAggregate
+class CsvReader implements FileBlocks
 {
     public function __construct(private string $filename)
     {

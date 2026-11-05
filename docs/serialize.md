@@ -224,7 +224,12 @@ Notes:
   the blocks before it may already have been processed. libxml reads ahead, so for XML that can
   happen before the blocks that come just before the error.
 - `toIterator()` works on any `Serialize`: the blocks are the items of a list of arrays or objects,
-  and any other model is a single block.
+  and any other value is a single block.
+- `fromFile()` creates a `ByJG\Serializer\Reader\CsvReader` or `XmlBlockReader`. Both implement
+  `ByJG\Serializer\Reader\FileBlocks`, and `from()` reads any `FileBlocks` the same way:
+  `Serialize::from(new XmlBlockReader('/data/books.xml', 'book'))` is
+  `Serialize::fromFile('/data/books.xml', blockElement: 'book')`. Another object that can be iterated
+  (a collection) is not `FileBlocks`, so `from()` converts it as any object.
 
 ### Formatting an array into JSON, YAML, XML, CSV, or Plain Text
 
