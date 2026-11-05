@@ -42,12 +42,44 @@ Every value is a string. CDATA is read as text; entities are not expanded and no
 fetched from the network (no XXE). Invalid XML throws `InvalidArgumentException`.
 `XmlFormatter::parse()` does the work, with the formatter's configuration.
 
+Namespaces are kept: an element or attribute in a namespace keeps its prefix (`x:isbn`,
+`xsi:type`), and a declaration is an attribute, as in XML (`@attributes['xmlns:x']`, `xmlns` for a
+default namespace). `toXml()` writes them back, so a namespaced document survives
+`fromXml()` then `toXml()`.
+
 ### `toXml()` options, attributes and text
 
 - `toXml(rootElement: 'users', listElement: 'user', listElementSuffix: true)` sets what was
   only available on `XmlFormatter` directly.
 - An `@attributes` key is written as the attributes of its element, and an `@value` key as
   its text.
+
+### Reading a file block by block: `Serialize::fromFile()` and `toIterator()`
+
+`fromFile()` detects the format by the extension (`.csv`, `.xml`, `.json`, `.yaml`, `.yml`).
+A CSV or XML file is not loaded: it is read one block at a time, each time it is used, so a file
+with millions of records keeps the memory flat while you loop:
+
+```php
+foreach (Serialize::fromFile('big.csv')->withOnlyProperties(['name'])->toIterator() as $block) {
+    $block->toArray();     // one CSV record
+}
+
+Serialize::fromFile('export.xml', blockElement: 'row')->toJson();   // all the blocks, as a list
+```
+
+- A block is a CSV record keyed by the header row, or an XML element: each child of the root
+  element, or the elements named by `blockElement` at any depth, read as `fromXml()` reads a document.
+- Each block is a `Serialize` with the same options. Every `to*()` method works over all the
+  blocks and returns them as a list.
+- A block keeps the value read, returned by the new `getValue()`: the original `DOMElement` of an
+  XML block, the record of a CSV block. It is converted only when a `to*()` method is called.
+- `toXml()` of an XML block writes the original element, without a conversion (which loses the
+  order of siblings, namespaced elements and mixed text); with an option or a parameter it converts.
+- JSON and YAML have no streaming parser in PHP: the file is read by `fromFile()`, as
+  `fromJson()` and `fromYaml()` do.
+- `toIterator()` also works on any `Serialize`: the blocks are the items of a list of arrays or
+  objects, and anything else is a single block.
 
 ## Performance
 
@@ -93,6 +125,8 @@ the pipeline, since a property handler may map or transform every name and value
 
 These are all `private`/internal to `final class ObjectCopy`, so they are not part of the public API.
 
+- `fromCsv()` reads its records with the new `Reader\CsvReader`, which `fromFile()` also uses.
+
 ## Bug Fixes
 
 - `Serialize::withMethodPattern()` now rejects a search pattern shorter than 2 characters, as its
@@ -119,6 +153,22 @@ These are all `private`/internal to `final class ObjectCopy`, so they are not pa
   the header, and left a key out when it had fewer (`"name,age\nJane"` gave `['name' => 'Jane']`). A
   record must have as many fields as the header (RFC 4180): otherwise it throws
   `ByJG\Serializer\Exception\InvalidArgumentException` ("Invalid CSV: record 2 has 1 fields, the header has 2").
+- `toXml()` of a list with a single array or object (`[['name' => 'John']]`) threw a `TypeError`:
+  the formatter returned the item instead of XML. It is now written as a list, like a longer one:
+  `<root><item><name>John</name></item></root>`. A list with a single scalar is still its text.
+
+- `withOnlyProperties()` filtered every level, so it emptied what it kept and dropped the items of a
+  list: `withOnlyProperties(['name', 'address'])` gave `'address' => []`, and a list of records
+  (`[['name' => 'John', 'age' => 30], ...]`) with `withOnlyProperties(['name'])` gave `[]`, while
+  `toIterator()` gave each record filtered. It now filters the properties of the model, or of each
+  item of a list of arrays or objects; a property kept keeps its whole value.
+  `withIgnoreProperties()` is unchanged: it still removes a property at every level.
+- An anonymous class (`new class { ... }`) ignored the options: `withIgnoreProperties()`,
+  `withOnlyProperties()`, `withDoNotParseNullValues()` and the function of `parseAttributes()`, so
+  `withIgnoreProperties(['password'])` still wrote the `password` of an anonymous object. It now has
+  them as a class has, and `parseAttributes()` receives the attribute of its property. For the same
+  reason, `ObjectCopy::copy()` with a property handler copied nothing from an anonymous class source; it
+  now copies its properties.
 
 ## Breaking Changes
 
@@ -126,6 +176,21 @@ These are all `private`/internal to `final class ObjectCopy`, so they are not pa
 
 An array key named `@attributes` or `@value` is now written as the element's attributes or
 text, instead of as a child element (whose name was not valid XML).
+
+### A prefixed key in `toXml()` needs its namespace declaration
+
+A key with a prefix (`'dc:title'`) was written without it (`<title>`). It is now written in the
+namespace its prefix is declared for, by an `xmlns:dc` key in `@attributes` of that element or
+a parent; without a declaration it throws `InvalidArgumentException`, since `<dc:title>` alone is
+not valid XML. Declare the namespace, or rename the key.
+
+### `Serialize::$model` is now `$value`
+
+The protected property that holds what is serialized is renamed from `$model` to `$value`, as returned
+by the new `getValue()`: it is not always a model, but an array, an object, an XML node or a block of a
+file. The parameter of `from()` is renamed too. A subclass that reads `$this->model` reads
+`$this->value`, and a call with a named argument, `Serialize::from(model: $x)`, is now
+`Serialize::from(value: $x)`.
 
 ### A backed enum is serialized as its value
 
@@ -155,7 +220,8 @@ already did. A property or setter typed with the enum (`Status`, `?Status`) stil
 If you read a backed enum from `Serialize` output as `['value']` (or as the enum object at the
 first level), read the value directly. If you copy an array holding a backed enum into a
 `stdClass`, an array or a `string|Enum` property and expect the enum object, call
-`Status::from()` on the copied value. Otherwise no action is required. Existing code using `ObjectCopy`, `ObjectCopyTrait`,
+`Status::from()` on the copied value. If you extend `Serialize` and read `$this->model`, or call
+`Serialize::from(model: ...)`, use `$value` instead. Otherwise no action is required. Existing code using `ObjectCopy`, `ObjectCopyTrait`,
 `BaseModel`, `Serialize`, and the property handlers continues to work unchanged.
 
 For the 6.x migration guide, see [CHANGELOG-6.0.md](CHANGELOG-6.0.md).

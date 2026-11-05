@@ -255,15 +255,7 @@ ObjectCopy::copy($source, $target, $handler);
 
 **Possible Causes:**
 
-**1. The source is an anonymous class**
-
-The handler is called for every property of the source, whether or not the target has a matching
-property. An anonymous class source, however, is not passed through the property handler, so
-nothing is copied from it.
-
-**Solution:** Use a named class (or an array) as the source.
-
-**2. Source property is null**
+**Source property is null**
 
 Value handlers are still called for null values, but make sure you handle them:
 

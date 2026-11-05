@@ -190,6 +190,25 @@ echo (new XmlFormatter())->process($data);
 A list of scalars is written with the list element too: `['tags' => ['a', 'b']]` gives
 `<tags><item>a</item><item>b</item></tags>`.
 
+A list with a single array is written as a list too: `[['name' => 'John']]` gives
+`<root><item><name>John</name></item></root>`. Only a single scalar (`['text']`) is written
+as its text.
+
+An `xmlns` or `xmlns:x` key in `@attributes` declares a namespace, and a prefixed key
+(`x:isbn`, or the attribute `xsi:type`) is written in the namespace declared for its prefix,
+on that element or a parent (`xml:` needs no declaration):
+
+```php
+$data = ['@attributes' => ['xmlns:x' => 'urn:x'], 'x:isbn' => '111'];
+
+echo (new XmlFormatter())->process($data);
+
+// <root xmlns:x="urn:x"><x:isbn>111</x:isbn></root>
+```
+
+A prefix without a declaration throws `ByJG\Serializer\Exception\InvalidArgumentException`:
+the XML would not be valid.
+
 #### Reading XML
 
 `parse()` is the reverse of `process()`, with the same configuration. It is what
@@ -204,6 +223,10 @@ $array = (new XmlFormatter())
 ```
 
 `parse($content, withRoot: true)` keeps the root element as the single key of the result.
+
+Namespaced elements and attributes are read with their prefix, and the namespace
+declarations as `xmlns` / `xmlns:x` attributes, so `process()` writes them back (see
+[Serialize](serialize.md#xml-conversion)).
 
 #### Complete Example
 
@@ -667,7 +690,7 @@ For large datasets, consider:
 ### Memory Usage
 
 Formatters process data in memory. For very large datasets:
-- Use streaming APIs if available
+- Read a CSV or XML file block by block with `Serialize::fromFile()` and `toIterator()` (see [Serialize](serialize.md))
 - Process data in chunks
 - Consider database exports instead of in-memory formatting
 

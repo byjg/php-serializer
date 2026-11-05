@@ -177,6 +177,21 @@ class ObjectCopyTest extends TestCase
         $this->assertEquals(49, $target->age);
     }
 
+    /**
+     * The property handler is called for an anonymous class source, as for a class
+     */
+    public function testPropertyHandlerWithAnAnonymousClassSource(): void
+    {
+        $source = new class {
+            public string $client_name = 'Joao';
+        };
+
+        $target = new stdClass();
+        ObjectCopy::copy($source, $target, new SnakeToCamelCase());
+
+        $this->assertEquals((object)['clientName' => 'Joao'], $target);
+    }
+
 
     public function testPropertyPatterCamelToSnake(): void
     {

@@ -1036,6 +1036,45 @@ class SerializerObjectTest extends TestCase
         $this->assertEquals(['id' => 10, 'Name' => 'Test', 'Test' => 50], $result);
     }
 
+    /**
+     * An anonymous class has the options of a class: the properties ignored or kept, the null values, and the
+     * function of parseAttributes() with the attribute of the property
+     */
+    public function testAnonymousClassHasTheOptions(): void
+    {
+        $obj = new class {
+            private string $password = 'secret';
+            #[SampleAttribute('Login')]
+            public string $login = 'john';
+            public ?string $note = null;
+
+            public function getPassword(): string
+            {
+                return $this->password;
+            }
+        };
+
+        $this->assertSame(['password' => 'secret', 'login' => 'john', 'note' => null], Serialize::from($obj)->toArray());
+        $this->assertSame(
+            ['user' => ['login' => 'john', 'note' => null]],
+            Serialize::from(['user' => $obj])->withIgnoreProperties(['password'])->toArray()
+        );
+        $this->assertSame(['login' => 'john'], Serialize::from($obj)->withOnlyProperties(['login'])->toArray());
+        $this->assertSame(['password' => 'secret', 'login' => 'john'], Serialize::from($obj)->withDoNotParseNullValues()->toArray());
+        $this->assertSame(
+            [
+                'password' => "['password', 'password', 'secret', '', 'getPassword']",
+                'login' => "['login', 'login', 'john', 'Login', '']",
+                'note' => "['note', 'note', '', '', '']",
+            ],
+            Serialize::from($obj)->parseAttributes(
+                fn($attribute, $value, $keyName, $propertyName, $getterName) =>
+                    "['$keyName', '$propertyName', '$value', '" . $attribute?->getElementName() . "', '$getterName']",
+                SampleAttribute::class
+            )
+        );
+    }
+
     public function testSerializeUninitializedTypedPropertyIsSkipped(): void
     {
         // No property was assigned: both typed properties are uninitialized and must be omitted
