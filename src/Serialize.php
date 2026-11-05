@@ -739,71 +739,78 @@ class Serialize
     }
 
     /**
-     * Parse an anonymous class using its getter methods
+     * Parse an anonymous class using its getter methods, then its public properties
      */
     protected function parseAnonymousClass(object $object, ?string $attributeClass = null, ?Closure $attributeFunction = null): array
     {
         $result = [];
         $this->currentLevel++;
 
-        // Use reflection to get property names with original casing
         $reflectionClass = new ReflectionClass($object);
-        $propertyMap = [];
-        $attributeOf = function (string $name) use ($reflectionClass, $attributeClass, $attributeFunction): ?object {
-            if ($attributeFunction === null || $attributeClass === null || !$reflectionClass->hasProperty($name)) {
-                return null;
-            }
-            // By the class name, as a class does (cacheGetAttributes())
-            foreach ($reflectionClass->getProperty($name)->getAttributes() as $attribute) {
-                if ($attribute->getName() === $attributeClass) {
-                    return $attribute->newInstance();
-                }
-            }
-            return null;
-        };
+        $attributeOf = fn(string $name): ?object => $attributeFunction === null
+            ? null
+            : self::propertyAttribute($reflectionClass, $name, $attributeClass);
 
-        // Map all property names to their original casing
-        foreach ($reflectionClass->getProperties() as $property) {
-            $propertyMap[strtolower($property->getName())] = $property->getName();
-        }
-
-        // Process getters
-        $methods = get_class_methods($object);
-        $prefix = $this->getMethodGetPrefix();
-        $prefixLen = strlen($prefix);
+        // Getters take precedence over a public property with the same name
         $processedProperties = [];
-
-        foreach ($methods as $method) {
-            // Check if the method starts with the getter prefix
-            if (str_starts_with($method, $prefix) && strlen($method) > $prefixLen) {
-                // Extract the property name from getter (e.g., "getId" -> "id")
-                /** @var non-empty-string $propertyKey */
-                $propertyKey = lcfirst(substr($method, $prefixLen));
-
-                // Use original property casing if available
-                $propertyName = $propertyMap[strtolower($propertyKey)] ?? $propertyKey;
-                $processedProperties[strtolower($propertyName)] = true;
-                if ($this->isSkippingProperty($propertyName)) {
-                    continue;
-                }
-
-                $keyName = isset($propertyMap[strtolower($propertyKey)]) ? $propertyName : null;
+        foreach ($this->anonymousGetters($object, $reflectionClass) as $propertyName => [$method, $keyName]) {
+            $processedProperties[strtolower($propertyName)] = true;
+            if (!$this->isSkippingProperty($propertyName)) {
                 $this->addProperty($result, $propertyName, $object->$method(), $attributeFunction, $attributeOf($propertyName), $keyName, $method);
             }
         }
 
-        // Then process public properties
-        $objVars = get_object_vars($object);
-        foreach ($objVars as $key => $value) {
-            // Only add public properties that weren't already processed via getters
-            if (isset($processedProperties[strtolower($key)]) || $this->isSkippingProperty($key)) {
-                continue;
+        foreach (get_object_vars($object) as $key => $value) {
+            if (!isset($processedProperties[strtolower($key)]) && !$this->isSkippingProperty($key)) {
+                $this->addProperty($result, $key, $value, $attributeFunction, $attributeOf($key), $key, null);
             }
-            $this->addProperty($result, $key, $value, $attributeFunction, $attributeOf($key), $key, null);
         }
 
         $this->currentLevel--;
         return $result;
+    }
+
+    /**
+     * The getters of an anonymous class by the name of their property, with the casing of the property when it
+     * exists ("getId" is "id" for a property "id")
+     *
+     * @return array<string, array{0: string, 1: string|null}> The getter and the property, null when it has none
+     */
+    private function anonymousGetters(object $object, ReflectionClass $reflectionClass): array
+    {
+        $propertyMap = [];
+        foreach ($reflectionClass->getProperties() as $property) {
+            $propertyMap[strtolower($property->getName())] = $property->getName();
+        }
+
+        $prefix = $this->getMethodGetPrefix();
+        $getters = [];
+        foreach (get_class_methods($object) as $method) {
+            if (!str_starts_with($method, $prefix) || strlen($method) <= strlen($prefix)) {
+                continue;
+            }
+            /** @var non-empty-string $propertyKey longer than the prefix */
+            $propertyKey = lcfirst(substr($method, strlen($prefix)));
+            $keyName = $propertyMap[strtolower($propertyKey)] ?? null;
+            $getters[$keyName ?? $propertyKey] = [$method, $keyName];
+        }
+        return $getters;
+    }
+
+    /**
+     * The attribute of a property by its class name, as cacheGetAttributes() finds it for a class
+     */
+    private static function propertyAttribute(ReflectionClass $reflectionClass, string $name, ?string $attributeClass): ?object
+    {
+        if ($attributeClass === null || !$reflectionClass->hasProperty($name)) {
+            return null;
+        }
+        foreach ($reflectionClass->getProperty($name)->getAttributes() as $attribute) {
+            if ($attribute->getName() === $attributeClass) {
+                return $attribute->newInstance();
+            }
+        }
+        return null;
     }
 
     /**

@@ -183,7 +183,7 @@ class ObjectCopyTest extends TestCase
     public function testPropertyHandlerWithAnAnonymousClassSource(): void
     {
         $source = new class {
-            public string $client_name = 'Joao';
+            public string $client_name = 'Joao'; // NOSONAR: snake_case is what SnakeToCamelCase converts
         };
 
         $target = new stdClass();

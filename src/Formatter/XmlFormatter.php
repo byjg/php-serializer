@@ -129,15 +129,8 @@ class XmlFormatter implements FormatterInterface
     protected function xmlToArray(SimpleXMLElement $node, bool $top = false): array|string
     {
         $output = [];
-        $declared = $node->getDocNamespaces(false, false) ?: [];
-        if ($top) {
-            // Used in the element, but declared on a parent, not inside it
-            $declared += array_diff_key($node->getNamespaces(true), $node->getDocNamespaces(true, false) ?: []);
-        }
-        foreach ($declared as $prefix => $uri) {
-            if ($prefix !== 'xml') {
-                $output[self::ATTRIBUTES][$prefix === '' ? 'xmlns' : "xmlns:$prefix"] = $uri;
-            }
+        foreach (self::namespaceDeclarations($node, $top) as $name => $uri) {
+            $output[self::ATTRIBUTES][$name] = $uri;
         }
 
         // DOM, not SimpleXML: SimpleXML lists only the attributes and children without a namespace
@@ -148,23 +141,8 @@ class XmlFormatter implements FormatterInterface
 
         $repeated = [];
         foreach ($element->childNodes as $child) {
-            if (!$child instanceof DOMElement) {
-                continue;
-            }
-            $name = $child->nodeName;
-            $data = $this->xmlToArray(simplexml_import_dom($child)
-                ?? throw new InvalidArgumentException("The element <$child->nodeName> cannot be read"));
-
-            if ($this->isListElement($name)) {
-                $output[] = $data;
-            } elseif (!array_key_exists($name, $output)) {
-                $output[$name] = $data;
-            } else {
-                if (!isset($repeated[$name])) {
-                    $output[$name] = [$output[$name]];
-                    $repeated[$name] = true;
-                }
-                $output[$name][] = $data;
+            if ($child instanceof DOMElement) {
+                $this->readChild($output, $repeated, $child);
             }
         }
 
@@ -177,6 +155,57 @@ class XmlFormatter implements FormatterInterface
         }
 
         return $output;
+    }
+
+    /**
+     * The namespaces declared on an element, as the attributes that declare them (`xmlns`, `xmlns:x`)
+     *
+     * @param bool $top Also the namespaces used in the element but declared on a parent, not inside it
+     * @return array<string, string>
+     */
+    private static function namespaceDeclarations(SimpleXMLElement $node, bool $top): array
+    {
+        $declared = $node->getDocNamespaces(false, false);
+        $declared = $declared === false ? [] : $declared;
+        if ($top) {
+            $inside = $node->getDocNamespaces(true, false);
+            $declared += array_diff_key($node->getNamespaces(true), $inside === false ? [] : $inside);
+        }
+
+        $attributes = [];
+        foreach ($declared as $prefix => $uri) {
+            if ($prefix !== 'xml') {
+                $attributes[$prefix === '' ? 'xmlns' : "xmlns:$prefix"] = $uri;
+            }
+        }
+        return $attributes;
+    }
+
+    /**
+     * Adds a child element to the output: as a list entry, by its name, or into a list when the name repeats
+     *
+     * @param array<string, true> $repeated The names already turned into a list
+     * @throws InvalidArgumentException
+     */
+    private function readChild(array &$output, array &$repeated, DOMElement $child): void
+    {
+        $name = $child->nodeName;
+        $data = $this->xmlToArray(simplexml_import_dom($child)
+            ?? throw new InvalidArgumentException("The element <$name> cannot be read"));
+
+        if ($this->isListElement($name)) {
+            $output[] = $data;
+            return;
+        }
+        if (!array_key_exists($name, $output)) {
+            $output[$name] = $data;
+            return;
+        }
+        if (!isset($repeated[$name])) {
+            $output[$name] = [$output[$name]];
+            $repeated[$name] = true;
+        }
+        $output[$name][] = $data;
     }
 
     protected function isListElement(string $name): bool
@@ -201,48 +230,80 @@ class XmlFormatter implements FormatterInterface
      */
     protected function arrayToXml(array $array, SimpleXMLElement $xml, array $namespaces = []): SimpleXMLElement
     {
-        // The declarations first: the attributes and children of this element may use them
         $attributes = is_array($array[self::ATTRIBUTES] ?? null) ? $array[self::ATTRIBUTES] : [];
+        // The declarations first: the attributes and children of this element may use them
+        $namespaces = $this->declareNamespaces($attributes, $xml, $namespaces);
+        $this->writeAttributes($attributes, $xml, $namespaces);
+
+        foreach ($array as $key => $value) {
+            // @value is already the text of $xml, written when it was created
+            if ($key === self::VALUE || ($key === self::ATTRIBUTES && is_array($value))) {
+                continue;
+            }
+            $this->writeChild($key, $value, $xml, $namespaces);
+        }
+
+        return $xml;
+    }
+
+    private static function isNamespaceDeclaration(string $name): bool
+    {
+        return $name === 'xmlns' || str_starts_with($name, 'xmlns:');
+    }
+
+    /**
+     * Writes the namespace declarations among the attributes on the element
+     *
+     * @param array<string, string> $namespaces The namespaces declared on the parents
+     * @return array<string, string> The namespaces with the ones declared on the element
+     */
+    private function declareNamespaces(array $attributes, SimpleXMLElement $xml, array $namespaces): array
+    {
         foreach ($attributes as $name => $uri) {
             $name = (string)$name;
-            if ($name === 'xmlns' || str_starts_with($name, 'xmlns:')) {
+            if (self::isNamespaceDeclaration($name)) {
                 dom_import_simplexml($xml)->setAttributeNS(self::XMLNS, $name, (string)$uri);
                 $namespaces[$name === 'xmlns' ? '' : substr($name, 6)] = (string)$uri;
             }
         }
+        return $namespaces;
+    }
 
-        foreach ($array as $key => $value) {
-            if ($key === self::VALUE) {
-                continue;   // already the text of $xml, written when it was created
-            }
-            if ($key === self::ATTRIBUTES && is_array($value)) {
-                foreach ($value as $name => $attribute) {
-                    $name = (string)$name;
-                    if ($name === 'xmlns' || str_starts_with($name, 'xmlns:')) {
-                        continue;
-                    }
-                    $uri = str_contains($name, ':') ? $this->prefixNamespace($name, $namespaces) : null;
-                    $xml->addAttribute($name, (string)$attribute, $uri);
-                }
+    /**
+     * @param array<string, string> $namespaces
+     * @throws InvalidArgumentException when a prefix has no namespace declaration
+     */
+    private function writeAttributes(array $attributes, SimpleXMLElement $xml, array $namespaces): void
+    {
+        foreach ($attributes as $name => $attribute) {
+            $name = (string)$name;
+            if (self::isNamespaceDeclaration($name)) {
                 continue;
             }
-
-            $name = is_int($key)
-                ? ($this->listElement ?? 'item') . ($this->listElementSuffix ? $key : "")
-                : $key;
-            $uri = str_contains($name, ':') ? $this->prefixNamespace($name, $namespaces) : ($namespaces[''] ?? null);
-
-            if (is_array($value)) {
-                $text = isset($value[self::VALUE]) ? htmlspecialchars((string)$value[self::VALUE]) : null;
-                $child = $xml->addChild($name, $text, $uri)
-                    ?? throw new InvalidArgumentException("Cannot add the element <$name>");
-                $this->arrayToXml($value, $child, $namespaces);
-            } else {
-                $xml->addChild($name, htmlspecialchars("$value"), $uri);
-            }
+            $uri = str_contains($name, ':') ? $this->prefixNamespace($name, $namespaces) : null;
+            $xml->addAttribute($name, (string)$attribute, $uri);
         }
+    }
 
-        return $xml;
+    /**
+     * @param array<string, string> $namespaces
+     * @throws InvalidArgumentException when a prefix has no namespace declaration
+     */
+    private function writeChild(int|string $key, mixed $value, SimpleXMLElement $xml, array $namespaces): void
+    {
+        $name = is_int($key)
+            ? ($this->listElement ?? 'item') . ($this->listElementSuffix ? $key : "")
+            : $key;
+        $uri = str_contains($name, ':') ? $this->prefixNamespace($name, $namespaces) : ($namespaces[''] ?? null);
+
+        if (!is_array($value)) {
+            $xml->addChild($name, htmlspecialchars("$value"), $uri);
+            return;
+        }
+        $text = isset($value[self::VALUE]) ? htmlspecialchars((string)$value[self::VALUE]) : null;
+        $child = $xml->addChild($name, $text, $uri)
+            ?? throw new InvalidArgumentException("Cannot add the element <$name>");
+        $this->arrayToXml($value, $child, $namespaces);
     }
 
     /**
