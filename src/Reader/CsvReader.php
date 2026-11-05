@@ -41,16 +41,23 @@ class CsvReader implements FileBlocks
     /**
      * @param resource $handle
      * @param bool $hasHeader The first record is the header: the records are keyed by it
+     * @param string $separator The character between the fields (one byte)
+     * @param string $enclosure The character that quotes a field (one byte); doubled inside it, it is the
+     *                          character itself
      * @return Generator<int, array> each record, keyed by the header, or a list without a header
      * @throws InvalidArgumentException when a record does not have as many fields as the header
      */
-    public static function records($handle, bool $hasHeader = true): Generator
-    {
+    public static function records(
+        $handle,
+        bool $hasHeader = true,
+        string $separator = ',',
+        string $enclosure = '"'
+    ): Generator {
         $headers = null;
         $record = 0;
 
         // fgetcsv() reads a record, not a line: the line breaks inside quotes stay in the value
-        while (is_array($row = fgetcsv($handle, escape: "\\"))) {
+        while (is_array($row = fgetcsv($handle, null, $separator, $enclosure, "\\"))) {
             if (count($row) === 1 && trim((string)$row[0]) === '') {
                 continue;
             }

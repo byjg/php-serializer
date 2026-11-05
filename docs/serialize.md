@@ -230,6 +230,9 @@ Notes:
   `Serialize::from(new XmlBlockReader('/data/books.xml', 'book'))` is
   `Serialize::fromFile('/data/books.xml', blockElement: 'book')`. Another object that can be iterated
   (a collection) is not `FileBlocks`, so `from()` converts it as any object.
+- `CsvReader::records($handle, $hasHeader, $separator, $enclosure)` reads the records of an open stream, one
+  at a time, with another separator (`;`, `|`, a tab...) or enclosure (`'`) than the default `,` and `"`:
+  `CsvReader::records(fopen('/data/users.csv', 'r'), separator: ';')`.
 
 ### Formatting an array into JSON, YAML, XML, CSV, or Plain Text
 
