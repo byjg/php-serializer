@@ -42,8 +42,8 @@ final class ObjectCopy
      */
     public static function copy(object|array $source, object|array &$target, ?PropertyHandlerInterface $propertyHandler = null): void
     {
-        if (is_null($propertyHandler) && is_array($source)) {
-            self::copyDirect($source, $target);
+        if (is_array($source)) {
+            self::copyArray($source, $target, $propertyHandler);
             return;
         }
 
@@ -57,29 +57,25 @@ final class ObjectCopy
     }
 
     /**
-     * Fast copy path for the common case: an array source and no property handler.
-     * Uses direct iteration instead of the full Serialize pipeline, which for an array
-     * source with withStopAtFirstLevel() produces exactly the same assignments: a backed
-     * enum is copied as its value, as the pipeline does, and applyToTarget() builds the
-     * enum again for a member typed with it.
+     * Fast copy path for an array source (a database row, a request body...), with or without a property
+     * handler. Uses direct iteration instead of the full Serialize pipeline, which for an array source with
+     * withStopAtFirstLevel() makes exactly the same calls: each key in order, a backed enum as its value (and
+     * applyToTarget() builds the enum again for a member typed with it), then applyAttribute() with the key as
+     * the property name and the whole source array.
      *
      * @param array $source The source array
      * @param object|array $target The target object
+     * @param PropertyHandlerInterface|null $propertyHandler The property handler
      * @return void
      */
-    private static function copyDirect(array $source, object|array &$target): void
+    private static function copyArray(array $source, object|array &$target, ?PropertyHandlerInterface $propertyHandler): void
     {
-        foreach ($source as $propertyName => $value) {
+        foreach ($source as $key => $value) {
             if ($value instanceof BackedEnum) {
                 $value = $value->value;
             }
 
-            if (is_array($target)) {
-                $target[$propertyName] = $value;
-                continue;
-            }
-
-            self::applyToTarget((string)$propertyName, $value, $target);
+            self::applyAttribute(null, $value, $key, (string)$key, $propertyHandler, $target, $source);
         }
     }
 

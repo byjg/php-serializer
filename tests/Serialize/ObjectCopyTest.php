@@ -4,7 +4,7 @@ namespace Tests\Serialize;
 
 use ByJG\Serializer\ObjectCopy;
 use ByJG\Serializer\PropertyHandler\CamelToSnakeCase;
-use ByJG\Serializer\PropertyHandler\DirectTransform;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
 use ByJG\Serializer\PropertyHandler\SnakeToCamelCase;
 use ByJG\Serializer\Serialize;
@@ -13,6 +13,8 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 use Tests\Sample\ModelPropertyPattern;
 use Tests\Sample\ModelPublic;
+use Tests\Sample\SampleLevel;
+use Tests\Sample\SampleStatus;
 use Tests\Sample\SampleModel;
 use TypeError;
 
@@ -303,20 +305,70 @@ class ObjectCopyTest extends TestCase
     }
 
     /**
-     * When the source is an array and no property handler is given, ObjectCopy::copy()
-     * takes a fast path that bypasses the Serialize pipeline. It must produce exactly
-     * the same result as the pipeline, which is forced here by passing an identity handler.
+     * The sources of fastPathProvider(), and the values where the paths could differ: a backed enum, an
+     * integer key, nested values (kept whole at the first level)
      */
-    #[DataProvider('fastPathProvider')]
-    public function testFastPathMatchesPipeline(array $source, callable $makeTarget): void
+    public static function handlerFastPathProvider(): array
     {
-        $fastPath = $makeTarget();
-        ObjectCopy::copy($source, $fastPath);
+        return self::fastPathProvider() + [
+            'backed enum values' => [
+                ['status' => SampleStatus::Paid, 'level' => SampleLevel::Low, 'Name' => 'Joao'],
+                fn () => new stdClass(),
+            ],
+            'integer keys' => [
+                [0 => 'zero', 1 => 'one'],
+                fn () => [],
+            ],
+            'nested values' => [
+                ['Id' => ['a' => 1], 'Name' => new ModelPublic(1, 'x')],
+                fn () => new stdClass(),
+            ],
+        ];
+    }
 
-        $pipeline = $makeTarget();
-        ObjectCopy::copy($source, $pipeline, new DirectTransform());
+    /**
+     * With a property handler, an array source also takes the fast path: the handler must get exactly what the
+     * Serialize pipeline gives for each key (the same keys in the same order, the same values, the whole source
+     * array), and the target must be the same as with no handler.
+     */
+    #[DataProvider('handlerFastPathProvider')]
+    public function testArrayWithHandlerGivesTheHandlerWhatThePipelineGives(array $source, callable $makeTarget): void
+    {
+        $pipeline = [];
+        Serialize::from($source)
+            ->withStopAtFirstLevel()
+            ->parseAttributes(function ($attribute, $value, $keyName, $propertyName) use (&$pipeline) {
+                $pipeline[] = [(string)$propertyName, $value];
+            });
 
-        $this->assertEquals($pipeline, $fastPath);
+        $handler = new class implements PropertyHandlerInterface {
+            public array $calls = [];
+            public array $sources = [];
+
+            #[\Override]
+            public function mapName(string $property): string
+            {
+                return $property;
+            }
+
+            #[\Override]
+            public function transformValue(string $propertyName, string $targetName, mixed $value, mixed $instance = null): mixed
+            {
+                $this->calls[] = [$propertyName, $value];
+                $this->sources[] = $instance;
+                return $value;
+            }
+        };
+
+        $withHandler = $makeTarget();
+        ObjectCopy::copy($source, $withHandler, $handler);
+
+        $this->assertEquals($pipeline, $handler->calls);
+        $this->assertSame(array_fill(0, count($source), $source), $handler->sources);
+
+        $withoutHandler = $makeTarget();
+        ObjectCopy::copy($source, $withoutHandler);
+        $this->assertEquals($withoutHandler, $withHandler);
     }
 
     public function testCopyIntoDifferentClassesWithSameShape(): void
