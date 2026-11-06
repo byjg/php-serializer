@@ -85,40 +85,55 @@ Serialize::fromFile('export.xml', blockElement: 'row')->toJson();   // all the b
   `Serialize::from(new CsvReader('big.csv'))`. Another object that can be iterated (a collection) is
   converted as before.
 
+- `Reader\CsvReader::records($handle, $hasHeader, $separator = ',', $enclosure = '"')` reads the records
+  of an open stream with another separator (`;`, `|`, a tab...) or enclosure (`'`).
+- `new Reader\XmlBlockReader($filename, $blockElement, $namespaces = [])`: with a prefix of `$namespaces`
+  (`'a:entry'`, `['a' => 'http://www.w3.org/2005/Atom']`), the block elements are matched by namespace URI
+  and local name, whatever prefix the file uses (none, for a default namespace). Without it, the name is
+  compared as written in the file.
+
+### `ObjectCopy::writerFor()`
+
+`ObjectCopy::writerFor(string $className, string $name)` returns how `copy()` writes a value with that name
+into an object of that class: `[member, isSetter, enumClass]` for its setter (any case) or public property
+(exact case, else any case), or `false` when the class has neither. For code that fills many objects of the
+same class with the same rules as `copy()`, such as the byjg/micro-orm entity hydrator.
+
+**Documentation:** [ObjectCopy](docs/objectcopy.md)
+
 ## Performance
 
-### `ObjectCopy` direct copy path
+### `ObjectCopy` direct copy path for an array source
 
-`ObjectCopy::copy()` previously routed every copy through the full `Serialize` pipeline.
-When the source is an **array** and **no property handler** is given, that pipeline does no
-work beyond iterating the array: `withStopAtFirstLevel()` makes every value pass through
-untouched, no property filters are configured, and null values are copied by default.
+`ObjectCopy::copy()` previously routed every copy through the full `Serialize` pipeline. When the
+source is an **array** (a database row, a request body), with or without a property handler, it now
+iterates the array directly and makes the same calls the pipeline made: each key in order, a backed
+enum as its value, then the property handler (`mapName()`, `transformValue()` with the whole source
+array) and the write. The behaviour is pinned by
+`ObjectCopyTest::testArrayWithHandlerGivesTheHandlerWhatThePipelineGives()`, which runs the `Serialize`
+pipeline on the same sources (backed enums, integer keys, nested values) and checks the handler gets the
+same calls. A copy from an object source still uses the pipeline.
 
-That case now uses direct iteration instead. The resulting assignments are identical — the
-behaviour is pinned by `ObjectCopyTest::testFastPathMatchesPipeline()`, which runs the same
-inputs through both paths and asserts the targets match.
+### How a class takes each value is resolved once
 
-Copies made with a property handler, or from an object source, are unaffected and still use
-the pipeline.
-
-### Cached property-name resolution
-
-The case-insensitive property lookup used when a target has no setter and no exactly matching
-property is now cached statically, keyed by class name, rather than rebuilt on every call to
-`copy()`. Class properties do not change at runtime, so the cache is both correct and bounded
-by the number of classes copied into.
+For each value, the write into an object resolved the setter (`method_exists('set' . $name)`), the public
+property (exact case, else any case) and the backed enum of the member. That is now resolved once per class
+and name, and cached statically (classes do not change at runtime); the new public
+`ObjectCopy::writerFor()` returns it (see New Features). Only a property the instance itself has (dynamic,
+or magic `__isset()`/`__set()`) is still checked on the object, as before. The behaviour is pinned by
+`ObjectCopyWriteTest`.
 
 ### Measured impact
 
-200,000 copies of a five-property model, PHP 8.5, no opcache JIT, median of three runs:
+200,000 copies of a five-property model from an array, PHP 8.5, Xdebug off, median of three runs:
 
-| Scenario | 6.0 | 7.0 | |
+| Scenario | 6.0.2 | 7.0 | |
 |---|---|---|---|
-| Array source, no property handler | 3.67 s | **1.26 s** | ~2.9x faster |
-| Array source, with property handler | 5.09 s | 4.90 s | ~4% faster |
+| Array source, no property handler | 0.55 s | **0.25 s** | ~2.2x faster |
+| Array source, with property handler (`SnakeToCamelCase`) | 0.75 s | **0.45 s** | ~1.65x faster |
 
-The second row only benefits from the cached property-name resolution; it still goes through
-the pipeline, since a property handler may map or transform every name and value.
+For entities read from a database (byjg/anydataset-db with byjg/micro-orm), together with the changes in
+those libraries: about 5x faster than at the start of 7.0 development.
 
 ## Internal Changes
 
@@ -133,6 +148,10 @@ These are all `private`/internal to `final class ObjectCopy`, so they are not pa
 
 ## Bug Fixes
 
+- A static property is no longer serialized nor copied into: it is class state, not data of the object.
+  `Serialize` read it as an instance property (warning "Undefined property" and notice "Accessing static
+  property as non static"), and `ObjectCopy` wrote a key with its name as a dynamic property of the object
+  (deprecated since PHP 8.2), leaving the static property unchanged.
 - `Serialize::withMethodPattern()` now rejects a search pattern shorter than 2 characters, as its
   message ("cannot be empty or less than 2 characters") already said. The check used `&&`
   (`empty($search) && strlen($search) <= 2`), so only `''` and `'0'` were rejected and a

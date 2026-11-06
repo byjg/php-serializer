@@ -230,12 +230,62 @@ Notes:
   `Serialize::from(new XmlBlockReader('/data/books.xml', 'book'))` is
   `Serialize::fromFile('/data/books.xml', blockElement: 'book')`. Another object that can be iterated
   (a collection) is not `FileBlocks`, so `from()` converts it as any object.
-- `new XmlBlockReader($filename, 'a:entry', ['a' => 'http://www.w3.org/2005/Atom'])` reads the `entry` elements
-  of that namespace, whatever prefix the file uses (none, for a default namespace). Without `$namespaces`, or
-  with a prefix that is not in it, the name is compared as written in the file.
-- `CsvReader::records($handle, $hasHeader, $separator, $enclosure)` reads the records of an open stream, one
-  at a time, with another separator (`;`, `|`, a tab...) or enclosure (`'`) than the default `,` and `"`:
-  `CsvReader::records(fopen('/data/users.csv', 'r'), separator: ';')`.
+
+#### XML elements of a namespace: `XmlBlockReader` with `$namespaces`
+
+`blockElement` is compared with the element name **as written in the file**. A feed with a default namespace
+(`<feed xmlns="http://www.w3.org/2005/Atom"><entry>`) is read with `'entry'`, but another file may write the
+same elements as `<atom:entry>`. To read the elements of a namespace whatever prefix the file uses, give the
+prefix of your `blockElement` and its URI in `$namespaces`:
+
+```php
+<?php
+use ByJG\Serializer\Reader\XmlBlockReader;
+use ByJG\Serializer\Serialize;
+
+// <feed xmlns="http://www.w3.org/2005/Atom"><entry><id>1</id><title>A</title></entry>...</feed>
+$entries = new XmlBlockReader('/data/feed.xml', 'atom:entry', ['atom' => 'http://www.w3.org/2005/Atom']);
+
+foreach (Serialize::from($entries)->toIterator() as $block) {
+    $block->toArray();   // ['@attributes' => ['xmlns' => 'http://www.w3.org/2005/Atom'], 'id' => '1', 'title' => 'A']
+}
+```
+
+Only the elements of that namespace match: an `<x:entry>` of another namespace is not a block. Without
+`$namespaces`, or with a prefix that is not in it, the name is compared as written in the file.
+
+#### CSV with another separator or enclosure: `CsvReader::records()`
+
+`fromCsv()` and `fromFile()` read CSV with `,` and `"`. `CsvReader::records()` reads the records of an open
+stream (a file, `php://stdin`, an HTTP stream...) one at a time, with another separator or enclosure:
+
+```php
+<?php
+use ByJG\Serializer\Reader\CsvReader;
+
+// users.csv:   id;name
+//              1;"Doe; John"
+$handle = fopen('/data/users.csv', 'r');
+foreach (CsvReader::records($handle, separator: ';') as $record) {
+    $record;   // ['id' => '1', 'name' => 'Doe; John']
+}
+fclose($handle);
+
+// No header row, `|` between the fields, `'` around them: each record is a list
+// codes.txt:   1|'a|b'
+//              2|'O''Brien'
+$handle = fopen('/data/codes.txt', 'r');
+foreach (CsvReader::records($handle, hasHeader: false, separator: '|', enclosure: "'") as $record) {
+    $record;   // ['1', 'a|b'], then ['2', "O'Brien"]
+}
+fclose($handle);
+```
+
+- `$separator` and `$enclosure` are one character each; inside the enclosure, the enclosure doubled is the
+  character itself.
+- With a header row, every record must have as many fields as the header, or `InvalidArgumentException` is
+  thrown when it is read.
+- The records are read while you loop: the stream is not closed by `records()`, close it yourself.
 
 ### Formatting an array into JSON, YAML, XML, CSV, or Plain Text
 

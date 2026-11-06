@@ -4,6 +4,7 @@ namespace ByJG\Serializer;
 
 use BackedEnum;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
+use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionProperty;
@@ -25,12 +26,13 @@ final class ObjectCopy
     private static array $propNameLowerCache = [];
 
     /**
-     * Static cache of the backed enum a member takes ("Class::setName" for a setter's parameter,
-     * "Class::$name" for a property), or null when it does not take one.
+     * Static cache of how a value is written into a class, by target name: the member (a setter or a public
+     * property), whether it is a setter, and the backed enum it takes (or null); false when the class has
+     * neither, and only the instance can have it (a dynamic or magic property).
      *
-     * @var array<string, class-string<BackedEnum>|null>
+     * @var array<string, array<string, array{0: string, 1: bool, 2: class-string<BackedEnum>|null}|false>>
      */
-    private static array $backedEnumCache = [];
+    private static array $writerCache = [];
 
     /**
      * Copy the properties from a source object to the properties matching to a target object
@@ -42,8 +44,8 @@ final class ObjectCopy
      */
     public static function copy(object|array $source, object|array &$target, ?PropertyHandlerInterface $propertyHandler = null): void
     {
-        if (is_null($propertyHandler) && is_array($source)) {
-            self::copyDirect($source, $target);
+        if (is_array($source)) {
+            self::copyArray($source, $target, $propertyHandler);
             return;
         }
 
@@ -57,29 +59,25 @@ final class ObjectCopy
     }
 
     /**
-     * Fast copy path for the common case: an array source and no property handler.
-     * Uses direct iteration instead of the full Serialize pipeline, which for an array
-     * source with withStopAtFirstLevel() produces exactly the same assignments: a backed
-     * enum is copied as its value, as the pipeline does, and applyToTarget() builds the
-     * enum again for a member typed with it.
+     * Fast copy path for an array source (a database row, a request body...), with or without a property
+     * handler. Uses direct iteration instead of the full Serialize pipeline, which for an array source with
+     * withStopAtFirstLevel() makes exactly the same calls: each key in order, a backed enum as its value (and
+     * applyToTarget() builds the enum again for a member typed with it), then applyAttribute() with the key as
+     * the property name and the whole source array.
      *
      * @param array $source The source array
      * @param object|array $target The target object
+     * @param PropertyHandlerInterface|null $propertyHandler The property handler
      * @return void
      */
-    private static function copyDirect(array $source, object|array &$target): void
+    private static function copyArray(array $source, object|array &$target, ?PropertyHandlerInterface $propertyHandler): void
     {
-        foreach ($source as $propertyName => $value) {
+        foreach ($source as $key => $value) {
             if ($value instanceof BackedEnum) {
                 $value = $value->value;
             }
 
-            if (is_array($target)) {
-                $target[$propertyName] = $value;
-                continue;
-            }
-
-            self::applyToTarget((string)$propertyName, $value, $target);
+            self::applyAttribute(null, $value, $key, (string)$key, $propertyHandler, $target, $source);
         }
     }
 
@@ -115,8 +113,11 @@ final class ObjectCopy
     }
 
     /**
-     * Assign a single value to an object target, using the setter when available and
-     * falling back to a case-insensitive property match.
+     * Assign a single value to an object target: with the setter when there is one (in any case), else the
+     * public property (exact case, else any case), else a property the instance has (dynamic, or magic
+     * __isset()/__set()). A value for a member typed with a backed enum is made that enum.
+     *
+     * How the class takes each name is resolved once (see writerOf()); only the last case depends on the instance.
      *
      * @param string $targetName
      * @param mixed $value
@@ -125,56 +126,76 @@ final class ObjectCopy
      */
     private static function applyToTarget(string $targetName, mixed $value, object $target): void
     {
-        if (method_exists($target, 'set' . $targetName)) {
-            $target->{'set' . $targetName}(self::toBackedEnum($target, 'set' . $targetName, true, $value));
-            return;
-        }
-
         if ($target instanceof stdClass) {
             $target->{$targetName} = $value;
             return;
         }
 
-        if (isset($target->{$targetName})) {
-            $target->{$targetName} = self::toBackedEnum($target, $targetName, false, $value);
+        $writer = self::writerFor(get_class($target), $targetName);
+
+        if ($writer === false) {
+            if (isset($target->{$targetName})) {
+                $target->{$targetName} = $value;
+            }
             return;
         }
 
-        // Check if source property have property case name different from target
-        $propNameLower = self::propNameLower(get_class($target));
-
-        $propLower = strtolower($targetName);
-        if (isset($propNameLower[$propLower])) {
-            $target->{$propNameLower[$propLower]} = self::toBackedEnum($target, $propNameLower[$propLower], false, $value);
+        [$member, $isSetter, $enum] = $writer;
+        // A database row holds "PAID", the member is typed ?PaymentState. An unknown value is a ValueError
+        if ($enum !== null && (is_int($value) || is_string($value))) {
+            $value = $enum::from($value);
         }
+
+        if ($isSetter) {
+            $target->{$member}($value);
+            return;
+        }
+        $target->{$member} = $value;
     }
 
     /**
-     * The value as the backed enum the member takes, when it takes one and the value is the
-     * enum's int or string: a database row holds "PAID", the property is typed ?PaymentState.
-     * An unknown value is a ValueError from BackedEnum::from(). Anything else is returned as it is.
+     * How copy() writes a value with this name into an object of this class, resolved once per class and name:
+     * [member, is setter, backed enum or null] for its setter (in any case), else its public property (exact case,
+     * else any case); false when it has neither (copy() then writes it only to a property the instance has: dynamic,
+     * or magic __isset()/__set()).
      *
-     * @param string $member A setter name, or a property name
+     * For code that writes many values into objects of the same class with the same rules as copy(), such as an
+     * entity hydrator: a backed enum member takes BackedEnum::from() of an int or string value.
+     *
+     * @param class-string $className
+     * @return array{0: string, 1: bool, 2: class-string<BackedEnum>|null}|false
      */
-    private static function toBackedEnum(object $target, string $member, bool $isSetter, mixed $value): mixed
+    public static function writerFor(string $className, string $targetName): array|false
     {
-        if (!is_int($value) && !is_string($value)) {
-            return $value;
+        if (!isset(self::$writerCache[$className][$targetName])) {
+            self::$writerCache[$className][$targetName] = self::writerOf($className, $targetName);
+        }
+        return self::$writerCache[$className][$targetName];
+    }
+
+    /**
+     * How a class takes a value by a name: [member, is setter, backed enum or null], or false when it has
+     * neither a setter nor a public property with that name
+     *
+     * @param class-string $className
+     * @return array{0: string, 1: bool, 2: class-string<BackedEnum>|null}|false
+     */
+    private static function writerOf(string $className, string $targetName): array|false
+    {
+        $setter = 'set' . $targetName;
+        if (method_exists($className, $setter)) {
+            $type = ((new ReflectionMethod($className, $setter))->getParameters()[0] ?? null)?->getType();
+            return [$setter, true, self::backedEnumOf($type)];
         }
 
-        $key = get_class($target) . ($isSetter ? '::' : '::$') . $member;
-        if (!array_key_exists($key, self::$backedEnumCache)) {
-            $type = null;
-            if ($isSetter) {
-                $type = ((new ReflectionMethod($target, $member))->getParameters()[0] ?? null)?->getType();
-            } elseif (property_exists($target, $member)) {
-                $type = (new ReflectionProperty($target, $member))->getType();
-            }
-            self::$backedEnumCache[$key] = self::backedEnumOf($type);
+        $properties = self::propNameLower($className);
+        $property = in_array($targetName, $properties, true)
+            ? $targetName
+            : ($properties[strtolower($targetName)] ?? null);
+        if ($property === null) {
+            return false;
         }
-
-        $enum = self::$backedEnumCache[$key];
-        return $enum === null ? $value : $enum::from($value);
+        return [$property, false, self::backedEnumOf((new ReflectionProperty($className, $property))->getType())];
     }
 
     /**
@@ -211,9 +232,9 @@ final class ObjectCopy
     }
 
     /**
-     * Map of lowercase property name => declared property name for a class.
+     * Map of lowercase property name => declared property name for a class (its public instance properties).
      *
-     * @param string $className
+     * @param class-string $className
      * @return array<string, string>
      */
     private static function propNameLower(string $className): array
@@ -221,8 +242,11 @@ final class ObjectCopy
         if (!isset(self::$propNameLowerCache[$className])) {
             self::$propNameLowerCache[$className] = [];
 
-            foreach (get_class_vars($className) as $varKey => $varValue) {
-                self::$propNameLowerCache[$className][strtolower($varKey)] = $varKey;
+            // The public instance properties: a static property is class state, not data of the object
+            foreach ((new ReflectionClass($className))->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+                if (!$property->isStatic()) {
+                    self::$propNameLowerCache[$className][strtolower($property->getName())] = $property->getName();
+                }
             }
         }
 

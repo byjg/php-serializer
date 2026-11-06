@@ -216,6 +216,61 @@ built again for a target typed with the enum. So every source (array or object, 
 a property handler) gives the same result: `Status::Paid` in a `Status`/`?Status` property or
 setter, and `'PAID'` in a `string|Status` property, a `stdClass` or an array.
 
+### Writing many values into objects of the same class
+
+`ObjectCopy::writerFor(string $className, string $name)` gives how `copy()` writes a value with that name into an
+object of that class, resolved once per class and name:
+
+- `[member, isSetter, enumClass]`: the setter (in any case), else the public property (exact case, else any case),
+  and the backed enum it takes (`null` if none; an int or string value then takes `enumClass::from()`)
+- `false`: the class has neither; `copy()` then writes the value only to a property the instance has (dynamic, or
+  magic `__isset()`/`__set()`)
+
+It is for code that fills many objects of the same class with the same rules as `copy()`, such as an entity
+hydrator (byjg/micro-orm): resolve each name once, then write every object with it.
+
+```php
+<?php
+use ByJG\Serializer\ObjectCopy;
+
+class Product
+{
+    public $id;
+    protected $price;
+    public function setPrice($price) { $this->price = $price; }
+}
+
+ObjectCopy::writerFor(Product::class, 'price');     // ['setprice', true, null]: the setter
+ObjectCopy::writerFor(Product::class, 'ID');        // ['id', false, null]: the public property, any case
+ObjectCopy::writerFor(Product::class, 'missing');   // false
+
+// Fill many products from rows, resolving each column once
+$writers = [];
+foreach ($rows as $row) {
+    $product = new Product();
+    foreach ($row as $name => $value) {
+        $writer = $writers[$name] ??= ObjectCopy::writerFor(Product::class, $name);
+        if ($writer === false) {
+            continue;
+        }
+        [$member, $isSetter, $enum] = $writer;
+        if ($enum !== null && (is_int($value) || is_string($value))) {
+            $value = $enum::from($value);
+        }
+        if ($isSetter) {
+            $product->{$member}($value);
+        } else {
+            $product->{$member} = $value;
+        }
+    }
+    $products[] = $product;
+}
+```
+
+The member name of a setter is `'set'` and the name given (`setprice`): PHP method names are case-insensitive.
+See [How to fill the entities yourself](https://github.com/byjg/php-anydataset-db/blob/master/docs/entity-hydrator.md)
+for a complete entity hydrator.
+
 ## Available Property Handler Classes
 
 The library provides several built-in property handler classes for common transformations:
